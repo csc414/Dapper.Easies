@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -10,19 +11,34 @@ namespace Dapper.Easies.Tests
         static async Task Main(string[] args)
         {
             var services = new ServiceCollection();
-            services.AddEasiesProvider();
-            services.AddEasiesMysql("Host=121.41.203.49;UserName=root;Password=cpsyb_mysql;Database=dev_openeasy_nonlocal_saas;Port=3306;CharSet=utf8mb4;Connection Timeout=1200;Allow User Variables=true;");
+            services.AddEasiesProvider(options =>
+            {
+                options.ConnectionString = "Host=localhost;UserName=root;Password=123456;Database=School;Port=3306;CharSet=utf8mb4;Connection Timeout=1200;Allow User Variables=true;";
+                options.AddMysql();
+            });
             var serviceProvider = services.BuildServiceProvider();
+
             var easiesProvider = serviceProvider.GetRequiredService<IEasiesProvider>();
 
-            var student = await easiesProvider.Table<Student>().Where(o => o.Name == "name").FirstOrDefaultAsync();
+            var student = new Student();
+            student.ClassId = Guid.NewGuid();
+            student.StudentName = "李坤";
+            student.Age = 18;
+            student.CreateTime = DateTime.Now;
 
-            var query = easiesProvider.Table<Student>().Join<Teacher>((a, b) => a.TeacherId == b.Id, JoinType.Left).Where((student, teacher) => student.Name == "李钊");
+            await easiesProvider.InsertAsync(student);
+            //var stop = Stopwatch.StartNew();
+            //await easiesProvider.InsertAsync(student);
+            //stop.Stop();
+            //Console.WriteLine("耗时：{0}", stop.ElapsedMilliseconds);
 
-            await easiesProvider.TransactionScopeAsync(async () =>
-            {
-                await easiesProvider.Table<Teacher>().Join<Student>((a, b) => a.Id == b.TeacherId).FirstOrDefaultAsync();
-            });
+            var temp = await easiesProvider.Query<Student>().Join<Class>((student, cls) => student.ClassId == cls.Id, JoinType.Left).FirstAsync();
+            
         }
+    }
+
+    class Test
+    {
+        public Guid MyProperty { get; set; }
     }
 }

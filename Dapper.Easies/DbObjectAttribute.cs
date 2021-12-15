@@ -5,13 +5,15 @@ using System.Text;
 namespace Dapper.Easies
 {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-    public class DbTableAttribute : Attribute
+    public class DbObjectAttribute : Attribute
     {
-        public DbTableAttribute(string tableName)
+        public DbObjectAttribute() { }
+
+        public DbObjectAttribute(string tableName)
         {
             TableName = tableName;
         }
 
-        public string TableName { get; }
+        public string TableName { get; set; }
     }
 }

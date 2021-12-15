@@ -24,21 +24,27 @@ namespace Dapper.Easies
 
         protected void AddJoinMetedata<TJoin>(Expression joinExpression, JoinType type)
         {
-            _context.JoinMetedatas.Add(new JoinMetedata { DbTable = typeof(TJoin), JoinExpression = joinExpression, Type = type });
+            var dbObject = DbObject.Get(typeof(TJoin));
+            if (!_context.Alias.TryAdd(dbObject.Type, new DbAlias(dbObject.EscapeName, $"t{_context.Alias.Count + 1}")))
+                throw new ArgumentException($"Already join {dbObject.Type.Name}.");
+
+            _context.JoinMetedatas.Add(new JoinMetedata { DbObject = dbObject, JoinExpression = joinExpression, Type = type });
         }
 
         public Task<T> FirstAsync<T>()
         {
-            return Task.FromResult<T>(default);
+            _context.Take = 1;
+            return _context.Connection.QueryFirstAsync<T>(_context.Converter.ToQuerySql(_context, out var parameters), parameters);
         }
 
         public Task<T> FirstOrDefaultAsync<T>()
         {
-            return Task.FromResult<T>(default);
+            _context.Take = 1;
+            return _context.Connection.QueryFirstOrDefaultAsync<T>(_context.Converter.ToQuerySql(_context, out var parameters), parameters);
         }
     }
 
-    public class DbQuery<T> : DbQuery
+    public class DbQuery<T> : DbQuery, IDbQuery<T>, IOrderedDbQuery<T>, ISelectedQuery<T>
     {
         internal DbQuery(QueryContext context) : base(context) { }
 
@@ -58,14 +64,39 @@ namespace Dapper.Easies
             return FirstOrDefaultAsync<T>();
         }
 
-        public DbQuery<T, TJoin> Join<TJoin>(Expression<Predicate<T, TJoin>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbTable
+        public ISelectedQuery<TResult> Select<TResult>(Expression<Func<T, TResult>> selector)
+        {
+            return new DbQuery<TResult>(_context);
+        }
+
+        public IOrderedDbQuery<T> OrderBy(params Expression<Func<T, object>>[] orderFields)
+        {
+            return this;
+        }
+
+        public IOrderedDbQuery<T> OrderByDescending(params Expression<Func<T, object>>[] orderFields)
+        {
+            return this;
+        }
+
+        public IDbQuery<T, TJoin> Join<TJoin>(Expression<Predicate<T, TJoin>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject
         {
             AddJoinMetedata<TJoin>(on, type);
             return new DbQuery<T, TJoin>(_context);
         }
+
+        public IOrderedDbQuery<T> ThenBy(params Expression<Func<T, object>>[] orderFields)
+        {
+            return this;
+        }
+
+        public IOrderedDbQuery<T> ThenByDescending(params Expression<Func<T, object>>[] orderFields)
+        {
+            return this;
+        }
     }
 
-    public class DbQuery<T1, T2> : DbQuery<T1>
+    public class DbQuery<T1, T2> : DbQuery<T1>, IDbQuery<T1, T2>
     {
         internal DbQuery(QueryContext context) : base(context) { }
 
@@ -75,7 +106,7 @@ namespace Dapper.Easies
             return this;
         }
 
-        public DbQuery<T1, T2, TJoin> Join<TJoin>(Expression<Predicate<T1, T2, TJoin>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbTable
+        public DbQuery<T1, T2, TJoin> Join<TJoin>(Expression<Predicate<T1, T2, TJoin>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject
         {
             AddJoinMetedata<TJoin>(on, type);
             return new DbQuery<T1, T2, TJoin>(_context);
@@ -92,7 +123,7 @@ namespace Dapper.Easies
             return this;
         }
 
-        public DbQuery<T1, T2, T3, TJoin> Join<TJoin>(Expression<Predicate<T1, T2, T3, TJoin>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbTable
+        public DbQuery<T1, T2, T3, TJoin> Join<TJoin>(Expression<Predicate<T1, T2, T3, TJoin>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject
         {
             AddJoinMetedata<TJoin>(on, type);
             return new DbQuery<T1, T2, T3, TJoin>(_context);
@@ -109,7 +140,7 @@ namespace Dapper.Easies
             return this;
         }
 
-        public DbQuery<T1, T2, T3, T4, TJoin> Join<TJoin>(Expression<Predicate<T1, T2, T3, T4, TJoin>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbTable
+        public DbQuery<T1, T2, T3, T4, TJoin> Join<TJoin>(Expression<Predicate<T1, T2, T3, T4, TJoin>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject
         {
             AddJoinMetedata<TJoin>(on, type);
             return new DbQuery<T1, T2, T3, T4, TJoin>(_context);

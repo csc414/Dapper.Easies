@@ -1,0 +1,105 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Text;
+
+namespace Dapper.Easies
+{
+    public class DefaultSqlSyntax : ISqlSyntax
+    {
+        public virtual string QueryFormat(string tableName, string fields, IEnumerable<string> joins, string where, string orderBy, int skip, int take)
+        {
+            var sql = new StringBuilder($"select {fields} from {tableName}", 200);
+
+            if (joins != null)
+                sql.AppendFormat(" {0}", string.Join(" ", joins));
+
+            if (where != null)
+                sql.AppendFormat(" where {0}", where);
+
+            if (orderBy != null)
+                sql.AppendFormat(" {0}", orderBy);
+
+            return sql.ToString();
+        }
+
+        public virtual string InsertFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> paramNames, bool hasIdentityKey)
+        {
+            return $"insert into {tableName}({string.Join(", ", fields)}) values({string.Join(", ", paramNames)});";
+        }
+
+        public virtual string Join(string tableName, JoinType joinType, string on)
+        {
+            string joinWay = null;
+            switch (joinType)
+            {
+                case JoinType.Left:
+                    joinWay = "left ";
+                    break;
+                case JoinType.Right:
+                    joinWay = "right ";
+                    break;
+            }
+
+            if (on == null)
+                return $"{joinWay}join {tableName}";
+            else
+                return $"{joinWay}join {tableName} on {on}";
+        }
+
+        public virtual string EscapeTableName(string name)
+        {
+            return name;
+        }
+
+        public virtual string TableNameAlias(DbAlias alias)
+        {
+            return $"{alias.Name} {alias.Alias}";
+        }
+
+        public virtual string EscapePropertyName(string name)
+        {
+            return name;
+        }
+
+        public virtual string PropertyNameAlias(DbAlias alias)
+        {
+            return $"{alias.Name} {alias.Alias}";
+        }
+
+        public virtual string ParameterName(string name)
+        {
+            return $"@{name}";
+        }
+
+        public virtual string Operator(OperatorType operatorType)
+        {
+            switch (operatorType)
+            {
+                case OperatorType.AndAlso:
+                    return " and ";
+                case OperatorType.OrElse:
+                    return " or ";
+                case OperatorType.Equal:
+                    return " = ";
+                case OperatorType.NotEqual:
+                    return " <> ";
+                case OperatorType.GreaterThan:
+                    return " > ";
+                case OperatorType.GreaterThanOrEqual:
+                    return " >= ";
+                case OperatorType.LessThan:
+                    return " < ";
+                case OperatorType.LessThanOrEqual:
+                    return " <= ";
+                default:
+                    throw new NotImplementedException($"{(ExpressionType)operatorType}");
+            }
+        }
+
+        public virtual string OrderBy()
+        {
+            throw new NotImplementedException();
+        }
+    }
+}

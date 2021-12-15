@@ -5,9 +5,9 @@ using System.Text;
 
 namespace Dapper.Easies
 {
-    internal class JoinMetedata
+    public class JoinMetedata
     {
-        public Type DbTable { get; set; }
+        public DbObject DbObject { get; set; }
 
         public JoinType Type { get; set; }
 

@@ -4,6 +4,8 @@ using System.Text;
 
 namespace Dapper.Easies
 {
+    public delegate bool Predicate<in T>(T a);
+
     public delegate bool Predicate<in T1, in T2>(T1 a, T2 b);
 
     public delegate bool Predicate<in T1, in T2, in T3>(T1 a, T2 b, T3 c);

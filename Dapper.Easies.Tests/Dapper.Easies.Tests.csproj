@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Dapper.Easies.MySql\Dapper.Easies.MySql.csproj" />
+    <ProjectReference Include="..\Dapper.Easies.Tests.Entities\Dapper.Easies.Tests.Entities.csproj" />
   </ItemGroup>
 
 </Project>
