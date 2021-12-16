@@ -25,7 +25,20 @@ namespace Dapper.Easies
 
         public virtual string InsertFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> paramNames, bool hasIdentityKey)
         {
-            return $"insert into {tableName}({string.Join(", ", fields)}) values({string.Join(", ", paramNames)});";
+            return $"insert into {tableName}({string.Join(", ", fields)}) values({string.Join(", ", paramNames)})";
+        }
+
+        public virtual string DeleteFormat(IEnumerable<string> deleteTableAlias, string tableName, IEnumerable<string> joins, string where)
+        {
+            var sql = new StringBuilder($"delete {string.Join(",", deleteTableAlias)} from {tableName}", 200);
+
+            if (joins != null)
+                sql.AppendFormat(" {0}", string.Join(" ", joins));
+
+            if (where != null)
+                sql.AppendFormat(" where {0}", where);
+
+            return sql.ToString();
         }
 
         public virtual string Join(string tableName, JoinType joinType, string on)
@@ -64,7 +77,10 @@ namespace Dapper.Easies
 
         public virtual string PropertyNameAlias(DbAlias alias)
         {
-            return $"{alias.Name} {alias.Alias}";
+            if (alias.Name.Equals(alias.Alias, StringComparison.Ordinal))
+                return EscapePropertyName(alias.Name);
+
+            return $"{EscapePropertyName(alias.Name)} {alias.Alias}";
         }
 
         public virtual string ParameterName(string name)
@@ -97,9 +113,12 @@ namespace Dapper.Easies
             }
         }
 
-        public virtual string OrderBy()
+        public virtual string OrderBy(IEnumerable<string> orderBy, SortType orderBySortType, IEnumerable<string> thenBy, SortType? thenBySortType)
         {
-            throw new NotImplementedException();
+            if (thenBy == null)
+                return $"order by {string.Join(", ", orderBy)} {orderBySortType}";
+
+            return $"order by {string.Join(", ", orderBy)} {orderBySortType}, {string.Join(", ", thenBy)} {thenBySortType}";
         }
     }
 }

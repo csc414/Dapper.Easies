@@ -26,7 +26,7 @@ namespace Dapper.Easies
 
         public Type Type { get; }
 
-        public IEnumerable<DbProperty> Properties => _properties.Values;
+        public IEnumerable<DbProperty> Properties => _properties.Values.Where(o => !o.Ignore);
 
         public DbProperty IdentityKey { get; set; }
 
@@ -56,6 +56,8 @@ namespace Dapper.Easies
 
             public bool IdentityKey { get; set; }
 
+            public bool Ignore { get; set; }
+
             public PropertyInfo PropertyInfo { get; }
         }
 
@@ -72,8 +74,9 @@ namespace Dapper.Easies
                 {
                     var attr = p.GetCustomAttribute<DbPropertyAttribute>();
                     var property = new DbProperty(attr?.PropertyName ?? p.Name, p);
+                    property.Ignore = attr?.Ignore ?? false;
                     property.EscapeName = sqlSyntax.EscapePropertyName(property.DbName);
-                    property.EscapeNameAsAlias = property.DbName.Equals(property.PropertyInfo.Name, StringComparison.Ordinal) ? property.EscapeName : sqlSyntax.PropertyNameAlias(new DbAlias(property.EscapeName, property.PropertyInfo.Name));
+                    property.EscapeNameAsAlias = sqlSyntax.PropertyNameAlias(new DbAlias(property.DbName, property.PropertyInfo.Name));
                     obj.Add(p.Name, property);
                     if (attr != null && attr.PrimaryKey && attr.Identity && obj.IdentityKey == null)
                     {

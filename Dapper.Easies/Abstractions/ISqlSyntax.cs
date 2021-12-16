@@ -10,6 +10,8 @@ namespace Dapper.Easies
 
         string InsertFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> paramNames, bool hasIdentityKey);
 
+        string DeleteFormat(IEnumerable<string> deleteTableAlias, string tableName, IEnumerable<string> joins, string where);
+
         string EscapeTableName(string name);
 
         string TableNameAlias(DbAlias alias);
@@ -24,6 +26,6 @@ namespace Dapper.Easies
 
         string Operator(OperatorType operatorType);
 
-        string OrderBy();
+        string OrderBy(IEnumerable<string> orderBy, SortType orderBySortType, IEnumerable<string> thenBy, SortType? thenBySortType);
     }
 }

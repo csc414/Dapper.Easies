@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
 using System.Linq;
+using System.Linq.Expressions;
 
 namespace Dapper.Easies
 {
@@ -32,22 +33,52 @@ namespace Dapper.Easies
             if (entity == null)
                 throw new ArgumentNullException(nameof(entity));
 
-            var table = DbObject.Get(typeof(T));
-            var properties = table.Properties.Where(o => !o.IdentityKey);
-            var sql = _sqlSyntax.InsertFormat(table.EscapeName, properties.Select(o => o.EscapeName), properties.Select(o => _sqlSyntax.ParameterName(o.PropertyInfo.Name)), table.IdentityKey != null);
-            var parameters = new DynamicParameters(entity);
-            if (table.IdentityKey == null)
-                return await Connection.ExecuteAsync(sql, parameters) > 0;
-            else
+            var sql = _sqlConverter.ToInsertSql(entity, out var parameters, out var hasIdentity);
+            if (hasIdentity)
             {
                 var id = await Connection.ExecuteScalarAsync<long>(sql, parameters);
                 if (id > 0)
                 {
-                    table.IdentityKey.PropertyInfo.SetValue(entity, Convert.ChangeType(id, table.IdentityKey.PropertyInfo.PropertyType));
+                    var propertyInfo = DbObject.Get(typeof(T)).IdentityKey.PropertyInfo;
+                    var val = Convert.ChangeType(id, propertyInfo.PropertyType);
+                    propertyInfo.SetValue(entity, val);
                     return true;
                 }
                 return false;
             }
+            else
+                return await Connection.ExecuteAsync(sql, parameters) > 0;
+        }
+
+        public Task<int> DeleteAsync<T>() where T : IDbTable
+        {
+            return DeleteAsync(new QueryContext(this, _sqlConverter, DbObject.Get(typeof(T))));
+        }
+
+        public Task<int> DeleteAsync<T>(Expression<Predicate<T>> predicate) where T : IDbTable
+        {
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
+
+            var context = new QueryContext(this, _sqlConverter, DbObject.Get(typeof(T)));
+            context.WhereExpressions.Add(predicate);
+            return DeleteAsync(context);
+        }
+
+        public Task<int> DeleteAsync(IDbQuery query)
+        {
+            return DeleteAsync(query.Context);
+        }
+
+        public Task<int> DeleteCorrelationAsync(IDbQuery query)
+        {
+            return DeleteAsync(query.Context, true);
+        }
+
+        Task<int> DeleteAsync(QueryContext context, bool correlation = false)
+        {
+            var sql = _sqlConverter.ToDeleteSql(context, correlation, out var parameters);
+            return Connection.ExecuteAsync(sql, parameters);
         }
 
         public IDbConnection Connection => _connection ?? (_connection = _connectionFactory.Create());

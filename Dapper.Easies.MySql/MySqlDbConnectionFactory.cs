@@ -1,4 +1,5 @@
-﻿using MySqlConnector;
+﻿using Microsoft.Extensions.Options;
+using MySqlConnector;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -8,16 +9,16 @@ namespace Dapper.Easies.MySql
 {
     public class MySqlDbConnectionFactory : IDbConnectionFactory
     {
-        private readonly string _connectionString;
+        private readonly EasiesOptions _options;
 
-        public MySqlDbConnectionFactory(string connectionString)
+        public MySqlDbConnectionFactory(EasiesOptions options)
         {
-            _connectionString = connectionString;
+            _options = options;
         }
 
         public IDbConnection Create()
         {
-            return new MySqlConnection(_connectionString);
+            return new MySqlConnection(_options.ConnectionString);
         }
     }
 }

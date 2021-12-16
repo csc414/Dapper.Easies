@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 
 namespace Dapper.Easies
@@ -43,7 +44,7 @@ namespace Dapper.Easies
                 case ExpressionType.Constant:
                     return VisitConstant((ConstantExpression)exp);
                 default:
-					throw new NotSupportedException($"{exp.NodeType}");
+					throw new NotImplementedException($"{exp.NodeType}");
 			}
 		}
 
@@ -84,6 +85,25 @@ namespace Dapper.Easies
         internal virtual Expression VisitConstant(ConstantExpression c)
         {
             return c;
+        }
+
+        internal static object GetPropertyValue(Expression expression)
+        {
+            if (expression == null)
+                return null;
+
+            if (expression.NodeType == ExpressionType.Constant)
+                return ((ConstantExpression)expression).Value;
+
+            var memberExpression = (MemberExpression)expression;
+            var obj = GetPropertyValue(memberExpression.Expression);
+            if (memberExpression.Member is PropertyInfo propertyInfo)
+                return propertyInfo.GetValue(obj);
+
+            if (memberExpression.Member is FieldInfo fieldInfo)
+                return fieldInfo.GetValue(obj);
+
+            throw new NotImplementedException("Not implemented");
         }
     }
 }

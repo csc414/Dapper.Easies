@@ -13,5 +13,13 @@ namespace Dapper.Easies
 		IDbQuery<T> Query<T>() where T : IDbObject;
 
         Task<bool> InsertAsync<T>(T entity) where T : IDbTable;
+
+        Task<int> DeleteAsync<T>() where T : IDbTable;
+
+        Task<int> DeleteAsync<T>(Expression<Predicate<T>> predicate) where T : IDbTable;
+
+        Task<int> DeleteAsync(IDbQuery query);
+
+        Task<int> DeleteCorrelationAsync(IDbQuery query);
     }
 }

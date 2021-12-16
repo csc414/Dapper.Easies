@@ -38,6 +38,12 @@ namespace Dapper.Easies
 
         public ICollection<Expression> OrderExpressions => _orderExpressions ?? (_orderExpressions = new List<Expression>());
 
+        public OrderByMetedata OrderByMetedata { get; internal set; }
+
+        public OrderByMetedata ThenByMetedata { get; internal set; }
+
+        public Expression SelectorExpression { get; internal set; }
+
         public int Skip { get; set; }
 
         public int Take { get; set; }

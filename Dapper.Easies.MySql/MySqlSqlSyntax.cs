@@ -17,7 +17,7 @@ namespace Dapper.Easies.MySql
 
         public override string InsertFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> paramNames, bool hasIdentityKey)
         {
-            return $"{base.InsertFormat(tableName, fields, paramNames, hasIdentityKey)} select LAST_INSERT_ID();";
+            return $"{base.InsertFormat(tableName, fields, paramNames, hasIdentityKey)}; select LAST_INSERT_ID()";
         }
 
         public override string EscapePropertyName(string name)

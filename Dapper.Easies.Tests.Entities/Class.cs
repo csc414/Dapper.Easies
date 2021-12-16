@@ -4,6 +4,7 @@ using System.Text;
 
 namespace Dapper.Easies.Tests
 {
+    [DbObject("bnt_class")]
     public class Class : IDbTable
     {
         public Guid Id { get; set; }

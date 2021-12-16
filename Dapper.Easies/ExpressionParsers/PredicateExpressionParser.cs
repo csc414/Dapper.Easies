@@ -69,25 +69,6 @@ namespace Dapper.Easies
             return c;
         }
 
-        object GetPropertyValue(Expression expression)
-        {
-            if (expression == null)
-                return null;
-
-            if (expression.NodeType == ExpressionType.Constant)
-                return ((ConstantExpression)expression).Value;
-
-            var memberExpression = (MemberExpression)expression;
-            var obj = GetPropertyValue(memberExpression.Expression);
-            if (memberExpression.Member is PropertyInfo propertyInfo)
-                return propertyInfo.GetValue(obj);
-
-            if (memberExpression.Member is FieldInfo fieldInfo)
-                return fieldInfo.GetValue(obj);
-
-            throw new NotImplementedException("Not implemented");
-        }
-
         void AppendParameter(object value)
         {
             _sql.Append(_parameters.AddParameter(value));

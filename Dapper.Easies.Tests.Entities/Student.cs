@@ -18,5 +18,8 @@ namespace Dapper.Easies.Tests
         public int Age { get; set; }
 
         public DateTime CreateTime { get; set; }
+
+        [DbProperty(Ignore = true)]
+        public string ClassName { get; set; }
     }
 }

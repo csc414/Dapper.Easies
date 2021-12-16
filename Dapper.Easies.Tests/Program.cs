@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -11,34 +12,55 @@ namespace Dapper.Easies.Tests
         static async Task Main(string[] args)
         {
             var services = new ServiceCollection();
-            services.AddEasiesProvider(options =>
+            services.AddEasiesProvider(builder =>
             {
-                options.ConnectionString = "Host=localhost;UserName=root;Password=123456;Database=School;Port=3306;CharSet=utf8mb4;Connection Timeout=1200;Allow User Variables=true;";
-                options.AddMysql();
+                builder.DevelopmentMode();
+                builder.AddMysql("Host=localhost;UserName=root;Password=123456;Database=School;Port=3306;CharSet=utf8mb4;Connection Timeout=1200;Allow User Variables=true;");
+            });
+            services.AddLogging(builder => {
+                builder.AddConsole();
             });
             var serviceProvider = services.BuildServiceProvider();
 
             var easiesProvider = serviceProvider.GetRequiredService<IEasiesProvider>();
 
-            var student = new Student();
-            student.ClassId = Guid.NewGuid();
-            student.StudentName = "李坤";
-            student.Age = 18;
-            student.CreateTime = DateTime.Now;
+            //var cls = new Class();
+            //cls.Id = Guid.NewGuid();
+            //cls.Name = "六年二班";
+            //cls.CreateTime = DateTime.Now;
+            //await easiesProvider.InsertAsync(cls);
 
-            await easiesProvider.InsertAsync(student);
-            //var stop = Stopwatch.StartNew();
-            //await easiesProvider.InsertAsync(student);
-            //stop.Stop();
-            //Console.WriteLine("耗时：{0}", stop.ElapsedMilliseconds);
 
-            var temp = await easiesProvider.Query<Student>().Join<Class>((student, cls) => student.ClassId == cls.Id, JoinType.Left).FirstAsync();
-            
+            //var stu = new Student();
+            //stu.ClassId = cls.Id;
+            //stu.StudentName = "李坤";
+            //stu.Age = 18;
+            //stu.CreateTime = DateTime.Now;
+            //await easiesProvider.InsertAsync(stu);
+
+            var temp = await easiesProvider.Query<Student>()
+                .Join<Class>((student, cls) => student.ClassId == cls.Id)
+                .Where((stu, cls) => stu.Age == 18)
+                .OrderBy((a, b) => a.Age)
+                .ThenBy((a, b) => b.CreateTime)
+                .Select((a, b) => new { a.StudentName, ClassName = b.Name })
+                .FirstOrDefaultAsync();
+
+            var query = easiesProvider.Query<Student>()
+                .Join<Class>((student, cls) => student.ClassId == cls.Id)
+                .Where((stu, cls) => stu.Age == 18);
+            //await easiesProvider.DeleteAsync<Student>();
+            //await easiesProvider.DeleteAsync<Student>(o => o.Age == 18);
+            await easiesProvider.DeleteCorrelationAsync(query);
+
+            Console.WriteLine("{0} {1}", temp?.StudentName, temp?.ClassName);
         }
-    }
 
-    class Test
-    {
-        public Guid MyProperty { get; set; }
+        public class StudentResponse
+        {
+            public string Name { get; set; }
+
+            public string ClassName { get; set; }
+        }
     }
 }

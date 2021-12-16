@@ -10,9 +10,10 @@ namespace Dapper.Easies
 {
     public static class EasiesOptionsExtensions
     {
-        public static EasiesOptions AddMysql(this EasiesOptions options)
+        public static EasiesOptionsBuilder AddMysql(this EasiesOptionsBuilder options, string connectionString)
         {
-            options.Services.AddSingleton<IDbConnectionFactory>(new MySqlDbConnectionFactory(options.ConnectionString));
+            options.Options.ConnectionString = connectionString;
+            options.Services.AddSingleton<IDbConnectionFactory, MySqlDbConnectionFactory>();
             options.Services.Replace(new ServiceDescriptor(typeof(ISqlSyntax), typeof(MySqlSqlSyntax), ServiceLifetime.Singleton));
             return options;
         }

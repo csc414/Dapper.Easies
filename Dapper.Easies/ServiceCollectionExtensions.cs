@@ -17,13 +17,14 @@ namespace Microsoft.Extensions.DependencyInjection
             return services.AddEasiesProvider(null);
         }
 
-        public static IServiceCollection AddEasiesProvider(this IServiceCollection services, Action<EasiesOptions> optionAction)
+        public static IServiceCollection AddEasiesProvider(this IServiceCollection services, Action<EasiesOptionsBuilder> builderAction)
         {
-            var options = new EasiesOptions(services);
-            optionAction?.Invoke(options);
-            services.Add(new ServiceDescriptor(typeof(IEasiesProvider), typeof(DefaultEasiesProvider), options.Lifetime));
+            var builder = new EasiesOptionsBuilder(services);
+            builderAction?.Invoke(builder);
+            services.Add(new ServiceDescriptor(typeof(IEasiesProvider), typeof(DefaultEasiesProvider), builder.Lifetime));
             services.AddSingleton<ISqlConverter, DefaultSqlConverter>();
-            if (!options.Services.Any(o => o.ServiceType == typeof(ISqlSyntax)))
+            services.AddSingleton(builder.Options);
+            if (!services.Any(o => o.ServiceType == typeof(ISqlSyntax)))
                 services.AddSingleton<ISqlSyntax, DefaultSqlSyntax>();
 
             return services;

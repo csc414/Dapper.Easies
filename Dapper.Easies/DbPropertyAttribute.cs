@@ -28,5 +28,10 @@ namespace Dapper.Easies
         /// 是否自增长，在 PrimaryKey 等于 true 的情况下才生效
         /// </summary>
         public bool Identity { get; set; }
+
+        /// <summary>
+        /// 忽略该字段
+        /// </summary>
+        public bool Ignore { get; set; }
     }
 }
