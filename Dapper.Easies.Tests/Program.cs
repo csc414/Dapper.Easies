@@ -15,7 +15,7 @@ namespace Dapper.Easies.Tests
             services.AddEasiesProvider(builder =>
             {
                 builder.DevelopmentMode();
-                builder.AddMysql("Host=localhost;UserName=root;Password=123456;Database=School;Port=3306;CharSet=utf8mb4;Connection Timeout=1200;Allow User Variables=true;");
+                builder.UseMySql("Host=localhost;UserName=root;Password=123456;Database=School;Port=3306;CharSet=utf8mb4;Connection Timeout=1200;Allow User Variables=true;");
             });
             services.AddLogging(builder => {
                 builder.AddConsole();
