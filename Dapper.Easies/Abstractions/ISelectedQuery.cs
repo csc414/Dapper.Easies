@@ -11,5 +11,7 @@ namespace Dapper.Easies
         Task<T> FirstAsync();
 
         Task<T> FirstOrDefaultAsync();
+
+        Task<IEnumerable<T>> QueryAsync();
     }
 }

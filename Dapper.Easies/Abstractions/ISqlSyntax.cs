@@ -6,11 +6,13 @@ namespace Dapper.Easies
 {
     public interface ISqlSyntax
     {
-        string QueryFormat(string tableName, string fields, IEnumerable<string> joins, string where, string orderBy, int skip, int take);
+        string QueryFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> joins, string where, string orderBy, int skip, int take);
 
         string InsertFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> paramNames, bool hasIdentityKey);
 
-        string DeleteFormat(IEnumerable<string> deleteTableAlias, string tableName, IEnumerable<string> joins, string where);
+        string DeleteFormat(string tableName, IEnumerable<string> deleteTableAlias, IEnumerable<string> joins, string where);
+
+        string UpdateFormat(string tableName, IEnumerable<string> updateFields, string where);
 
         string EscapeTableName(string name);
 

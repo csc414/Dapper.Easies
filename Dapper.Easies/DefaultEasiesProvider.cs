@@ -15,15 +15,12 @@ namespace Dapper.Easies
 
         private readonly ISqlConverter _sqlConverter;
 
-        private readonly ISqlSyntax _sqlSyntax;
-
         private IDbConnection _connection;
 
-        public DefaultEasiesProvider(IDbConnectionFactory connectionFactory, ISqlConverter sqlConverter, ISqlSyntax sqlSyntax)
+        public DefaultEasiesProvider(IDbConnectionFactory connectionFactory, ISqlConverter sqlConverter)
         {
             _connectionFactory = connectionFactory;
             _sqlConverter = sqlConverter;
-            _sqlSyntax = sqlSyntax;
         }
 
         public IDbQuery<T> Query<T>() where T : IDbObject => new DbQuery<T>(new QueryContext(this, _sqlConverter, DbObject.Get(typeof(T))));
@@ -50,18 +47,12 @@ namespace Dapper.Easies
                 return await Connection.ExecuteAsync(sql, parameters) > 0;
         }
 
-        public Task<int> DeleteAsync<T>() where T : IDbTable
+        public Task<int> DeleteAsync<T>(Expression<Predicate<T>> predicate = null) where T : IDbTable
         {
-            return DeleteAsync(new QueryContext(this, _sqlConverter, DbObject.Get(typeof(T))));
-        }
-
-        public Task<int> DeleteAsync<T>(Expression<Predicate<T>> predicate) where T : IDbTable
-        {
-            if (predicate == null)
-                throw new ArgumentNullException(nameof(predicate));
-
             var context = new QueryContext(this, _sqlConverter, DbObject.Get(typeof(T)));
-            context.WhereExpressions.Add(predicate);
+            if (predicate != null)
+                context.WhereExpressions.Add(predicate);
+
             return DeleteAsync(context);
         }
 
@@ -78,6 +69,22 @@ namespace Dapper.Easies
         Task<int> DeleteAsync(QueryContext context, bool correlation = false)
         {
             var sql = _sqlConverter.ToDeleteSql(context, correlation, out var parameters);
+            return Connection.ExecuteAsync(sql, parameters);
+        }
+
+        public Task<int> UpdateAsync<T>(Expression<Func<T>> updateFields, Expression<Predicate<T>> predicate = null) where T : IDbTable
+        {
+            var context = new QueryContext(this, _sqlConverter, DbObject.Get(typeof(T)));
+            if (predicate != null)
+                context.WhereExpressions.Add(predicate);
+
+            var sql = _sqlConverter.ToUpdateFieldsSql(updateFields, context, out var parameters);
+            return Connection.ExecuteAsync(sql, parameters);
+        }
+
+        public Task<int> UpdateAsync<T>(T entity) where T : IDbTable
+        {
+            var sql = _sqlConverter.ToUpdateSql(entity, out var parameters);
             return Connection.ExecuteAsync(sql, parameters);
         }
 

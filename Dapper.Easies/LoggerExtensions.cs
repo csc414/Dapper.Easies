@@ -9,15 +9,26 @@ namespace Dapper.Easies
 {
     public static class LoggerExtensions
     {
-        internal static void LogQuerySql(this ILogger logger, string sql, DynamicParameters parameters)
+        internal static void LogParametersSql(this ILogger logger, string sql, DynamicParameters parameters)
         {
             IParameterLookup parameterLookup = parameters;
-            logger.LogInformation($"Dapper.Easies Generate Sql：{Environment.NewLine}{string.Join(Environment.NewLine, parameters.ParameterNames.Select(name => $"set @{name} = {parameterLookup[name]};"))}{Environment.NewLine}{sql};");
+            logger.LogInformation($"Generated Sql：{Environment.NewLine}{string.Join(Environment.NewLine, parameters.ParameterNames.Select(name => $"set @{name} = {GetValue(parameterLookup[name])};"))}{Environment.NewLine}{sql};");
         }
 
-        internal static void LogInsertSql(this ILogger logger, string sql)
+        static string GetValue(object val)
         {
-            logger.LogInformation($"Dapper.Easies Generate Sql：{Environment.NewLine}{sql};");
+            if (val == null)
+                return "null";
+
+            if (val.GetType() == typeof(string))
+                return $"\"{val}\"";
+
+            return val.ToString();
+        }
+
+        internal static void LogSql(this ILogger logger, string sql)
+        {
+            logger.LogInformation($"Generated Sql：{Environment.NewLine}{sql};");
         }
     }
 }

@@ -28,7 +28,7 @@ namespace Dapper.Easies
         {
             var dbObject = DbObject.Get(typeof(TJoin));
             if (!_context.Alias.TryAdd(dbObject.Type, new DbAlias(dbObject.EscapeName, $"t{_context.Alias.Count}")))
-                throw new ArgumentException($"Already join {dbObject.Type.Name}.");
+                throw new ArgumentException($"请勿重复连接表 {dbObject.Type.Name}.");
 
             _context.JoinMetedatas.Add(new JoinMetedata { DbObject = dbObject, JoinExpression = joinExpression, Type = type });
         }
@@ -50,16 +50,25 @@ namespace Dapper.Easies
             _context.ThenByMetedata = new OrderByMetedata(orderFields, sortType);
         }
 
-        public Task<T> FirstAsync<T>()
+        protected Task<int> CountAsync(Expression field)
         {
-            _context.Take = 1;
-            return _context.Connection.QueryFirstAsync<T>(_context.Converter.ToQuerySql(_context, out var parameters), parameters);
+            return _context.Connection.ExecuteScalarAsync<int>(_context.Converter.ToQuerySql(_context, out var parameters, aggregateInfo: new AggregateInfo(AggregateType.Count, field)), parameters);
         }
 
-        public Task<T> FirstOrDefaultAsync<T>()
+        protected Task<TResult> MaxAsync<TResult>(Expression field)
         {
-            _context.Take = 1;
-            return _context.Connection.QueryFirstOrDefaultAsync<T>(_context.Converter.ToQuerySql(_context, out var parameters), parameters);
+            if (field == null)
+                throw new ArgumentException("字段不能为空");
+
+            return _context.Connection.ExecuteScalarAsync<TResult>(_context.Converter.ToQuerySql(_context, out var parameters, aggregateInfo: new AggregateInfo(AggregateType.Max, field)), parameters);
+        }
+
+        protected Task<TResult> MinAsync<TResult>(Expression field)
+        {
+            if (field == null)
+                throw new ArgumentException("字段不能为空");
+
+            return _context.Connection.ExecuteScalarAsync<TResult>(_context.Converter.ToQuerySql(_context, out var parameters, aggregateInfo: new AggregateInfo(AggregateType.Min, field)), parameters);
         }
     }
 
@@ -111,13 +120,24 @@ namespace Dapper.Easies
 
         public Task<T> FirstAsync()
         {
-            return FirstAsync<T>();
+            return _context.Connection.QueryFirstAsync<T>(_context.Converter.ToQuerySql(_context, out var parameters, take: 1), parameters);
         }
 
         public Task<T> FirstOrDefaultAsync()
         {
-            return FirstOrDefaultAsync<T>();
+            return _context.Connection.QueryFirstOrDefaultAsync<T>(_context.Converter.ToQuerySql(_context, out var parameters, take: 1), parameters);
         }
+
+        public Task<IEnumerable<T>> QueryAsync()
+        {
+            return _context.Connection.QueryAsync<T>(_context.Converter.ToQuerySql(_context, out var parameters), parameters);
+        }
+
+        public Task<int> CountAsync(Expression<Func<T, object>> field) => base.CountAsync(field);
+
+        public Task<TResult> MaxAsync<TResult>(Expression<Func<T, TResult>> field) => base.MaxAsync<TResult>(field);
+
+        public Task<TResult> MinAsync<TResult>(Expression<Func<T, TResult>> field) => base.MinAsync<TResult>(field);
     }
 
     public class DbQuery<T1, T2> : DbQuery<T1>, IDbQuery<T1, T2>, IOrderedDbQuery<T1, T2>
@@ -136,7 +156,7 @@ namespace Dapper.Easies
             return new DbQuery<TResult>(_context);
         }
 
-        public DbQuery<T1, T2, TJoin> Join<TJoin>(Expression<Predicate<T1, T2, TJoin>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject
+        public IDbQuery<T1, T2, TJoin> Join<TJoin>(Expression<Predicate<T1, T2, TJoin>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject
         {
             AddJoinMetedata<TJoin>(on, type);
             return new DbQuery<T1, T2, TJoin>(_context);
@@ -165,50 +185,164 @@ namespace Dapper.Easies
             SetThenBy(orderFields, SortType.Desc);
             return this;
         }
+
+        public Task<int> CountAsync(Expression<Func<T1, T2, object>> field) => base.CountAsync(field);
+
+        public Task<TResult> MaxAsync<TResult>(Expression<Func<T1, T2, TResult>> field) => base.MaxAsync<TResult>(field);
+
+        public Task<TResult> MinAsync<TResult>(Expression<Func<T1, T2, TResult>> field) => base.MinAsync<TResult>(field);
     }
 
-    public class DbQuery<T1, T2, T3> : DbQuery<T1, T2>
+    public class DbQuery<T1, T2, T3> : DbQuery<T1, T2>, IDbQuery<T1, T2, T3>, IOrderedDbQuery<T1, T2, T3>
     {
         internal DbQuery(QueryContext context) : base(context) { }
 
-        public DbQuery<T1, T2, T3> Where(Expression<Predicate<T1, T2, T3>> predicate)
+        public IDbQuery<T1, T2, T3> Where(Expression<Predicate<T1, T2, T3>> predicate)
         {
             AddWhereExpression(predicate);
             return this;
         }
 
-        public DbQuery<T1, T2, T3, TJoin> Join<TJoin>(Expression<Predicate<T1, T2, T3, TJoin>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject
+        public ISelectedQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        public IDbQuery<T1, T2, T3, TJoin> Join<TJoin>(Expression<Predicate<T1, T2, T3, TJoin>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject
         {
             AddJoinMetedata<TJoin>(on, type);
             return new DbQuery<T1, T2, T3, TJoin>(_context);
         }
+
+        public IOrderedDbQuery<T1, T2, T3> OrderBy(params Expression<Func<T1, T2, T3, object>>[] orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public IOrderedDbQuery<T1, T2, T3> OrderByDescending(params Expression<Func<T1, T2, T3, object>>[] orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public IOrderedDbQuery<T1, T2, T3> ThenBy(params Expression<Func<T1, T2, T3, object>>[] orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public IOrderedDbQuery<T1, T2, T3> ThenByDescending(params Expression<Func<T1, T2, T3, object>>[] orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public Task<int> CountAsync(Expression<Func<T1, T2, T3, object>> field) => base.CountAsync(field);
+
+        public Task<TResult> MaxAsync<TResult>(Expression<Func<T1, T2, T3, TResult>> field) => base.MaxAsync<TResult>(field);
+
+        public Task<TResult> MinAsync<TResult>(Expression<Func<T1, T2, T3, TResult>> field) => base.MinAsync<TResult>(field);
     }
 
-    public class DbQuery<T1, T2, T3, T4> : DbQuery<T1, T2, T3>
+    public class DbQuery<T1, T2, T3, T4> : DbQuery<T1, T2, T3>, IDbQuery<T1, T2, T3, T4>, IOrderedDbQuery<T1, T2, T3, T4>
     {
         internal DbQuery(QueryContext context) : base(context) { }
 
-        public DbQuery<T1, T2, T3, T4> Where(Expression<Predicate<T1, T2, T3, T4>> predicate)
+        public IDbQuery<T1, T2, T3, T4> Where(Expression<Predicate<T1, T2, T3, T4>> predicate)
         {
             AddWhereExpression(predicate);
             return this;
         }
 
-        public DbQuery<T1, T2, T3, T4, TJoin> Join<TJoin>(Expression<Predicate<T1, T2, T3, T4, TJoin>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject
+        public ISelectedQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, T4, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        public IDbQuery<T1, T2, T3, T4, TJoin> Join<TJoin>(Expression<Predicate<T1, T2, T3, T4, TJoin>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject
         {
             AddJoinMetedata<TJoin>(on, type);
             return new DbQuery<T1, T2, T3, T4, TJoin>(_context);
         }
+
+        public IOrderedDbQuery<T1, T2, T3, T4> OrderBy(params Expression<Func<T1, T2, T3, T4, object>>[] orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public IOrderedDbQuery<T1, T2, T3, T4> OrderByDescending(params Expression<Func<T1, T2, T3, T4, object>>[] orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public IOrderedDbQuery<T1, T2, T3, T4> ThenBy(params Expression<Func<T1, T2, T3, T4, object>>[] orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public IOrderedDbQuery<T1, T2, T3, T4> ThenByDescending(params Expression<Func<T1, T2, T3, T4, object>>[] orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public Task<int> CountAsync(Expression<Func<T1, T2, T3, T4, object>> field) => base.CountAsync(field);
+
+        public Task<TResult> MaxAsync<TResult>(Expression<Func<T1, T2, T3, T4, TResult>> field) => base.MaxAsync<TResult>(field);
+
+        public Task<TResult> MinAsync<TResult>(Expression<Func<T1, T2, T3, T4, TResult>> field) => base.MinAsync<TResult>(field);
     }
 
-    public class DbQuery<T1, T2, T3, T4, T5> : DbQuery<T1, T2, T3, T4>
+    public class DbQuery<T1, T2, T3, T4, T5> : DbQuery<T1, T2, T3, T4>, IDbQuery<T1, T2, T3, T4, T5>, IOrderedDbQuery<T1, T2, T3, T4, T5>
     {
         internal DbQuery(QueryContext context) : base(context) { }
 
-        public DbQuery<T1, T2, T3, T4, T5> Where(Expression<Predicate<T1, T2, T3, T4, T5>> predicate)
+        public IDbQuery<T1, T2, T3, T4, T5> Where(Expression<Predicate<T1, T2, T3, T4, T5>> predicate)
         {
             AddWhereExpression(predicate);
             return this;
         }
+
+        public ISelectedQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        public IOrderedDbQuery<T1, T2, T3, T4, T5> OrderBy(params Expression<Func<T1, T2, T3, T4, T5, object>>[] orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public IOrderedDbQuery<T1, T2, T3, T4, T5> OrderByDescending(params Expression<Func<T1, T2, T3, T4, T5, object>>[] orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public IOrderedDbQuery<T1, T2, T3, T4, T5> ThenBy(params Expression<Func<T1, T2, T3, T4, T5, object>>[] orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public IOrderedDbQuery<T1, T2, T3, T4, T5> ThenByDescending(params Expression<Func<T1, T2, T3, T4, T5, object>>[] orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public Task<int> CountAsync(Expression<Func<T1, T2, T3, T4, T5, object>> field) => base.CountAsync(field);
+
+        public Task<TResult> MaxAsync<TResult>(Expression<Func<T1, T2, T3, T4, T5, TResult>> field) => base.MaxAsync<TResult>(field);
+
+        public Task<TResult> MinAsync<TResult>(Expression<Func<T1, T2, T3, T4, T5, TResult>> field) => base.MinAsync<TResult>(field);
     }
 }

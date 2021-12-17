@@ -19,6 +19,8 @@ namespace Dapper.Easies
 
         private HashSet<string> _lambdaParameters;
 
+        private int _i = 0;
+
         internal PredicateExpressionParser(ISqlSyntax sqlSyntax, ParameterBuilder parameterBuilder)
         {
             _sqlSyntax = sqlSyntax;
@@ -47,9 +49,26 @@ namespace Dapper.Easies
 
         internal override Expression VisitBinary(BinaryExpression b)
         {
+            var condition = b.NodeType != ExpressionType.AndAlso && b.NodeType != ExpressionType.OrElse;
+
             Visit(b.Left);
             _sql.Append(_sqlSyntax.Operator((OperatorType)b.NodeType));
             Visit(b.Right);
+
+            void Visit(Expression exp)
+            {
+                var hasBracket = _i > 0 && exp is BinaryExpression;
+                if (hasBracket)
+                    _sql.Append("(");
+                if (condition)
+                    _i++;
+                this.Visit(exp);
+                if (condition)
+                    _i--;
+                if (hasBracket)
+                    _sql.Append(")");
+            }
+
             return b;
         }
 

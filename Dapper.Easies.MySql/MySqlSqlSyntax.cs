@@ -6,7 +6,7 @@ namespace Dapper.Easies.MySql
 {
     public class MySqlSqlSyntax : DefaultSqlSyntax
     {
-        public override string QueryFormat(string tableName, string fields, IEnumerable<string> joins, string where, string orderBy, int skip, int take)
+        public override string QueryFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> joins, string where, string orderBy, int skip, int take)
         {
             var sql = base.QueryFormat(tableName, fields, joins, where, orderBy, skip, take);
             if (take > 0)

@@ -7,9 +7,9 @@ namespace Dapper.Easies
 {
     public class DefaultSqlSyntax : ISqlSyntax
     {
-        public virtual string QueryFormat(string tableName, string fields, IEnumerable<string> joins, string where, string orderBy, int skip, int take)
+        public virtual string QueryFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> joins, string where, string orderBy, int skip, int take)
         {
-            var sql = new StringBuilder($"select {fields} from {tableName}", 200);
+            var sql = new StringBuilder($"select {string.Join(", ", fields)} from {tableName}", 200);
 
             if (joins != null)
                 sql.AppendFormat(" {0}", string.Join(" ", joins));
@@ -28,12 +28,22 @@ namespace Dapper.Easies
             return $"insert into {tableName}({string.Join(", ", fields)}) values({string.Join(", ", paramNames)})";
         }
 
-        public virtual string DeleteFormat(IEnumerable<string> deleteTableAlias, string tableName, IEnumerable<string> joins, string where)
+        public virtual string DeleteFormat(string tableName, IEnumerable<string> deleteTableAlias, IEnumerable<string> joins, string where)
         {
-            var sql = new StringBuilder($"delete {string.Join(",", deleteTableAlias)} from {tableName}", 200);
+            var sql = new StringBuilder($"delete {string.Join(", ", deleteTableAlias)} from {tableName}", 200);
 
             if (joins != null)
                 sql.AppendFormat(" {0}", string.Join(" ", joins));
+
+            if (where != null)
+                sql.AppendFormat(" where {0}", where);
+
+            return sql.ToString();
+        }
+
+        public virtual string UpdateFormat(string tableName, IEnumerable<string> updateFields, string where)
+        {
+            var sql = new StringBuilder($"update {tableName} set {string.Join(", ", updateFields)}", 200);
 
             if (where != null)
                 sql.AppendFormat(" where {0}", where);
@@ -108,6 +118,14 @@ namespace Dapper.Easies
                     return " < ";
                 case OperatorType.LessThanOrEqual:
                     return " <= ";
+                case OperatorType.Add:
+                    return " + ";
+                case OperatorType.Subtract:
+                    return " - ";
+                case OperatorType.Multiply:
+                    return " * ";
+                case OperatorType.Divide:
+                    return " / ";
                 default:
                     throw new NotImplementedException($"{(ExpressionType)operatorType}");
             }

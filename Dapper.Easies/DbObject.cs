@@ -54,6 +54,8 @@ namespace Dapper.Easies
 
             public string EscapeNameAsAlias { get; internal set; }
 
+            public bool PrimaryKey { get; set; }
+
             public bool IdentityKey { get; set; }
 
             public bool Ignore { get; set; }
@@ -74,6 +76,7 @@ namespace Dapper.Easies
                 {
                     var attr = p.GetCustomAttribute<DbPropertyAttribute>();
                     var property = new DbProperty(attr?.PropertyName ?? p.Name, p);
+                    property.PrimaryKey = attr?.PrimaryKey ?? false;
                     property.Ignore = attr?.Ignore ?? false;
                     property.EscapeName = sqlSyntax.EscapePropertyName(property.DbName);
                     property.EscapeNameAsAlias = sqlSyntax.PropertyNameAlias(new DbAlias(property.DbName, property.PropertyInfo.Name));

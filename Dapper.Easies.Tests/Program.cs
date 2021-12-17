@@ -33,27 +33,43 @@ namespace Dapper.Easies.Tests
 
             //var stu = new Student();
             //stu.ClassId = cls.Id;
-            //stu.StudentName = "李坤";
+            //stu.StudentName = "李坤1";
             //stu.Age = 18;
             //stu.CreateTime = DateTime.Now;
             //await easiesProvider.InsertAsync(stu);
 
-            var temp = await easiesProvider.Query<Student>()
+            var student = await easiesProvider.Query<Student>().Where(o => o.Id == 2).FirstOrDefaultAsync();
+            student.Age = 19;
+
+            var count = await easiesProvider.Query<Student>()
                 .Join<Class>((student, cls) => student.ClassId == cls.Id)
-                .Where((stu, cls) => stu.Age == 18)
                 .OrderBy((a, b) => a.Age)
                 .ThenBy((a, b) => b.CreateTime)
-                .Select((a, b) => new { a.StudentName, ClassName = b.Name })
-                .FirstOrDefaultAsync();
+                .MinAsync((a,b) => a.Age);
+
+            var temps = await easiesProvider.Query<Student>()
+                .Join<Class>((student, cls) => student.ClassId == cls.Id)
+                .OrderBy((a, b) => a.Age)
+                .ThenBy((a, b) => b.CreateTime)
+                .Select((a, b) => new { Name = a.StudentName, ClassName = b.Name })
+                .QueryAsync();
+
+            foreach (var item in temps)
+            {
+                Console.WriteLine("{0} {1}", item.Name, item.ClassName);
+            }
 
             var query = easiesProvider.Query<Student>()
                 .Join<Class>((student, cls) => student.ClassId == cls.Id)
                 .Where((stu, cls) => stu.Age == 18);
+
+            await easiesProvider.UpdateAsync(student);
+            await easiesProvider.UpdateAsync(() => new Student { Age = student.Age }, o => o.Id == 2);
+           
             //await easiesProvider.DeleteAsync<Student>();
             //await easiesProvider.DeleteAsync<Student>(o => o.Age == 18);
-            await easiesProvider.DeleteCorrelationAsync(query);
-
-            Console.WriteLine("{0} {1}", temp?.StudentName, temp?.ClassName);
+            //await easiesProvider.DeleteAsync(query);
+            //await easiesProvider.DeleteCorrelationAsync(query);
         }
 
         public class StudentResponse
