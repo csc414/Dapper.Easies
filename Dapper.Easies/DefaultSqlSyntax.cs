@@ -131,6 +131,8 @@ namespace Dapper.Easies
                     return " IS NULL";
                 case OperatorType.NotEqualNull:
                     return " IS NOT NULL";
+                case OperatorType.Not:
+                    return "NOT ";
                 default:
                     return null;
             }

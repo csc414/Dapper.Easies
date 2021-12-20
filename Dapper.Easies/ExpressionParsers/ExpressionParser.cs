@@ -41,6 +41,9 @@ namespace Dapper.Easies
                 case ExpressionType.LeftShift:
                 case ExpressionType.ExclusiveOr:
                     return VisitBinary((BinaryExpression)exp);
+                case ExpressionType.Convert:
+                case ExpressionType.Not:
+                    return VisitUnary((UnaryExpression)exp);
                 case ExpressionType.MemberAccess:
                     return VisitMemberAccess((MemberExpression)exp);
                 case ExpressionType.Constant:
@@ -75,6 +78,16 @@ namespace Dapper.Easies
             }
 
             return b;
+        }
+
+        internal virtual Expression VisitUnary(UnaryExpression u)
+        {
+            Expression operand = Visit(u.Operand);
+            if (operand != u.Operand)
+            {
+                return Expression.MakeUnary(u.NodeType, operand, u.Type, u.Method);
+            }
+            return u;
         }
 
         internal virtual Expression VisitMethodCall(MethodCallExpression m)

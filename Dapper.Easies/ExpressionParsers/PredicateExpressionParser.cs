@@ -81,6 +81,25 @@ namespace Dapper.Easies
             return b;
         }
 
+        internal override Expression VisitUnary(UnaryExpression u)
+        {
+            if (u.NodeType == ExpressionType.Convert)
+            {
+                AppendParameter(GetValue(u.Operand));
+                return u;
+            }
+
+            var operatorType = (OperatorType)u.NodeType;
+            var operatorStr = _sqlSyntax.Operator(operatorType);
+            if (operatorStr == null)
+                throw new NotImplementedException($"ExpressionType：{(ExpressionType)operatorType}");
+            _sql.Append(operatorStr);
+            _i++;
+            Visit(u.Operand);
+            _i--;
+            return u;
+        }
+
         internal override Expression VisitMemberAccess(MemberExpression m)
         {
             if (m.Expression is ParameterExpression)
