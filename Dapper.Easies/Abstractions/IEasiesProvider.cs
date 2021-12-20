@@ -10,7 +10,9 @@ namespace Dapper.Easies
 {
     public interface IEasiesProvider : IConnection
     {
-		IDbQuery<T> Query<T>() where T : IDbObject;
+        IDbQuery<T> Query<T>() where T : IDbObject;
+
+        Task<T> GetAsync<T>(params object[] ids) where T : IDbTable;
 
         Task<bool> InsertAsync<T>(T entity) where T : IDbTable;
 

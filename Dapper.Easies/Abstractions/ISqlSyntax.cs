@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 
 namespace Dapper.Easies
 {
     public interface ISqlSyntax
     {
-        string QueryFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> joins, string where, string orderBy, int skip, int take);
+        string SelectFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> joins, string where, string orderBy, int skip, int take);
 
         string InsertFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> paramNames, bool hasIdentityKey);
 
@@ -29,5 +30,7 @@ namespace Dapper.Easies
         string Operator(OperatorType operatorType);
 
         string OrderBy(IEnumerable<string> orderBy, SortType orderBySortType, IEnumerable<string> thenBy, SortType? thenBySortType);
+
+        string Method(MethodInfo method, string field, object[] args, ParameterBuilder parameter);
     }
 }

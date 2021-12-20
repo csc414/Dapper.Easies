@@ -9,6 +9,8 @@ namespace Dapper.Easies
     {
         string ToQuerySql(QueryContext context, out DynamicParameters parameters, int? take = null, AggregateInfo aggregateInfo = null);
 
+        string ToGetSql<T>(object[] ids, out DynamicParameters parameters);
+
         string ToInsertSql<T>(T entity, out DynamicParameters parameters, out bool hasIdentityKey);
 
         string ToDeleteSql(QueryContext context, bool correlation, out DynamicParameters parameters);

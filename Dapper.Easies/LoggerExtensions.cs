@@ -12,7 +12,7 @@ namespace Dapper.Easies
         internal static void LogParametersSql(this ILogger logger, string sql, DynamicParameters parameters)
         {
             IParameterLookup parameterLookup = parameters;
-            logger.LogInformation($"Generated Sql：{Environment.NewLine}{string.Join(Environment.NewLine, parameters.ParameterNames.Select(name => $"set @{name} = {GetValue(parameterLookup[name])};"))}{Environment.NewLine}{sql};");
+            logger.LogInformation($"Generated Sql：{Environment.NewLine}{string.Join(Environment.NewLine, parameters.ParameterNames.Select(name => $"SET @{name} = {GetValue(parameterLookup[name])};"))}{Environment.NewLine}{sql};");
         }
 
         static string GetValue(object val)
@@ -20,8 +20,12 @@ namespace Dapper.Easies
             if (val == null)
                 return "null";
 
-            if (val.GetType() == typeof(string))
+            var t = val.GetType();
+            if (t == typeof(string))
                 return $"\"{val}\"";
+
+            if (t.IsArray)
+                return $"{string.Join(", ", (object[])val)}";
 
             return val.ToString();
         }

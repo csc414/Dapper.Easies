@@ -1,21 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 
 namespace Dapper.Easies
 {
     public class DefaultSqlSyntax : ISqlSyntax
     {
-        public virtual string QueryFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> joins, string where, string orderBy, int skip, int take)
+        public virtual string SelectFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> joins, string where, string orderBy, int skip, int take)
         {
-            var sql = new StringBuilder($"select {string.Join(", ", fields)} from {tableName}", 200);
+            var sql = new StringBuilder($"SELECT {string.Join(", ", fields)} FROM {tableName}");
 
             if (joins != null)
                 sql.AppendFormat(" {0}", string.Join(" ", joins));
 
             if (where != null)
-                sql.AppendFormat(" where {0}", where);
+                sql.AppendFormat(" WHERE {0}", where);
 
             if (orderBy != null)
                 sql.AppendFormat(" {0}", orderBy);
@@ -25,28 +26,28 @@ namespace Dapper.Easies
 
         public virtual string InsertFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> paramNames, bool hasIdentityKey)
         {
-            return $"insert into {tableName}({string.Join(", ", fields)}) values({string.Join(", ", paramNames)})";
+            return $"INSERT INTO {tableName}({string.Join(", ", fields)}) VALUES({string.Join(", ", paramNames)})";
         }
 
         public virtual string DeleteFormat(string tableName, IEnumerable<string> deleteTableAlias, IEnumerable<string> joins, string where)
         {
-            var sql = new StringBuilder($"delete {string.Join(", ", deleteTableAlias)} from {tableName}", 200);
+            var sql = new StringBuilder($"DELETE {string.Join(", ", deleteTableAlias)} FROM {tableName}", 200);
 
             if (joins != null)
                 sql.AppendFormat(" {0}", string.Join(" ", joins));
 
             if (where != null)
-                sql.AppendFormat(" where {0}", where);
+                sql.AppendFormat(" WHERE {0}", where);
 
             return sql.ToString();
         }
 
         public virtual string UpdateFormat(string tableName, IEnumerable<string> updateFields, string where)
         {
-            var sql = new StringBuilder($"update {tableName} set {string.Join(", ", updateFields)}", 200);
+            var sql = new StringBuilder($"UPDATE {tableName} SET {string.Join(", ", updateFields)}", 200);
 
             if (where != null)
-                sql.AppendFormat(" where {0}", where);
+                sql.AppendFormat(" WHERE {0}", where);
 
             return sql.ToString();
         }
@@ -57,17 +58,17 @@ namespace Dapper.Easies
             switch (joinType)
             {
                 case JoinType.Left:
-                    joinWay = "left ";
+                    joinWay = "LEFT ";
                     break;
                 case JoinType.Right:
-                    joinWay = "right ";
+                    joinWay = "RIGHT ";
                     break;
             }
 
             if (on == null)
-                return $"{joinWay}join {tableName}";
+                return $"{joinWay}JOIN {tableName}";
             else
-                return $"{joinWay}join {tableName} on {on}";
+                return $"{joinWay}JOIN {tableName} ON {on}";
         }
 
         public virtual string EscapeTableName(string name)
@@ -103,9 +104,9 @@ namespace Dapper.Easies
             switch (operatorType)
             {
                 case OperatorType.AndAlso:
-                    return " and ";
+                    return " AND ";
                 case OperatorType.OrElse:
-                    return " or ";
+                    return " OR ";
                 case OperatorType.Equal:
                     return " = ";
                 case OperatorType.NotEqual:
@@ -126,17 +127,34 @@ namespace Dapper.Easies
                     return " * ";
                 case OperatorType.Divide:
                     return " / ";
+                case OperatorType.EqualNull:
+                    return " IS NULL";
+                case OperatorType.NotEqualNull:
+                    return " IS NOT NULL";
                 default:
-                    throw new NotImplementedException($"{(ExpressionType)operatorType}");
+                    return null;
             }
         }
 
         public virtual string OrderBy(IEnumerable<string> orderBy, SortType orderBySortType, IEnumerable<string> thenBy, SortType? thenBySortType)
         {
             if (thenBy == null)
-                return $"order by {string.Join(", ", orderBy)} {orderBySortType}";
+                return $"ORDER BY {string.Join(", ", orderBy)} {orderBySortType}";
 
-            return $"order by {string.Join(", ", orderBy)} {orderBySortType}, {string.Join(", ", thenBy)} {thenBySortType}";
+            return $"ORDER BY {string.Join(", ", orderBy)} {orderBySortType}, {string.Join(", ", thenBy)} {thenBySortType}";
+        }
+
+        public virtual string Method(MethodInfo method, string field, object[] args, ParameterBuilder parameter)
+        {
+            switch (method.Name)
+            {
+                case "Like":
+                    return $"{field} LIKE {parameter.AddParameter(args[0])}";
+                case "In":
+                    return $"{field} IN {parameter.AddParameter(args[0])}";
+                default:
+                    return null;
+            }
         }
     }
 }

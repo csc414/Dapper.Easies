@@ -25,6 +25,12 @@ namespace Dapper.Easies
 
         public IDbQuery<T> Query<T>() where T : IDbObject => new DbQuery<T>(new QueryContext(this, _sqlConverter, DbObject.Get(typeof(T))));
 
+        public Task<T> GetAsync<T>(params object[] ids) where T : IDbTable
+        {
+            var sql = _sqlConverter.ToGetSql<T>(ids, out var parameters);
+            return Connection.QueryFirstOrDefaultAsync<T>(sql, parameters);
+        }
+
         public async Task<bool> InsertAsync<T>(T entity) where T : IDbTable
         {
             if (entity == null)

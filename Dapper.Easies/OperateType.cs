@@ -17,6 +17,10 @@ namespace Dapper.Easies
         GreaterThan = 15,
         GreaterThanOrEqual = 16,
         LessThan = 20,
-        LessThanOrEqual = 21
+        LessThanOrEqual = 21,
+
+        //自定义
+        EqualNull = 100,
+        NotEqualNull = 101
     }
 }

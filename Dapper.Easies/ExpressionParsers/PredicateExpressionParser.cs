@@ -17,8 +17,6 @@ namespace Dapper.Easies
 
         private ParameterBuilder _parameters;
 
-        private HashSet<string> _lambdaParameters;
-
         private int _i = 0;
 
         internal PredicateExpressionParser(ISqlSyntax sqlSyntax, ParameterBuilder parameterBuilder)
@@ -35,7 +33,6 @@ namespace Dapper.Easies
             Clear();
             _context = context;
             _sql = new StringBuilder();
-            _lambdaParameters = ((LambdaExpression)exp).Parameters.Select(o => o.Name).ToHashSet();
             Visit(exp);
             return _sql.ToString();
         }
@@ -44,17 +41,29 @@ namespace Dapper.Easies
         {
             _context = null;
             _sql = null;
-            _lambdaParameters = null;
         }
 
         internal override Expression VisitBinary(BinaryExpression b)
         {
             var condition = b.NodeType != ExpressionType.AndAlso && b.NodeType != ExpressionType.OrElse;
-
+            var operatorType = (OperatorType)b.NodeType;
             Visit(b.Left);
-            _sql.Append(_sqlSyntax.Operator((OperatorType)b.NodeType));
-            Visit(b.Right);
-
+            if ((operatorType == OperatorType.Equal || operatorType == OperatorType.NotEqual) && b.Right is ConstantExpression constant && constant.Value == null)
+            {
+                var operatorStr = _sqlSyntax.Operator(operatorType == OperatorType.Equal ? OperatorType.EqualNull : OperatorType.NotEqualNull);
+                if (operatorStr == null)
+                    throw new NotImplementedException($"ExpressionType：{(ExpressionType)operatorType}");
+                _sql.Append(operatorStr);
+            }
+            else
+            {
+                var operatorStr = _sqlSyntax.Operator(operatorType);
+                if(operatorStr == null)
+                    throw new NotImplementedException($"ExpressionType：{(ExpressionType)operatorType}");
+                _sql.Append(operatorStr);
+                Visit(b.Right);
+            }
+            
             void Visit(Expression exp)
             {
                 var hasBracket = _i > 0 && exp is BinaryExpression;
@@ -74,10 +83,32 @@ namespace Dapper.Easies
 
         internal override Expression VisitMemberAccess(MemberExpression m)
         {
-            if (m.Expression is ParameterExpression parameter && _lambdaParameters.Contains(parameter.Name))
+            if (m.Expression is ParameterExpression)
                 _sql.AppendFormat("{0}.{1}", _context.Alias[m.Member.ReflectedType].Alias, DbObject.Get(m.Member.ReflectedType)[m.Member.Name].EscapeName);
             else
-                AppendParameter(GetPropertyValue(m));
+                AppendParameter(GetValue(m));
+
+            return m;
+        }
+
+        internal override Expression VisitMethodCall(MethodCallExpression m)
+        {
+            if (m.Method.IsStatic && typeof(DbFunction).IsAssignableFrom(m.Method.ReflectedType))
+            {
+                if (m.Arguments[0] is MemberExpression member && member.Expression is ParameterExpression)
+                {
+                    var field = string.Format("{0}.{1}", _context.Alias[member.Member.ReflectedType].Alias, DbObject.Get(member.Member.ReflectedType)[member.Member.Name].EscapeName);
+                    var args = m.Arguments.Skip(1).Select(o => GetValue(o));
+                    var result = _sqlSyntax.Method(m.Method, field, args.ToArray(), _parameters);
+                    if (result == null)
+                        throw new NotImplementedException($"MethodName：{m.Method.Name}");
+                    _sql.Append(result);
+                }
+                else
+                    throw new ArgumentException("自定义方法第一个字段必须是实体参数");
+            }
+            else
+                AppendParameter(GetValue(m));
 
             return m;
         }

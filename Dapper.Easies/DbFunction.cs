@@ -6,7 +6,12 @@ namespace Dapper.Easies
 {
     public class DbFunction
     {
-        public static bool Like(object val, string format)
+        public static bool Like<T>(T field, string text)
+        {
+            throw new InvalidOperationException("Do not directly call this method.");
+        }
+
+        public static bool In<T>(T field, IEnumerable<T> array)
         {
             throw new InvalidOperationException("Do not directly call this method.");
         }

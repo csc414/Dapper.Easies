@@ -15,11 +15,16 @@ namespace Dapper.Easies.Tests
         [DbProperty("Name")]
         public string StudentName { get; set; }
 
-        public int Age { get; set; }
+        public int? Age { get; set; }
 
         public DateTime CreateTime { get; set; }
 
         [DbProperty(Ignore = true)]
         public string ClassName { get; set; }
+
+        public string Change(string aa)
+        {
+            return aa;
+        }
     }
 }

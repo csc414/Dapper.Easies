@@ -38,11 +38,11 @@ namespace Dapper.Easies.Tests
             //stu.CreateTime = DateTime.Now;
             //await easiesProvider.InsertAsync(stu);
 
-            var student = await easiesProvider.Query<Student>().Where(o => o.Id == 2).FirstOrDefaultAsync();
+            var student = await easiesProvider.GetAsync<Student>(2);
             student.Age = 19;
-
             var count = await easiesProvider.Query<Student>()
                 .Join<Class>((student, cls) => student.ClassId == cls.Id)
+                .Where((a, b) => a.Age != null && DbFunction.In(a.StudentName, new[] { "123", "456" }))
                 .OrderBy((a, b) => a.Age)
                 .ThenBy((a, b) => b.CreateTime)
                 .MinAsync((a,b) => a.Age);
