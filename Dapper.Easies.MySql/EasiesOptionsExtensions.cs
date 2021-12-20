@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Dapper.Easies
+namespace Microsoft.Extensions.DependencyInjection
 {
     public static class EasiesOptionsExtensions
     {

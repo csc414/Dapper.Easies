@@ -21,10 +21,5 @@ namespace Dapper.Easies.Tests
 
         [DbProperty(Ignore = true)]
         public string ClassName { get; set; }
-
-        public string Change(string aa)
-        {
-            return aa;
-        }
     }
 }

@@ -64,7 +64,7 @@ namespace Dapper.Easies
                 1);
             parameters = dynamicParameters;
             if (_options.DevelopmentMode)
-                _logger?.LogSql(sql);
+                _logger?.LogParametersSql(sql, parameters);
             return sql;
         }
 
