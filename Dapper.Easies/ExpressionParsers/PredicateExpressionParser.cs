@@ -17,7 +17,7 @@ namespace Dapper.Easies
 
         private ParameterBuilder _parameters;
 
-        private int _i = 0;
+        private int _binaryDeep = 0;
 
         internal PredicateExpressionParser(ISqlSyntax sqlSyntax, ParameterBuilder parameterBuilder)
         {
@@ -43,104 +43,141 @@ namespace Dapper.Easies
             _sql = null;
         }
 
-        internal override Expression VisitBinary(BinaryExpression b)
+        internal override ParserData VisitLambda(LambdaExpression lambda)
         {
-            var condition = b.NodeType != ExpressionType.AndAlso && b.NodeType != ExpressionType.OrElse;
-            var operatorType = (OperatorType)b.NodeType;
-            Visit(b.Left);
-            if ((operatorType == OperatorType.Equal || operatorType == OperatorType.NotEqual) && b.Right is ConstantExpression constant && constant.Value == null)
+            AppendSql(Visit(lambda.Body));
+            return ParserData.Empty;
+        }
+
+        internal override ParserData VisitBinary(BinaryExpression b)
+        {
+            if (b.NodeType == ExpressionType.Coalesce || b.NodeType == ExpressionType.ArrayIndex)
+                return CreateConstant(GetValue(b), b);
+
+            PrivateVisit(b.Left);
+            if ((b.NodeType == ExpressionType.Equal || b.NodeType == ExpressionType.NotEqual) && b.Right is ConstantExpression constant && constant.Value == null)
             {
-                var operatorStr = _sqlSyntax.Operator(operatorType == OperatorType.Equal ? OperatorType.EqualNull : OperatorType.NotEqualNull);
+                var operatorStr = _sqlSyntax.Operator(b.NodeType == ExpressionType.Equal ? OperatorType.EqualNull : OperatorType.NotEqualNull);
                 if (operatorStr == null)
-                    throw new NotImplementedException($"ExpressionType：{(ExpressionType)operatorType}");
+                    throw new NotImplementedException($"ExpressionType：{b.NodeType}");
                 _sql.Append(operatorStr);
             }
             else
             {
-                var operatorStr = _sqlSyntax.Operator(operatorType);
-                if(operatorStr == null)
-                    throw new NotImplementedException($"ExpressionType：{(ExpressionType)operatorType}");
+                var operatorStr = _sqlSyntax.Operator((OperatorType)b.NodeType);
+                if (operatorStr == null)
+                    throw new NotImplementedException($"ExpressionType：{b.NodeType}");
                 _sql.Append(operatorStr);
-                Visit(b.Right);
+                PrivateVisit(b.Right);
             }
-            
-            void Visit(Expression exp)
+
+            void PrivateVisit(Expression exp)
             {
-                var hasBracket = _i > 0 && exp is BinaryExpression;
+                var condition = b.NodeType != ExpressionType.AndAlso && b.NodeType != ExpressionType.OrElse;
+                var hasBracket = _binaryDeep > 0 && exp is BinaryExpression;
                 if (hasBracket)
                     _sql.Append("(");
                 if (condition)
-                    _i++;
-                this.Visit(exp);
+                    _binaryDeep++;
+                var data = Visit(exp);
+                AppendSql(data);
                 if (condition)
-                    _i--;
+                    _binaryDeep--;
                 if (hasBracket)
                     _sql.Append(")");
             }
 
-            return b;
+            return ParserData.Empty;
         }
 
-        internal override Expression VisitUnary(UnaryExpression u)
-        {
-            if (u.NodeType == ExpressionType.Convert)
-            {
-                AppendParameter(GetValue(u.Operand));
-                return u;
-            }
-
-            var operatorType = (OperatorType)u.NodeType;
-            var operatorStr = _sqlSyntax.Operator(operatorType);
-            if (operatorStr == null)
-                throw new NotImplementedException($"ExpressionType：{(ExpressionType)operatorType}");
-            _sql.Append(operatorStr);
-            _i++;
-            Visit(u.Operand);
-            _i--;
-            return u;
-        }
-
-        internal override Expression VisitMemberAccess(MemberExpression m)
+        internal override ParserData VisitMemberAccess(MemberExpression m)
         {
             if (m.Expression is ParameterExpression)
-                _sql.AppendFormat("{0}.{1}", _context.Alias[m.Member.ReflectedType].Alias, DbObject.Get(m.Member.ReflectedType)[m.Member.Name].EscapeName);
+                return CreateParserData(ParserDataType.Property, DbObject.Get(m.Member.ReflectedType)[m.Member.Name], m);
             else
-                AppendParameter(GetValue(m));
+            {
+                var parserData = Visit(m.Expression);
+                if (parserData.Type == ParserDataType.Constant)
+                {
+                    if (m.Member is PropertyInfo propertyInfo)
+                        return CreateParserData(ParserDataType.Constant, propertyInfo.GetValue(parserData.Value));
 
-            return m;
+                    if (m.Member is FieldInfo fieldInfo)
+                        return CreateParserData(ParserDataType.Constant, fieldInfo.GetValue(parserData.Value));
+                }
+            }
+
+            return ParserData.Empty;
         }
 
-        internal override Expression VisitMethodCall(MethodCallExpression m)
+        internal override ParserData VisitConstant(ConstantExpression c)
+        {
+            return CreateConstant(c.Value, c);
+        }
+
+        internal override ParserData VisitUnary(UnaryExpression u)
+        {
+            if (u.NodeType == ExpressionType.Convert)
+                return Visit(u.Operand);
+
+            if (u.NodeType == ExpressionType.ArrayLength)
+            {
+                var array = (Array)GetValue(u.Operand);
+                return CreateConstant(array.Length, u);
+            }
+
+            if (u.NodeType == ExpressionType.Not)
+            {
+                _sql.Append(_sqlSyntax.Operator(OperatorType.Not));
+                _sql.Append("(");
+                AppendSql(Visit(u.Operand));
+                _sql.Append(")");
+            }
+
+            return ParserData.Empty;
+        }
+
+        internal override ParserData VisitMethodCall(MethodCallExpression m)
         {
             if (m.Method.IsStatic && typeof(DbFunction).IsAssignableFrom(m.Method.ReflectedType))
             {
-                if (m.Arguments[0] is MemberExpression member && member.Expression is ParameterExpression)
+                var data = Visit(m.Arguments[0]);
+                if (data.Type == ParserDataType.Property)
                 {
-                    var field = string.Format("{0}.{1}", _context.Alias[member.Member.ReflectedType].Alias, DbObject.Get(member.Member.ReflectedType)[member.Member.Name].EscapeName);
+                    var property = (DbObject.DbProperty)data.Value;
                     var args = m.Arguments.Skip(1).Select(o => GetValue(o));
-                    var result = _sqlSyntax.Method(m.Method, field, args.ToArray(), _parameters);
+                    var result = _sqlSyntax.Method(m.Method, GetTablePropertyAlias(property), args.ToArray(), _parameters);
                     if (result == null)
                         throw new NotImplementedException($"MethodName：{m.Method.Name}");
                     _sql.Append(result);
+                    return ParserData.Empty;
                 }
                 else
                     throw new ArgumentException("自定义方法第一个字段必须是实体参数");
             }
-            else
-                AppendParameter(GetValue(m));
 
-            return m;
+            return CreateConstant(GetValue(m), m);
         }
 
-        internal override Expression VisitConstant(ConstantExpression c)
+        void AppendSql(ParserData data)
         {
-            AppendParameter(c.Value);
-            return c;
+            switch (data.Type)
+            {
+                case ParserDataType.Property:
+                    {
+                        var property = (DbObject.DbProperty)data.Value;
+                        _sql.Append(GetTablePropertyAlias(property));
+                    }
+                    break;
+                case ParserDataType.Constant:
+                    _sql.Append(_parameters.AddParameter(data.Value));
+                    break;
+            }
         }
 
-        void AppendParameter(object value)
+        string GetTablePropertyAlias(DbObject.DbProperty property)
         {
-            _sql.Append(_parameters.AddParameter(value));
+            return string.Format("{0}.{1}", _context.Alias[property.PropertyInfo.ReflectedType].Alias, property.EscapeName);
         }
     }
 }

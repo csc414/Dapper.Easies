@@ -169,11 +169,11 @@ namespace Dapper.Easies
                         var field = "*";
                         if (aggregateInfo.Expression != null)
                             field = GetPropertyName(aggregateInfo.Expression, context);
-                        return new[] { $"count({field})" };
+                        return new[] { $"COUNT({field})" };
                     case AggregateType.Max:
-                        return new[] { $"max({GetPropertyName(aggregateInfo.Expression, context)})" };
+                        return new[] { $"MAX({GetPropertyName(aggregateInfo.Expression, context)})" };
                     case AggregateType.Min:
-                        return new[] { $"min({ GetPropertyName(aggregateInfo.Expression, context)})" };
+                        return new[] { $"MIN({ GetPropertyName(aggregateInfo.Expression, context)})" };
                     default:
                         throw new NotImplementedException($"AggregateType：{aggregateInfo.Type}");
                 }

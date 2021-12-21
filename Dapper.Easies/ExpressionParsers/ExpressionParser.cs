@@ -10,12 +10,17 @@ namespace Dapper.Easies
 {
 	internal abstract class ExpressionParser
 	{
-        internal Expression Visit(Expression exp)
+        private int _deep = 0;
+
+        internal ParserData Visit(Expression exp)
 		{
-			switch (exp.NodeType)
-			{
-				case ExpressionType.Lambda:
-					return VisitLambda((LambdaExpression)exp);
+            ParserData data;
+            _deep++;
+            switch (exp.NodeType)
+            {
+                case ExpressionType.Lambda:
+                    data = VisitLambda((LambdaExpression)exp);
+                    break;
                 case ExpressionType.Add:
                 case ExpressionType.AddChecked:
                 case ExpressionType.Subtract:
@@ -37,108 +42,81 @@ namespace Dapper.Easies
                 case ExpressionType.NotEqual:
                 case ExpressionType.Coalesce:
                 case ExpressionType.ArrayIndex:
-                case ExpressionType.RightShift:
-                case ExpressionType.LeftShift:
-                case ExpressionType.ExclusiveOr:
-                    return VisitBinary((BinaryExpression)exp);
+                    data = VisitBinary((BinaryExpression)exp);
+                    break;
+                case ExpressionType.ArrayLength:
                 case ExpressionType.Convert:
                 case ExpressionType.Not:
-                    return VisitUnary((UnaryExpression)exp);
+                    data = VisitUnary((UnaryExpression)exp);
+                    break;
                 case ExpressionType.MemberAccess:
-                    return VisitMemberAccess((MemberExpression)exp);
+                    data = VisitMemberAccess((MemberExpression)exp);
+                    break;
                 case ExpressionType.Constant:
-                    return VisitConstant((ConstantExpression)exp);
+                    data = VisitConstant((ConstantExpression)exp);
+                    break;
                 case ExpressionType.Call:
-                    return VisitMethodCall((MethodCallExpression)exp);
+                    data = VisitMethodCall((MethodCallExpression)exp);
+                    break;
                 default:
-					throw new NotImplementedException($"{exp.NodeType}");
-			}
-		}
+                    throw new NotImplementedException($"{exp.NodeType}");
+            }
+            _deep--;
+            return data;
+        }
 
-        internal virtual Expression VisitLambda(LambdaExpression lambda)
+        internal virtual ParserData VisitLambda(LambdaExpression lambda)
 		{
-            Expression body = Visit(lambda.Body);
-            if (body != lambda.Body)
-                return Expression.Lambda(lambda.Type, body, lambda.Parameters);
-
-            return lambda;
+            Visit(lambda.Body);
+            return ParserData.Empty;
 		}
 
-        internal virtual Expression VisitBinary(BinaryExpression b)
+        internal virtual ParserData VisitBinary(BinaryExpression b)
         {
-            Expression left = Visit(b.Left);
-            Expression right = Visit(b.Right);
-            Expression conversion = Visit(b.Conversion);
-            if (left != b.Left || right != b.Right || conversion != b.Conversion)
-            {
-                if (b.NodeType == ExpressionType.Coalesce && b.Conversion != null)
-                    return Expression.Coalesce(left, right, conversion as LambdaExpression);
-                else
-                    return Expression.MakeBinary(b.NodeType, left, right, b.IsLiftedToNull, b.Method);
-            }
-
-            return b;
+            return ParserData.Empty;
         }
 
-        internal virtual Expression VisitUnary(UnaryExpression u)
+        internal virtual ParserData VisitUnary(UnaryExpression u)
         {
-            Expression operand = Visit(u.Operand);
-            if (operand != u.Operand)
-            {
-                return Expression.MakeUnary(u.NodeType, operand, u.Type, u.Method);
-            }
-            return u;
+            return ParserData.Empty;
         }
 
-        internal virtual Expression VisitMethodCall(MethodCallExpression m)
+        internal virtual ParserData VisitMethodCall(MethodCallExpression m)
         {
-            Expression obj = Visit(m.Object);
-            IEnumerable<Expression> args = VisitExpressionList(m.Arguments);
-            if (obj != m.Object || args != m.Arguments)
-            {
-                return Expression.Call(obj, m.Method, args);
-            }
-            return m;
+            return ParserData.Empty;
         }
 
-        internal virtual ReadOnlyCollection<Expression> VisitExpressionList(ReadOnlyCollection<Expression> original)
+        internal virtual ParserData VisitMemberAccess(MemberExpression m)
         {
-            List<Expression> list = null;
-            for (int i = 0, n = original.Count; i < n; i++)
-            {
-                Expression p = Visit(original[i]);
-                if (list != null)
-                {
-                    list.Add(p);
-                }
-                else if (p != original[i])
-                {
-                    list = new List<Expression>(n);
-                    for (int j = 0; j < i; j++)
-                    {
-                        list.Add(original[j]);
-                    }
-                    list.Add(p);
-                }
-            }
-            if (list != null)
-                return new ReadOnlyCollection<Expression>(list);
-            return original;
+            return ParserData.Empty;
         }
 
-        internal virtual Expression VisitMemberAccess(MemberExpression m)
+        internal virtual ParserData VisitConstant(ConstantExpression c)
         {
-            Expression exp = Visit(m.Expression);
-            if (exp != m.Expression)
-                return Expression.MakeMemberAccess(exp, m.Member);
-
-            return m;
+            return ParserData.Empty;
         }
 
-        internal virtual Expression VisitConstant(ConstantExpression c)
+        protected ParserData CreateConstant(object value)
         {
-            return c;
+            return CreateConstant(value, null);
         }
+
+        protected ParserData CreateConstant(object value, Expression expression)
+        {
+            return CreateParserData(ParserDataType.Constant, value, expression);
+        }
+
+        protected ParserData CreateParserData(ParserDataType type, object value)
+        {
+            return CreateParserData(type, value, null);
+        }
+
+        protected ParserData CreateParserData(ParserDataType type, object value, Expression expression)
+        {
+            return new ParserData(type, value, expression) { Deep = _deep };
+        }
+
+        protected int GetDeep() => _deep;
 
         internal static object GetValue(Expression expression)
         {
@@ -175,8 +153,59 @@ namespace Dapper.Easies
                     ary[i] = args[i];
                 return ary;
             }
-            
+
+            if (expression is BinaryExpression binaryExpression)
+            {
+                switch (expression.NodeType)
+                {
+                    case ExpressionType.Coalesce:
+                        {
+                            var value = GetValue(binaryExpression.Left);
+                            if (value == null)
+                                value = GetValue(binaryExpression.Right);
+                            return value;
+                        }
+                    case ExpressionType.ArrayIndex:
+                        {
+                            var array = (Array)GetValue(binaryExpression.Left);
+                            var index = (long)Convert.ChangeType(GetValue(binaryExpression.Right), typeof(long));
+                            return array.GetValue(index);
+                        }
+                }
+
+            }
             throw new NotImplementedException($"NodeType：{expression.NodeType}");
         }
+    }
+
+    public enum ParserDataType
+    {
+        Empty,
+        Property,
+        Constant
+    }
+
+    public class ParserData
+    {
+        public static ParserData Empty = new ParserData(ParserDataType.Empty, null);
+
+        public ParserData(ParserDataType type, object value)
+        {
+            Type = type;
+            Value = value;
+        }
+
+        public ParserData(ParserDataType type, object value, Expression expression) : this(type, value)
+        {
+            Expression = expression;
+        }
+
+        public int Deep { get; internal set; }
+
+        public Expression Expression { get; }
+
+        public ParserDataType Type { get; }
+
+        public object Value { get; }
     }
 }

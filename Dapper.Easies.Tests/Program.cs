@@ -37,12 +37,12 @@ namespace Dapper.Easies.Tests
             //stu.Age = 18;
             //stu.CreateTime = DateTime.Now;
             //await easiesProvider.InsertAsync(stu);
-
+            var ary = new[] { 1, 2, 3 };
             var student = await easiesProvider.GetAsync<Student>(2);
-            student.Age = 19;
+            student.Age = null;
             var count = await easiesProvider.Query<Student>()
                 .Join<Class>((student, cls) => student.ClassId == cls.Id)
-                .Where((a, b) => a.IsOk && !(a.Age != 18) && DbFunction.In(a.StudentName, new[] { "123", "456" }))
+                .Where((a, b) => a.Age == (student.Age ?? 5) && !a.IsOk && !(a.Age != 18) && (a.Age == (a.Age + 2) * 3) && DbFunction.In(a.StudentName, new[] { "123", "456" }))
                 .OrderBy((a, b) => a.Age)
                 .ThenBy((a, b) => b.CreateTime)
                 .MinAsync((a,b) => a.Age);
