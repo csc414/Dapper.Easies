@@ -154,6 +154,8 @@ namespace Dapper.Easies
                     return $"{field} LIKE {parameter.AddParameter(args[0])}";
                 case "In":
                     return $"{field} IN {parameter.AddParameter(args[0])}";
+                case "NotIn":
+                    return $"{field} NOT IN {parameter.AddParameter(args[0])}";
                 default:
                     return null;
             }

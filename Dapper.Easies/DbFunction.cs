@@ -15,5 +15,10 @@ namespace Dapper.Easies
         {
             throw new InvalidOperationException("Do not directly call this method.");
         }
+
+        public static bool NotIn<T>(T field, IEnumerable<T> array)
+        {
+            throw new InvalidOperationException("Do not directly call this method.");
+        }
     }
 }

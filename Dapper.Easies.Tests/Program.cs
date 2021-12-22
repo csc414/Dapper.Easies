@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -38,11 +39,12 @@ namespace Dapper.Easies.Tests
             //stu.CreateTime = DateTime.Now;
             //await easiesProvider.InsertAsync(stu);
             var ary = new[] { 1, 2, 3 };
+            var ls = new List<string> { "123", "456" };
             var student = await easiesProvider.GetAsync<Student>(2);
             student.Age = null;
             var count = await easiesProvider.Query<Student>()
-                .Join<Class>((student, cls) => student.ClassId == cls.Id)
-                .Where((a, b) => a.Age == (student.Age ?? 5) && !a.IsOk && !(a.Age != 18) && (a.Age == (a.Age + 2) * 3) && DbFunction.In(a.StudentName, new[] { "123", "456" }))
+                .Join<Class>((student, cls) => student.ClassId == (Guid?)Guid.NewGuid())
+                .Where((a, b) => !a.IsOk && !(a.Age != 18) && (a.Age == (a.Age + 2) * 3) && DbFunction.In(a.StudentName, ls))
                 .OrderBy((a, b) => a.Age)
                 .ThenBy((a, b) => b.CreateTime)
                 .MinAsync((a,b) => a.Age);

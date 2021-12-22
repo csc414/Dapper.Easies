@@ -21,11 +21,11 @@ namespace Dapper.Easies
                 return "null";
 
             var t = val.GetType();
-            if (t == typeof(string))
+            if (t == typeof(string) || typeof(Guid).IsAssignableFrom(t))
                 return $"\"{val}\"";
-
-            if (t.IsArray)
-                return $"{string.Join(", ", (object[])val)}";
+            
+            if (val is System.Collections.IEnumerable ls)
+                return $"{string.Join(", ", ls.Cast<object>())}";
 
             return val.ToString();
         }
