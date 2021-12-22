@@ -96,18 +96,18 @@ namespace Dapper.Easies
                 return CreateParserData(ParserDataType.Property, DbObject.Get(m.Member.ReflectedType)[m.Member.Name], m);
             else
             {
-                var parserData = Visit(m.Expression);
-                if (parserData.Type == ParserDataType.Constant)
-                {
-                    if (m.Member is PropertyInfo propertyInfo)
-                        return CreateParserData(ParserDataType.Constant, propertyInfo.GetValue(parserData.Value));
+                ParserData parserData = null;
+                if (m.Expression != null)
+                    parserData = Visit(m.Expression);
 
-                    if (m.Member is FieldInfo fieldInfo)
-                        return CreateParserData(ParserDataType.Constant, fieldInfo.GetValue(parserData.Value));
-                }
+                if (m.Member is PropertyInfo propertyInfo)
+                    return CreateParserData(ParserDataType.Constant, propertyInfo.GetValue(parserData?.Value));
+
+                if (m.Member is FieldInfo fieldInfo)
+                    return CreateParserData(ParserDataType.Constant, fieldInfo.GetValue(parserData?.Value));
+
+                throw new NotImplementedException($"ExpressionType：{m.NodeType}");
             }
-
-            return ParserData.Empty;
         }
 
         internal override ParserData VisitConstant(ConstantExpression c)

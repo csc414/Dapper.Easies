@@ -43,7 +43,7 @@ namespace Dapper.Easies.Tests
             var student = await easiesProvider.GetAsync<Student>(2);
             student.Age = null;
             var count = await easiesProvider.Query<Student>()
-                .Join<Class>((student, cls) => student.ClassId == (Guid?)Guid.NewGuid())
+                .Join<Class>((student, cls) => student.ClassId == Guid.Empty)
                 .Where((a, b) => !a.IsOk && !(a.Age != 18) && (a.Age == (a.Age + 2) * 3) && DbFunction.In(a.StudentName, ls))
                 .OrderBy((a, b) => a.Age)
                 .ThenBy((a, b) => b.CreateTime)
