@@ -5,9 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 
+[assembly: InternalsVisibleTo("Dapper.Easies.Tests")]
 namespace Microsoft.Extensions.DependencyInjection
 {
     public static class ServiceCollectionExtensions

@@ -17,7 +17,7 @@ namespace Dapper.Easies.Tests
 
         public int? Age { get; set; }
 
-        public bool IsOk { get; set; }
+        public bool IsHandsome { get; set; }
 
         public DateTime CreateTime { get; set; }
 

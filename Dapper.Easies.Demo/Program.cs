@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Dapper.Easies.Tests
+namespace Dapper.Easies.Demo
 {
     class Program
     {

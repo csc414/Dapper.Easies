@@ -57,7 +57,7 @@ namespace Dapper.Easies
         {
             var context = new QueryContext(this, _sqlConverter, DbObject.Get(typeof(T)));
             if (predicate != null)
-                context.WhereExpressions.Add(predicate);
+                context.AddWhere(predicate);
 
             return DeleteAsync(context);
         }
@@ -82,7 +82,7 @@ namespace Dapper.Easies
         {
             var context = new QueryContext(this, _sqlConverter, DbObject.Get(typeof(T)));
             if (predicate != null)
-                context.WhereExpressions.Add(predicate);
+                context.AddWhere(predicate);
 
             var sql = _sqlConverter.ToUpdateFieldsSql(updateFields, context, out var parameters);
             return Connection.ExecuteAsync(sql, parameters);

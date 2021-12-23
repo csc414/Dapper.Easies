@@ -154,7 +154,7 @@ namespace Dapper.Easies
 
         string GetPredicate(QueryContext context, PredicateExpressionParser parser)
         {
-            if (context.WhereExpressions.Count > 0)
+            if (context.WhereExpressions.Any())
                 return string.Join(_sqlSyntax.Operator(OperatorType.AndAlso), context.WhereExpressions.Select(o => parser.ToSql(o, context)));
             return null;
         }
@@ -228,7 +228,7 @@ namespace Dapper.Easies
                 return fields;
             }
 
-            if (context.JoinMetedatas.Count > 0)
+            if (context.JoinMetedatas.Any())
                 return new[] { $"{context.Alias[context.DbObject.Type].Alias}.*" };
             else
             {
@@ -276,7 +276,7 @@ namespace Dapper.Easies
 
         IEnumerable<string> GetJoins(QueryContext context, PredicateExpressionParser parser)
         {
-            if (context.JoinMetedatas.Count > 0)
+            if (context.JoinMetedatas.Any())
                 return context.JoinMetedatas.Select(o => _sqlSyntax.Join(_sqlSyntax.TableNameAlias(context.Alias[o.DbObject.Type]), o.Type, parser.ToSql(o.JoinExpression, context)));
             return null;
         }

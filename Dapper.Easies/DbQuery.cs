@@ -21,16 +21,12 @@ namespace Dapper.Easies
 
         protected void AddWhereExpression(Expression whereExpression)
         {
-            _context.WhereExpressions.Add(whereExpression);
+            _context.AddWhere(whereExpression);
         }
 
         protected void AddJoinMetedata<TJoin>(Expression joinExpression, JoinType type)
         {
-            var dbObject = DbObject.Get(typeof(TJoin));
-            if (!_context.Alias.TryAdd(dbObject.Type, new DbAlias(dbObject.EscapeName, $"t{_context.Alias.Count}")))
-                throw new ArgumentException($"请勿重复连接表 {dbObject.Type.Name}.");
-
-            _context.JoinMetedatas.Add(new JoinMetedata { DbObject = dbObject, JoinExpression = joinExpression, Type = type });
+            _context.AddJoin(typeof(TJoin), joinExpression, type);
         }
 
         protected void SetOrderBy<TField>(IEnumerable<Expression> orderFields, SortType sortType)

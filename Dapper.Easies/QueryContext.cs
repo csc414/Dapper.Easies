@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 
@@ -22,8 +23,6 @@ namespace Dapper.Easies
 
         private ICollection<Expression> _whereExpressions;
 
-        private ICollection<Expression> _orderExpressions;
-
         public DbObject DbObject { get; }
 
         public IDictionary<Type, DbAlias> Alias { get; }
@@ -32,11 +31,9 @@ namespace Dapper.Easies
 
         public IDbConnection Connection => _connection.Connection;
 
-        public ICollection<JoinMetedata> JoinMetedatas => _joinMetedatas ?? (_joinMetedatas = new List<JoinMetedata>());
+        public IEnumerable<JoinMetedata> JoinMetedatas => _joinMetedatas ?? Enumerable.Empty<JoinMetedata>();
 
-        public ICollection<Expression> WhereExpressions => _whereExpressions ?? (_whereExpressions = new List<Expression>());
-
-        public ICollection<Expression> OrderExpressions => _orderExpressions ?? (_orderExpressions = new List<Expression>());
+        public IEnumerable<Expression> WhereExpressions => _whereExpressions ?? Enumerable.Empty<Expression>();
 
         public OrderByMetedata OrderByMetedata { get; internal set; }
 
@@ -47,5 +44,25 @@ namespace Dapper.Easies
         public int Skip { get; set; }
 
         public int Take { get; set; }
+
+        public void AddJoin(Type joinType, Expression joinExpression, JoinType type)
+        {
+            var dbObject = DbObject.Get(joinType);
+            if (!Alias.TryAdd(dbObject.Type, new DbAlias(dbObject.EscapeName, $"t{Alias.Count}")))
+                throw new ArgumentException($"请勿重复连接表 {dbObject.Type.Name}.");
+
+            if (_joinMetedatas == null)
+                _joinMetedatas = new List<JoinMetedata>();
+
+            _joinMetedatas.Add(new JoinMetedata { DbObject = dbObject, JoinExpression = joinExpression, Type = type });
+        }
+
+        public void AddWhere(Expression whereExpression)
+        {
+            if (_whereExpressions == null)
+                _whereExpressions = new List<Expression>();
+
+            _whereExpressions.Add(whereExpression);
+        }
     }
 }

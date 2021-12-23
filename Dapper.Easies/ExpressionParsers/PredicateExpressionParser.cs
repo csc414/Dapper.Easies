@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Dapper.Easies
 {
     internal class PredicateExpressionParser : ExpressionParser
     {
+        private static readonly HashSet<ExpressionType> _expressionTypes = new HashSet<ExpressionType> { ExpressionType.AndAlso, ExpressionType.OrElse };
+
         private readonly ISqlSyntax _sqlSyntax;
 
         private QueryContext _context;
@@ -74,15 +77,15 @@ namespace Dapper.Easies
             void PrivateVisit(Expression exp)
             {
                 var condition = b.NodeType != ExpressionType.AndAlso && b.NodeType != ExpressionType.OrElse;
-                var hasBracket = _binaryDeep > 0 && exp is BinaryExpression;
+                var hasBracket = (_binaryDeep > 0 && exp is BinaryExpression) || (!condition && exp is BinaryExpression binary && binary.NodeType == ExpressionType.OrElse);
                 if (hasBracket)
                     _sql.Append("(");
                 if (condition)
                     _binaryDeep++;
                 var data = Visit(exp);
-                AppendSql(data);
                 if (condition)
                     _binaryDeep--;
+                AppendSql(data);
                 if (hasBracket)
                     _sql.Append(")");
             }
