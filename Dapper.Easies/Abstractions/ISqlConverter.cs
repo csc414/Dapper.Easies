@@ -13,6 +13,8 @@ namespace Dapper.Easies
 
         string ToInsertSql<T>(T entity, out DynamicParameters parameters, out bool hasIdentityKey);
 
+        string ToDeleteSql<T>(T entity, out DynamicParameters parameters);
+
         string ToDeleteSql(QueryContext context, bool correlation, out DynamicParameters parameters);
 
         string ToUpdateSql<T>(T entity, out DynamicParameters parameters);

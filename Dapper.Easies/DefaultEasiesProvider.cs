@@ -53,6 +53,15 @@ namespace Dapper.Easies
                 return await Connection.ExecuteAsync(sql, parameters) > 0;
         }
 
+        public Task<int> DeleteAsync<T>(T entity) where T : IDbTable
+        {
+            if (entity == null)
+                throw new ArgumentNullException(nameof(entity));
+
+            var sql = _sqlConverter.ToDeleteSql(entity, out var parameters);
+            return Connection.ExecuteAsync(sql, parameters);
+        }
+
         public Task<int> DeleteAsync<T>(Expression<Predicate<T>> predicate = null) where T : IDbTable
         {
             var context = new QueryContext(this, _sqlConverter, DbObject.Get(typeof(T)));

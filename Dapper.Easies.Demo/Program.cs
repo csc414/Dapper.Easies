@@ -25,12 +25,12 @@ namespace Dapper.Easies.Demo
 
             var easiesProvider = serviceProvider.GetRequiredService<IEasiesProvider>();
 
-            //var cls = new Class();
-            //cls.Id = Guid.NewGuid();
-            //cls.Name = "六年二班";
-            //cls.CreateTime = DateTime.Now;
-            //await easiesProvider.InsertAsync(cls);
-
+            var cls = new Class();
+            cls.Id = Guid.NewGuid();
+            cls.Name = "六年二班";
+            cls.CreateTime = DateTime.Now;
+            await easiesProvider.InsertAsync(cls);
+            var i = await easiesProvider.DeleteAsync(cls);
 
             //var stu = new Student();
             //stu.ClassId = cls.Id;

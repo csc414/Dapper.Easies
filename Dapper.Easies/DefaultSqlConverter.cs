@@ -53,7 +53,7 @@ namespace Dapper.Easies
                 table.EscapeName,
                 table.Properties.Select(o => o.EscapeNameAsAlias),
                 null,
-                string.Join(" and ", primaryKeys.Select((o, i) =>
+                string.Join(_sqlSyntax.Operator(OperatorType.AndAlso), primaryKeys.Select((o, i) =>
                 {
                     var name = _sqlSyntax.ParameterName(o.PropertyInfo.Name);
                     dynamicParameters.Add(name, ids[i]);
@@ -78,6 +78,24 @@ namespace Dapper.Easies
                 properties.Select(o => o.EscapeName),
                 properties.Select(o => _sqlSyntax.ParameterName(o.PropertyInfo.Name)),
                 hasIdentityKey);
+            parameters = new DynamicParameters(entity);
+            if (_options.DevelopmentMode)
+                _logger?.LogSql(sql);
+            return sql;
+        }
+
+        public string ToDeleteSql<T>(T entity, out DynamicParameters parameters)
+        {
+            var table = DbObject.Get(typeof(T));
+            var primaryKeys = table.Properties.Where(o => o.PrimaryKey).ToArray();
+            if (primaryKeys.Length == 0)
+                throw new ArgumentException("删除失败，实体类没有主键");
+
+            var sql = _sqlSyntax.DeleteFormat(
+                table.EscapeName,
+                null,
+                null,
+                string.Join(_sqlSyntax.Operator(OperatorType.AndAlso), primaryKeys.Select(o => $"{o.EscapeName} = {_sqlSyntax.ParameterName(o.PropertyInfo.Name)}")));
             parameters = new DynamicParameters(entity);
             if (_options.DevelopmentMode)
                 _logger?.LogSql(sql);
@@ -145,10 +163,10 @@ namespace Dapper.Easies
             var sql = _sqlSyntax.UpdateFormat(
                 table.EscapeName,
                 properties.Select(o => $"{o.EscapeName} = {_sqlSyntax.ParameterName(o.PropertyInfo.Name)}"),
-                string.Join(" and ", primaryKeys.Select(o => $"{o.EscapeName} = {_sqlSyntax.ParameterName(o.PropertyInfo.Name)}")));
+                string.Join(_sqlSyntax.Operator(OperatorType.AndAlso), primaryKeys.Select(o => $"{o.EscapeName} = {_sqlSyntax.ParameterName(o.PropertyInfo.Name)}")));
             parameters = new DynamicParameters(entity);
             if (_options.DevelopmentMode)
-                _logger?.LogSql(sql);
+                _logger?.LogParametersSql(sql, parameters);
             return sql;
         }
 

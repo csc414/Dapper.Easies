@@ -31,7 +31,11 @@ namespace Dapper.Easies
 
         public virtual string DeleteFormat(string tableName, IEnumerable<string> deleteTableAlias, IEnumerable<string> joins, string where)
         {
-            var sql = new StringBuilder($"DELETE {string.Join(", ", deleteTableAlias)} FROM {tableName}", 200);
+            var sql = new StringBuilder("DELETE");
+            if (deleteTableAlias != null)
+                sql.Append($" {string.Join(", ", deleteTableAlias)}");
+
+            sql.Append($" FROM { tableName}");
 
             if (joins != null)
                 sql.AppendFormat(" {0}", string.Join(" ", joins));
@@ -44,7 +48,7 @@ namespace Dapper.Easies
 
         public virtual string UpdateFormat(string tableName, IEnumerable<string> updateFields, string where)
         {
-            var sql = new StringBuilder($"UPDATE {tableName} SET {string.Join(", ", updateFields)}", 200);
+            var sql = new StringBuilder($"UPDATE {tableName} SET {string.Join(", ", updateFields)}");
 
             if (where != null)
                 sql.AppendFormat(" WHERE {0}", where);

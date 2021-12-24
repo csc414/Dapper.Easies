@@ -16,6 +16,8 @@ namespace Dapper.Easies
 
         Task<bool> InsertAsync<T>(T entity) where T : IDbTable;
 
+        Task<int> DeleteAsync<T>(T entity) where T : IDbTable;
+
         Task<int> DeleteAsync<T>(Expression<Predicate<T>> predicate = null) where T : IDbTable;
 
         Task<int> DeleteAsync(IDbQuery query);
