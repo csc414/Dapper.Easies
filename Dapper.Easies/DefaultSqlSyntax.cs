@@ -92,6 +92,9 @@ namespace Dapper.Easies
 
         public virtual string PropertyNameAlias(DbAlias alias)
         {
+            if(alias.IsExpr)
+                return $"{alias.Name} {alias.Alias}";
+
             if (alias.Name.Equals(alias.Alias, StringComparison.Ordinal))
                 return EscapePropertyName(alias.Name);
 

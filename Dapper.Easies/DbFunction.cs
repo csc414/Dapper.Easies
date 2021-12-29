@@ -20,5 +20,10 @@ namespace Dapper.Easies
         {
             throw new InvalidOperationException("Do not directly call this method.");
         }
+
+        public static T Expression<T>(string expr)
+        {
+            throw new InvalidOperationException("Do not directly call this method.");
+        }
     }
 }

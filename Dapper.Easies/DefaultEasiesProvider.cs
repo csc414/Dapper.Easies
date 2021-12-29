@@ -87,7 +87,7 @@ namespace Dapper.Easies
             return Connection.ExecuteAsync(sql, parameters);
         }
 
-        public Task<int> UpdateAsync<T>(Expression<Func<T>> updateFields, Expression<Predicate<T>> predicate = null) where T : IDbTable
+        public Task<int> UpdateAsync<T>(Expression<Func<T, T>> updateFields, Expression<Predicate<T>> predicate = null) where T : IDbTable
         {
             var context = new QueryContext(this, _sqlConverter, DbObject.Get(typeof(T)));
             if (predicate != null)

@@ -8,12 +8,12 @@ using System.Text;
 
 namespace Dapper.Easies
 {
-	internal abstract class ExpressionParser
-	{
+    internal abstract class ExpressionParser
+    {
         private int _deep = 0;
 
         internal ParserData Visit(Expression exp)
-		{
+        {
             ParserData data;
             _deep++;
             switch (exp.NodeType)
@@ -66,10 +66,10 @@ namespace Dapper.Easies
         }
 
         internal virtual ParserData VisitLambda(LambdaExpression lambda)
-		{
+        {
             Visit(lambda.Body);
             return ParserData.Empty;
-		}
+        }
 
         internal virtual ParserData VisitBinary(BinaryExpression b)
         {
@@ -128,15 +128,73 @@ namespace Dapper.Easies
 
         protected int GetDeep() => _deep;
 
+        internal static string GetExpression(Expression expression, ParameterBuilder builder, ISqlSyntax sqlSyntax, QueryContext context = null)
+        {
+            if (expression == null)
+                return null;
+
+            if (expression.NodeType == ExpressionType.Convert)
+                return GetExpression(((UnaryExpression)expression).Operand, builder, sqlSyntax, context);
+
+            if (expression.NodeType == ExpressionType.Call)
+            {
+                var m = (MethodCallExpression)expression;
+                if (m.Method.IsStatic && typeof(DbFunction).IsAssignableFrom(m.Method.ReflectedType) && m.Method.Name.Equals("Expression", StringComparison.Ordinal))
+                {
+                    var arg = m.Arguments[0];
+                    if (arg.NodeType == ExpressionType.Call)
+                        return GetExpression(arg, builder, sqlSyntax, context);
+                    else
+                        return GetValue(arg).ToString();
+                }
+                else if (m.Method.Name.Equals("Format", StringComparison.Ordinal))
+                {
+                    var args = m.Arguments.Select((o, j) => {
+                        if (j == 0)
+                            return GetValue(o);
+
+                        if(o.NodeType == ExpressionType.NewArrayInit)
+                        {
+                            var newArrayExpression = (NewArrayExpression)o;
+                            var args = newArrayExpression.Expressions.Select(e => GetExpression(e, builder, sqlSyntax, context)).ToArray();
+                            var ary = (object[])Activator.CreateInstance(newArrayExpression.Type, args.Length);
+                            for (int i = 0; i < ary.Length; ++i)
+                                ary[i] = args[i];
+                            return ary;
+                        }
+
+                        return GetExpression(o, builder, sqlSyntax, context);
+                    }).ToArray();
+
+                    return m.Method.Invoke(null, args).ToString();
+                }
+            }
+
+            if (expression is MemberExpression memberExpression && memberExpression.Expression.NodeType == ExpressionType.Parameter)
+            {
+                var table = DbObject.Get(memberExpression.Member.ReflectedType);
+                string alias = null;
+                if(context != null)
+                    alias = $"{context.Alias[table.Type].Alias}.";
+
+                return $"{alias}{table[memberExpression.Member.Name].EscapeName}";
+            }
+
+            return builder.AddParameter(GetValue(expression));
+        }
+
         internal static object GetValue(Expression expression)
         {
             if (expression == null)
                 return null;
 
+            if (expression.NodeType == ExpressionType.Convert)
+                return GetValue(((UnaryExpression)expression).Operand);
+
             if (expression.NodeType == ExpressionType.Constant)
                 return ((ConstantExpression)expression).Value;
 
-            if(expression is MemberExpression memberExpression)
+            if (expression is MemberExpression memberExpression)
             {
                 var obj = GetValue(memberExpression.Expression);
                 if (memberExpression.Member is PropertyInfo propertyInfo)
@@ -146,7 +204,7 @@ namespace Dapper.Easies
                     return fieldInfo.GetValue(obj);
             }
 
-            if(expression is MethodCallExpression methodCallExpression)
+            if (expression is MethodCallExpression methodCallExpression)
             {
                 var args = methodCallExpression.Arguments.Select(o => GetValue(o)).ToArray();
                 object obj = null;
@@ -155,7 +213,7 @@ namespace Dapper.Easies
                 return methodCallExpression.Method.Invoke(obj, args);
             }
 
-            if(expression is NewArrayExpression newArrayExpression)
+            if (expression is NewArrayExpression newArrayExpression)
             {
                 var args = newArrayExpression.Expressions.Select(o => GetValue(o)).ToArray();
                 var ary = (object[])Activator.CreateInstance(newArrayExpression.Type, args.Length);
@@ -184,6 +242,7 @@ namespace Dapper.Easies
                 }
 
             }
+
             throw new NotImplementedException($"NodeType：{expression.NodeType}");
         }
     }

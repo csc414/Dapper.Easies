@@ -41,10 +41,10 @@ namespace Dapper.Easies.Demo
             var ary = new[] { 1, 2, 3 };
             var ls = new List<string> { "123", "456" };
             var student = await easiesProvider.GetAsync<Student>(2);
-            student.Age = null;
+            student.Age = 19;
             var count = await easiesProvider.Query<Student>()
                 .Join<Class>((student, cls) => student.ClassId == Guid.Empty)
-                .Where((a, b) => !a.IsOk && !(a.Age != 18) && (a.Age == (a.Age + 2) * 3) && DbFunction.In(a.StudentName, ls))
+                .Where((a, b) => !a.IsOk && !(a.Age != 18) && (a.Age == (a.Age + 2) * 3) && DbFunction.In(a.StudentName, ls) && a.StudentName == DbFunction.Expression<string>($"IF({a.StudentName} = {a.Age}, {"李坤"}, {"刘鑫"})"))
                 .OrderBy((a, b) => a.Age)
                 .ThenBy((a, b) => b.CreateTime)
                 .MinAsync((a,b) => a.Age);
@@ -53,7 +53,7 @@ namespace Dapper.Easies.Demo
                 .Join<Class>((student, cls) => student.ClassId == cls.Id)
                 .OrderBy((a, b) => a.Age)
                 .ThenBy((a, b) => b.CreateTime)
-                .Select((a, b) => new { Name = a.StudentName, ClassName = b.Name })
+                .Select((a, b) => new StudentResponse { Name = DbFunction.Expression<string>($"IF({a.StudentName} = {a.Age}, '李坤', '刘鑫')"), ClassName = b.Name })
                 .QueryAsync();
 
             foreach (var item in temps)
@@ -66,8 +66,8 @@ namespace Dapper.Easies.Demo
                 .Where((stu, cls) => stu.Age == 18);
 
             await easiesProvider.UpdateAsync(student);
-            await easiesProvider.UpdateAsync(() => new Student { Age = student.Age }, o => o.Id == 2);
-           
+            await easiesProvider.UpdateAsync<Student>((o) => new Student { Age = DbFunction.Expression<int?>($"IF({o.Age} = {student.Age}, {o.Age}, {student.Age})") }, o => o.Id == 2 && o.StudentName == DbFunction.Expression<string>($"IF({o.StudentName} = {o.StudentName}, '李坤', '刘鑫')"));
+
             //await easiesProvider.DeleteAsync<Student>();
             //await easiesProvider.DeleteAsync<Student>(o => o.Age == 18);
             //await easiesProvider.DeleteAsync(query);

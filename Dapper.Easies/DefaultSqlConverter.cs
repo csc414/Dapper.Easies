@@ -30,7 +30,8 @@ namespace Dapper.Easies
             var parser = new PredicateExpressionParser(_sqlSyntax, parameterBuilder);
             var sql = _sqlSyntax.SelectFormat(
                 _sqlSyntax.TableNameAlias(context.Alias.Values.First()),
-                GetFields(context, aggregateInfo), GetJoins(context, parser),
+                GetFields(context, aggregateInfo, parameterBuilder), 
+                GetJoins(context, parser),
                 GetPredicate(context, parser),
                 aggregateInfo == null ? GetOrderBy(context) : null,
                 context.Skip,
@@ -133,10 +134,18 @@ namespace Dapper.Easies
             {
                 if (binding is MemberAssignment assignment)
                 {
-                    var value = ExpressionParser.GetValue(assignment.Expression);
+                    string value = null;
+                    if (assignment.Expression.NodeType == ExpressionType.Call)
+                    {
+                        var m = (MethodCallExpression)assignment.Expression;
+                        if (m.Method.IsStatic && typeof(DbFunction).IsAssignableFrom(m.Method.ReflectedType) && m.Method.Name.Equals("Expression", StringComparison.Ordinal))
+                            value = ExpressionParser.GetExpression(assignment.Expression, parameterBuilder, _sqlSyntax, context);
+                    }
+                    else
+                        value = parameterBuilder.AddParameter(ExpressionParser.GetValue(assignment.Expression));
                     var table = DbObject.Get(binding.Member.ReflectedType);
                     var alias = context.Alias[table.Type];
-                    fields.Add($"{alias.Alias}.{table[binding.Member.Name].EscapeName} = {parameterBuilder.AddParameter(value)}");
+                    fields.Add($"{alias.Alias}.{table[binding.Member.Name].EscapeName} = {value}");
                 }
                 else
                     throw new NotImplementedException($"BindingType：{binding.BindingType}");
@@ -177,7 +186,7 @@ namespace Dapper.Easies
             return null;
         }
 
-        IEnumerable<string> GetFields(QueryContext context, AggregateInfo aggregateInfo)
+        IEnumerable<string> GetFields(QueryContext context, AggregateInfo aggregateInfo, ParameterBuilder builder)
         {
             if (aggregateInfo != null)
             {
@@ -207,16 +216,18 @@ namespace Dapper.Easies
                     {
                         if (binding is MemberAssignment assignment)
                         {
-                            if (assignment.Expression.NodeType != ExpressionType.MemberAccess)
-                                throw new NotImplementedException($"NodeType：{assignment.Expression.NodeType}");
+                            if (assignment.Expression.NodeType == ExpressionType.MemberAccess)
+                            {
+                                var member = (MemberExpression)assignment.Expression;
+                                if (member.Expression.NodeType != ExpressionType.Parameter)
+                                    throw new NotImplementedException($"BindingType：{member.Expression.NodeType}");
 
-                            var member = (MemberExpression)assignment.Expression;
-                            if (member.Expression.NodeType != ExpressionType.Parameter)
-                                throw new NotImplementedException($"BindingType：{member.Expression.NodeType}");
-
-                            var table = DbObject.Get(member.Member.ReflectedType);
-                            var alias = context.Alias[table.Type];
-                            fields.Add($"{alias.Alias}.{_sqlSyntax.PropertyNameAlias(new DbAlias(table[member.Member.Name].DbName, assignment.Member.Name))}");
+                                var table = DbObject.Get(member.Member.ReflectedType);
+                                var alias = context.Alias[table.Type];
+                                fields.Add($"{alias.Alias}.{_sqlSyntax.PropertyNameAlias(new DbAlias(table[member.Member.Name].DbName, assignment.Member.Name))}");
+                            }
+                            else
+                                fields.Add($"{_sqlSyntax.PropertyNameAlias(new DbAlias(ExpressionParser.GetExpression(assignment.Expression, builder, _sqlSyntax, context), assignment.Member.Name, true))}");
                         }
                         else
                             throw new NotImplementedException($"BindingType：{binding.BindingType}");
@@ -228,16 +239,18 @@ namespace Dapper.Easies
                     {
                         var member = newExp.Members[i];
                         var arg = newExp.Arguments[i];
-                        if (arg.NodeType != ExpressionType.MemberAccess)
-                            throw new NotImplementedException($"NodeType：{arg.NodeType}");
+                        if (arg.NodeType == ExpressionType.MemberAccess)
+                        {
+                            var argMember = (MemberExpression)arg;
+                            if (argMember.Expression.NodeType != ExpressionType.Parameter)
+                                throw new NotImplementedException($"BindingType：{argMember.Expression.NodeType}");
 
-                        var argMember = (MemberExpression)arg;
-                        if (argMember.Expression.NodeType != ExpressionType.Parameter)
-                            throw new NotImplementedException($"BindingType：{argMember.Expression.NodeType}");
-
-                        var table = DbObject.Get(argMember.Member.ReflectedType);
-                        var alias = context.Alias[table.Type];
-                        fields.Add($"{alias.Alias}.{_sqlSyntax.PropertyNameAlias(new DbAlias(table[argMember.Member.Name].DbName, member.Name))}");
+                            var table = DbObject.Get(argMember.Member.ReflectedType);
+                            var alias = context.Alias[table.Type];
+                            fields.Add($"{alias.Alias}.{_sqlSyntax.PropertyNameAlias(new DbAlias(table[argMember.Member.Name].DbName, member.Name))}");
+                        }
+                        else
+                            fields.Add($"{_sqlSyntax.PropertyNameAlias(new DbAlias(ExpressionParser.GetExpression(arg, builder, _sqlSyntax, context), member.Name, true))}");
                     }
                 }
                 else
@@ -278,16 +291,19 @@ namespace Dapper.Easies
 
         string GetPropertyName(Expression exp, QueryContext context)
         {
-            Expression expression = ((LambdaExpression)exp).Body;
+            Expression expression = null;
+            if (exp.NodeType == ExpressionType.Lambda)
+                expression = ((LambdaExpression)exp).Body;
+
             if (expression.NodeType == ExpressionType.Convert)
                 expression = ((UnaryExpression)expression).Operand;
 
             if (expression.NodeType != ExpressionType.MemberAccess)
-                throw new ArgumentException("请正确设置排序字段");
+                throw new ArgumentException("请正确设置字段");
 
             var m = (MemberExpression)expression;
             if (m.Expression.NodeType != ExpressionType.Parameter)
-                throw new ArgumentException("请正确设置排序字段");
+                throw new ArgumentException("请正确设置字段");
 
             return string.Format("{0}.{1}", context.Alias[m.Member.ReflectedType].Alias, DbObject.Get(m.Member.ReflectedType)[m.Member.Name].EscapeName);
         }
