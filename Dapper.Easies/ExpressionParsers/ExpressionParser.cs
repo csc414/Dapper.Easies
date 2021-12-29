@@ -96,6 +96,16 @@ namespace Dapper.Easies
             return ParserData.Empty;
         }
 
+        protected ParserData CreateSql(string sql)
+        {
+            return CreateSql(sql, null);
+        }
+
+        protected ParserData CreateSql(string sql, Expression expression)
+        {
+            return CreateParserData(ParserDataType.Sql, sql, expression);
+        }
+
         protected ParserData CreateConstant(object value)
         {
             return CreateConstant(value, null);
@@ -182,7 +192,8 @@ namespace Dapper.Easies
     {
         Empty,
         Property,
-        Constant
+        Constant,
+        Sql
     }
 
     public class ParserData

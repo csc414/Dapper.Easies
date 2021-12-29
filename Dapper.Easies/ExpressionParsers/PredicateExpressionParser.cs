@@ -10,8 +10,6 @@ namespace Dapper.Easies
 {
     internal class PredicateExpressionParser : ExpressionParser
     {
-        private static readonly HashSet<ExpressionType> _expressionTypes = new HashSet<ExpressionType> { ExpressionType.AndAlso, ExpressionType.OrElse };
-
         private readonly ISqlSyntax _sqlSyntax;
 
         private QueryContext _context;
@@ -145,15 +143,15 @@ namespace Dapper.Easies
             if (m.Method.IsStatic && typeof(DbFunction).IsAssignableFrom(m.Method.ReflectedType))
             {
                 var data = Visit(m.Arguments[0]);
-                if (data.Type == ParserDataType.Property)
+                if (data.Type == ParserDataType.Property)                                                 
                 {
                     var property = (DbObject.DbProperty)data.Value;
                     var args = m.Arguments.Skip(1).Select(o => GetValue(o));
                     var result = _sqlSyntax.Method(m.Method, GetTablePropertyAlias(property), args.ToArray(), _parameters);
                     if (result == null)
                         throw new NotImplementedException($"MethodName：{m.Method.Name}");
-                    _sql.Append(result);
-                    return ParserData.Empty;
+
+                    return CreateSql(result);
                 }
                 else
                     throw new ArgumentException("自定义方法第一个字段必须是实体参数");
@@ -174,6 +172,9 @@ namespace Dapper.Easies
                     break;
                 case ParserDataType.Constant:
                     _sql.Append(_parameters.AddParameter(data.Value));
+                    break;
+                case ParserDataType.Sql:
+                    _sql.Append(data.Value);
                     break;
             }
         }
