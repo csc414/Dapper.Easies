@@ -207,6 +207,11 @@ var query = easiesProvider.Query<Student>()
 var query = easiesProvider.Query<Student>()
               .Join<Class>((a, b) => a.ClassId == b.Id)
               .Where((a, b) => a.Age > 10 && DbFunction.Expression<bool>($"{a.Name} LIKE {name} OR {a.Name} IN {names}"));
+              
+//Expression还可以使用在Selector
+var query = easiesProvider.Query<Student>()
+              .Join<Class>((a, b) => a.ClassId == b.Id)
+              .Select((a, b) => new { StudentName = a.Name, ClassName = b.Name, IsYoung = DbFunction.Expression<bool>($"IF({a.Age} < {10}, 1, 0)") })
 ```
 关于Sql转换
 ------------------------------------------------------------
