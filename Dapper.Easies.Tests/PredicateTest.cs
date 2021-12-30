@@ -94,5 +94,19 @@ namespace Dapper.Easies.Tests
             IParameterLookup lookup = builder.GetDynamicParameters();
             Assert.Equal($"%{name}%", (string)lookup["p0"]);
         }
+
+        [Fact]
+        public void ExpressionTest()
+        {
+            var builder = new ParameterBuilder(_sqlSyntax);
+            var parser = new PredicateExpressionParser(_sqlSyntax, builder);
+            var context = new QueryContext(null, null, DbObject.Get(typeof(Student)));
+            var name = "%ÕÅÈý%";
+            Expression<Predicate<Student>> exp = (a) => DbFunction.Expression<bool>($"{a.StudentName} LIKE {name}");
+            string sql = parser.ToSql(exp, context);
+            Assert.Equal("t.Name LIKE @p0", sql);
+            IParameterLookup lookup = builder.GetDynamicParameters();
+            Assert.Equal(name, (string)lookup["p0"]);
+        }
     }
 }
