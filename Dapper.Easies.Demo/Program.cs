@@ -67,6 +67,7 @@ namespace Dapper.Easies.Demo
 
             await easiesProvider.UpdateAsync(student);
             await easiesProvider.UpdateAsync<Student>((o) => new Student { Age = DbFunction.Expression<int?>($"IF({o.Age} = {student.Age}, {o.Age}, {student.Age})") }, o => o.Id == 2 && o.StudentName == DbFunction.Expression<string>($"IF({o.StudentName} = {o.StudentName}, '李坤', '刘鑫')"));
+            await easiesProvider.UpdateAsync(() => new Student { Age = 18 }, o => o.Id == 2);
 
             //await easiesProvider.DeleteAsync<Student>();
             //await easiesProvider.DeleteAsync<Student>(o => o.Age == 18);
