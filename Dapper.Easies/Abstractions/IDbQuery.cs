@@ -17,6 +17,8 @@ namespace Dapper.Easies
 
         IDbQuery<T> Where(Expression<Predicate<T>> predicate);
 
+        IDbQuery<T> Where(Expression<Func<T, string>> expression);
+
         IDbQuery<T, TJoin> Join<TJoin>(Expression<Predicate<T, TJoin>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject;
 
         IOrderedDbQuery<T> OrderBy<TField>(params Expression<Func<T, TField>>[] orderField);
@@ -29,6 +31,8 @@ namespace Dapper.Easies
         ISelectedQuery<TResult> Select<TResult>(Expression<Func<T1, T2, TResult>> selector);
 
         IDbQuery<T1, T2> Where(Expression<Predicate<T1, T2>> predicate);
+
+        IDbQuery<T1, T2> Where(Expression<Func<T1, T2, string>> expression);
 
         IDbQuery<T1, T2, TJoin> Join<TJoin>(Expression<Predicate<T1, T2, TJoin>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject;
 
@@ -43,6 +47,8 @@ namespace Dapper.Easies
 
         IDbQuery<T1, T2, T3> Where(Expression<Predicate<T1, T2, T3>> predicate);
 
+        IDbQuery<T1, T2, T3> Where(Expression<Func<T1, T2, T3, string>> expression);
+
         IDbQuery<T1, T2, T3, TJoin> Join<TJoin>(Expression<Predicate<T1, T2, T3, TJoin>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject;
 
         IOrderedDbQuery<T1, T2, T3> OrderBy<TField>(params Expression<Func<T1, T2, T3, TField>>[] orderField);
@@ -56,6 +62,8 @@ namespace Dapper.Easies
 
         IDbQuery<T1, T2, T3, T4> Where(Expression<Predicate<T1, T2, T3, T4>> predicate);
 
+        IDbQuery<T1, T2, T3, T4> Where(Expression<Func<T1, T2, T3, T4, string>> expression);
+
         IDbQuery<T1, T2, T3, T4, TJoin> Join<TJoin>(Expression<Predicate<T1, T2, T3, T4, TJoin>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject;
 
         IOrderedDbQuery<T1, T2, T3, T4> OrderBy<TField>(params Expression<Func<T1, T2, T3, T4, TField>>[] orderField);
@@ -68,6 +76,8 @@ namespace Dapper.Easies
         ISelectedQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, TResult>> selector);
 
         IDbQuery<T1, T2, T3, T4, T5> Where(Expression<Predicate<T1, T2, T3, T4, T5>> predicate);
+
+        IDbQuery<T1, T2, T3, T4, T5> Where(Expression<Func<T1, T2, T3, T4, T5, string>> expression);
 
         IOrderedDbQuery<T1, T2, T3, T4, T5> OrderBy<TField>(params Expression<Func<T1, T2, T3, T4, T5, TField>>[] orderField);
 

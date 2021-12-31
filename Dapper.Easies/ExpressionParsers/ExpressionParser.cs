@@ -142,31 +142,29 @@ namespace Dapper.Easies
                 if (m.Method.IsStatic && typeof(DbFunction).IsAssignableFrom(m.Method.ReflectedType) && m.Method.Name.Equals("Expression", StringComparison.Ordinal))
                 {
                     var arg = m.Arguments[0];
-                    if (arg.NodeType == ExpressionType.Call)
-                        return GetExpression(arg, builder, sqlSyntax, context);
+                    if (arg.NodeType == ExpressionType.Call && arg is MethodCallExpression mm && mm.Method.Name.Equals("Format", StringComparison.Ordinal))
+                    {
+                        var args = mm.Arguments.Select((o, j) => {
+                            if (j == 0)
+                                return GetValue(o);
+
+                            if (o.NodeType == ExpressionType.NewArrayInit)
+                            {
+                                var newArrayExpression = (NewArrayExpression)o;
+                                var args = newArrayExpression.Expressions.Select(e => GetExpression(e, builder, sqlSyntax, context)).ToArray();
+                                var ary = (object[])Activator.CreateInstance(newArrayExpression.Type, args.Length);
+                                for (int i = 0; i < ary.Length; ++i)
+                                    ary[i] = args[i];
+                                return ary;
+                            }
+
+                            return GetExpression(o, builder, sqlSyntax, context);
+                        }).ToArray();
+
+                        return mm.Method.Invoke(null, args).ToString();
+                    }
                     else
                         return GetValue(arg).ToString();
-                }
-                else if (m.Method.Name.Equals("Format", StringComparison.Ordinal))
-                {
-                    var args = m.Arguments.Select((o, j) => {
-                        if (j == 0)
-                            return GetValue(o);
-
-                        if(o.NodeType == ExpressionType.NewArrayInit)
-                        {
-                            var newArrayExpression = (NewArrayExpression)o;
-                            var args = newArrayExpression.Expressions.Select(e => GetExpression(e, builder, sqlSyntax, context)).ToArray();
-                            var ary = (object[])Activator.CreateInstance(newArrayExpression.Type, args.Length);
-                            for (int i = 0; i < ary.Length; ++i)
-                                ary[i] = args[i];
-                            return ary;
-                        }
-
-                        return GetExpression(o, builder, sqlSyntax, context);
-                    }).ToArray();
-
-                    return m.Method.Invoke(null, args).ToString();
                 }
             }
 

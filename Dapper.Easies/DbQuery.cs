@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -10,6 +11,8 @@ namespace Dapper.Easies
 {
     public abstract class DbQuery : IDbQuery
     {
+        internal static MethodInfo _expressionMethodInfo = typeof(DbFunction).GetTypeInfo().DeclaredMethods.First(o => o.Name == "Expression").MakeGenericMethod(typeof(string));
+
         internal readonly QueryContext _context;
 
         internal DbQuery(QueryContext context)
@@ -22,6 +25,11 @@ namespace Dapper.Easies
         protected void AddWhereExpression(Expression whereExpression)
         {
             _context.AddWhere(whereExpression);
+        }
+
+        protected Expression CreateExpressionLambda(LambdaExpression expression)
+        {
+            return Expression.Lambda(Expression.Call(_expressionMethodInfo, expression.Body), expression.Parameters);
         }
 
         protected void AddJoinMetedata<TJoin>(Expression joinExpression, JoinType type)
@@ -75,6 +83,12 @@ namespace Dapper.Easies
         public IDbQuery<T> Where(Expression<Predicate<T>> predicate)
         {
             AddWhereExpression(predicate);
+            return this;
+        }
+
+        public IDbQuery<T> Where(Expression<Func<T, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
             return this;
         }
 
@@ -146,6 +160,12 @@ namespace Dapper.Easies
             return this;
         }
 
+        public IDbQuery<T1, T2> Where(Expression<Func<T1, T2, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
         public ISelectedQuery<TResult> Select<TResult>(Expression<Func<T1, T2, TResult>> selector)
         {
             _context.SelectorExpression = selector;
@@ -196,6 +216,12 @@ namespace Dapper.Easies
         public IDbQuery<T1, T2, T3> Where(Expression<Predicate<T1, T2, T3>> predicate)
         {
             AddWhereExpression(predicate);
+            return this;
+        }
+
+        public IDbQuery<T1, T2, T3> Where(Expression<Func<T1, T2, T3, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
             return this;
         }
 
@@ -252,6 +278,12 @@ namespace Dapper.Easies
             return this;
         }
 
+        public IDbQuery<T1, T2, T3, T4> Where(Expression<Func<T1, T2, T3, T4, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
         public ISelectedQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, T4, TResult>> selector)
         {
             _context.SelectorExpression = selector;
@@ -302,6 +334,12 @@ namespace Dapper.Easies
         public IDbQuery<T1, T2, T3, T4, T5> Where(Expression<Predicate<T1, T2, T3, T4, T5>> predicate)
         {
             AddWhereExpression(predicate);
+            return this;
+        }
+
+        public IDbQuery<T1, T2, T3, T4, T5> Where(Expression<Func<T1, T2, T3, T4, T5, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
             return this;
         }
 

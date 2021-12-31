@@ -18,7 +18,8 @@ namespace Dapper.Easies.Demo
                 builder.DevelopmentMode();
                 builder.UseMySql("Host=localhost;UserName=root;Password=123456;Database=School;Port=3306;CharSet=utf8mb4;Connection Timeout=1200;Allow User Variables=true;");
             });
-            services.AddLogging(builder => {
+            services.AddLogging(builder =>
+            {
                 builder.AddConsole();
             });
             var serviceProvider = services.BuildServiceProvider();
@@ -44,10 +45,11 @@ namespace Dapper.Easies.Demo
             student.Age = 19;
             var count = await easiesProvider.Query<Student>()
                 .Join<Class>((student, cls) => student.ClassId == Guid.Empty)
-                .Where((a, b) => !a.IsOk && !(a.Age != 18) && (a.Age == (a.Age + 2) * 3) && DbFunction.In(a.StudentName, ls) && a.StudentName == DbFunction.Expression<string>($"IF({a.StudentName} = {a.Age}, {"李坤"}, {"刘鑫"})"))
+                .Where((a, b) => $"{a.StudentName} != {student.StudentName}")
+                //.Where((a, b) => !a.IsOk && !(a.Age != 18) && (a.Age == (a.Age + 2) * 3) && DbFunction.In(a.StudentName, ls) && DbFunction.Expression<bool>($"{a.StudentName} LIKE {$"%{cls.Name}%"}"))
                 .OrderBy((a, b) => a.Age)
                 .ThenBy((a, b) => b.CreateTime)
-                .MinAsync((a,b) => a.Age);
+                .MinAsync((a, b) => a.Age);
 
             var temps = await easiesProvider.Query<Student>()
                 .Join<Class>((student, cls) => student.ClassId == cls.Id)
