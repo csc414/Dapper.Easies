@@ -80,7 +80,7 @@ namespace Dapper.Easies
     {
         internal DbQuery(QueryContext context) : base(context) { }
 
-        public IDbQuery<T> Where(Expression<Predicate<T>> predicate)
+        public IDbQuery<T> Where(Expression<Func<T, bool>> predicate)
         {
             AddWhereExpression(predicate);
             return this;
@@ -98,9 +98,15 @@ namespace Dapper.Easies
             return new DbQuery<TResult>(_context);
         }
 
-        public IDbQuery<T, TJoin> Join<TJoin>(Expression<Predicate<T, TJoin>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject
+        public IDbQuery<T, TJoin> Join<TJoin>(Expression<Func<T, TJoin, bool>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject
         {
             AddJoinMetedata<TJoin>(on, type);
+            return new DbQuery<T, TJoin>(_context);
+        }
+
+        public IDbQuery<T, TJoin> Join<TJoin>(Expression<Func<T, TJoin, string>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject
+        {
+            AddJoinMetedata<TJoin>(CreateExpressionLambda(on), type);
             return new DbQuery<T, TJoin>(_context);
         }
 
@@ -154,7 +160,7 @@ namespace Dapper.Easies
     {
         internal DbQuery(QueryContext context) : base(context) { }
 
-        public IDbQuery<T1, T2> Where(Expression<Predicate<T1, T2>> predicate)
+        public IDbQuery<T1, T2> Where(Expression<Func<T1, T2, bool>> predicate)
         {
             AddWhereExpression(predicate);
             return this;
@@ -172,9 +178,15 @@ namespace Dapper.Easies
             return new DbQuery<TResult>(_context);
         }
 
-        public IDbQuery<T1, T2, TJoin> Join<TJoin>(Expression<Predicate<T1, T2, TJoin>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject
+        public IDbQuery<T1, T2, TJoin> Join<TJoin>(Expression<Func<T1, T2, TJoin, bool>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject
         {
             AddJoinMetedata<TJoin>(on, type);
+            return new DbQuery<T1, T2, TJoin>(_context);
+        }
+
+        public IDbQuery<T1, T2, TJoin> Join<TJoin>(Expression<Func<T1, T2, TJoin, string>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject
+        {
+            AddJoinMetedata<TJoin>(CreateExpressionLambda(on), type);
             return new DbQuery<T1, T2, TJoin>(_context);
         }
 
@@ -213,7 +225,7 @@ namespace Dapper.Easies
     {
         internal DbQuery(QueryContext context) : base(context) { }
 
-        public IDbQuery<T1, T2, T3> Where(Expression<Predicate<T1, T2, T3>> predicate)
+        public IDbQuery<T1, T2, T3> Where(Expression<Func<T1, T2, T3, bool>> predicate)
         {
             AddWhereExpression(predicate);
             return this;
@@ -231,9 +243,15 @@ namespace Dapper.Easies
             return new DbQuery<TResult>(_context);
         }
 
-        public IDbQuery<T1, T2, T3, TJoin> Join<TJoin>(Expression<Predicate<T1, T2, T3, TJoin>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject
+        public IDbQuery<T1, T2, T3, TJoin> Join<TJoin>(Expression<Func<T1, T2, T3, TJoin, bool>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject
         {
             AddJoinMetedata<TJoin>(on, type);
+            return new DbQuery<T1, T2, T3, TJoin>(_context);
+        }
+
+        public IDbQuery<T1, T2, T3, TJoin> Join<TJoin>(Expression<Func<T1, T2, T3, TJoin, string>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject
+        {
+            AddJoinMetedata<TJoin>(CreateExpressionLambda(on), type);
             return new DbQuery<T1, T2, T3, TJoin>(_context);
         }
 
@@ -272,7 +290,7 @@ namespace Dapper.Easies
     {
         internal DbQuery(QueryContext context) : base(context) { }
 
-        public IDbQuery<T1, T2, T3, T4> Where(Expression<Predicate<T1, T2, T3, T4>> predicate)
+        public IDbQuery<T1, T2, T3, T4> Where(Expression<Func<T1, T2, T3, T4, bool>> predicate)
         {
             AddWhereExpression(predicate);
             return this;
@@ -290,9 +308,15 @@ namespace Dapper.Easies
             return new DbQuery<TResult>(_context);
         }
 
-        public IDbQuery<T1, T2, T3, T4, TJoin> Join<TJoin>(Expression<Predicate<T1, T2, T3, T4, TJoin>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject
+        public IDbQuery<T1, T2, T3, T4, TJoin> Join<TJoin>(Expression<Func<T1, T2, T3, T4, TJoin, bool>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject
         {
             AddJoinMetedata<TJoin>(on, type);
+            return new DbQuery<T1, T2, T3, T4, TJoin>(_context);
+        }
+
+        public IDbQuery<T1, T2, T3, T4, TJoin> Join<TJoin>(Expression<Func<T1, T2, T3, T4, TJoin, string>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject
+        {
+            AddJoinMetedata<TJoin>(CreateExpressionLambda(on), type);
             return new DbQuery<T1, T2, T3, T4, TJoin>(_context);
         }
 
@@ -331,7 +355,7 @@ namespace Dapper.Easies
     {
         internal DbQuery(QueryContext context) : base(context) { }
 
-        public IDbQuery<T1, T2, T3, T4, T5> Where(Expression<Predicate<T1, T2, T3, T4, T5>> predicate)
+        public IDbQuery<T1, T2, T3, T4, T5> Where(Expression<Func<T1, T2, T3, T4, T5, bool>> predicate)
         {
             AddWhereExpression(predicate);
             return this;

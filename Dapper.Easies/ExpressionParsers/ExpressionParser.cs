@@ -168,7 +168,7 @@ namespace Dapper.Easies
                 }
             }
 
-            if (expression is MemberExpression memberExpression && memberExpression.Expression.NodeType == ExpressionType.Parameter)
+            if (expression is MemberExpression memberExpression && memberExpression.Expression?.NodeType == ExpressionType.Parameter)
             {
                 var table = DbObject.Get(memberExpression.Member.ReflectedType);
                 string alias = null;

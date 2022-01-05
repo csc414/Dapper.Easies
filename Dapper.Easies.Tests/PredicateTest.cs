@@ -53,12 +53,12 @@ namespace Dapper.Easies.Tests
             var builder = new ParameterBuilder(_sqlSyntax);
             var parser = new PredicateExpressionParser(_sqlSyntax, builder);
             var context = new QueryContext(null, null, DbObject.Get(typeof(Student)));
-            Expression<Predicate<Student, Class>> on = (a, b) => a.ClassId == b.Id;
+            Expression<Func<Student, Class, bool>> on = (a, b) => a.ClassId == b.Id;
             context.AddJoin(typeof(Class), on, JoinType.Left);
             string onSql = parser.ToSql(on, context);
             Assert.Equal("t.ClassId = t1.Id", onSql);
 
-            Expression<Predicate<Student, Class>> exp = (a, b) => a.StudentName == "张三" && b.Name == "一年级";
+            Expression<Func<Student, Class, bool>> exp = (a, b) => a.StudentName == "张三" && b.Name == "一年级";
             string sql = parser.ToSql(exp, context);
             Assert.Equal("t.Name = @p0 AND t1.Name = @p1", sql);
             IParameterLookup lookup = builder.GetDynamicParameters();

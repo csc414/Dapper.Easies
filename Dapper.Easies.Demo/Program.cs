@@ -41,11 +41,12 @@ namespace Dapper.Easies.Demo
             //await easiesProvider.InsertAsync(stu);
             var ary = new[] { 1, 2, 3 };
             var ls = new List<string> { "123", "456" };
+            var dict = new Dictionary<string, string> { { "aa", "bb" } };
             var student = await easiesProvider.GetAsync<Student>(2);
             student.Age = 19;
             var count = await easiesProvider.Query<Student>()
-                .Join<Class>((student, cls) => student.ClassId == Guid.Empty)
-                .Where((a, b) => $"{a.StudentName} != {student.StudentName}")
+                .Join<Class>((student, cls) => $"{student.ClassId} != {Guid.Empty}")
+                .Where((a, b) => $"{a.StudentName} != {dict["aa"]}")
                 //.Where((a, b) => !a.IsOk && !(a.Age != 18) && (a.Age == (a.Age + 2) * 3) && DbFunction.In(a.StudentName, ls) && DbFunction.Expression<bool>($"{a.StudentName} LIKE {$"%{cls.Name}%"}"))
                 .OrderBy((a, b) => a.Age)
                 .ThenBy((a, b) => b.CreateTime)
