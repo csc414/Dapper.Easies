@@ -18,7 +18,8 @@ namespace Dapper.Easies.Demo
                 builder.DevelopmentMode();
                 builder.UseMySql("Host=localhost;UserName=root;Password=123456;Database=School;Port=3306;CharSet=utf8mb4;Connection Timeout=1200;Allow User Variables=true;");
             });
-            services.AddLogging(builder => {
+            services.AddLogging(builder =>
+            {
                 builder.AddConsole();
             });
             var serviceProvider = services.BuildServiceProvider();
@@ -40,14 +41,16 @@ namespace Dapper.Easies.Demo
             //await easiesProvider.InsertAsync(stu);
             var ary = new[] { 1, 2, 3 };
             var ls = new List<string> { "123", "456" };
+            var dict = new Dictionary<string, string> { { "aa", "bb" } };
             var student = await easiesProvider.GetAsync<Student>(2);
             student.Age = 19;
             var count = await easiesProvider.Query<Student>()
-                .Join<Class>((student, cls) => student.ClassId == Guid.Empty)
-                .Where((a, b) => !a.IsOk && !(a.Age != 18) && (a.Age == (a.Age + 2) * 3) && DbFunction.In(a.StudentName, ls) && a.StudentName == DbFunction.Expression<string>($"IF({a.StudentName} = {a.Age}, {"李坤"}, {"刘鑫"})"))
+                .Join<Class>((student, cls) => $"{student.ClassId} != {Guid.Empty}")
+                .Where((a, b) => $"{a.StudentName} != {dict["aa"]}")
+                //.Where((a, b) => !a.IsOk && !(a.Age != 18) && (a.Age == (a.Age + 2) * 3) && DbFunction.In(a.StudentName, ls) && DbFunction.Expression<bool>($"{a.StudentName} LIKE {$"%{cls.Name}%"}"))
                 .OrderBy((a, b) => a.Age)
                 .ThenBy((a, b) => b.CreateTime)
-                .MinAsync((a,b) => a.Age);
+                .MinAsync((a, b) => a.Age);
 
             var temps = await easiesProvider.Query<Student>()
                 .Join<Class>((student, cls) => student.ClassId == cls.Id)
@@ -67,6 +70,7 @@ namespace Dapper.Easies.Demo
 
             await easiesProvider.UpdateAsync(student);
             await easiesProvider.UpdateAsync<Student>((o) => new Student { Age = DbFunction.Expression<int?>($"IF({o.Age} = {student.Age}, {o.Age}, {student.Age})") }, o => o.Id == 2 && o.StudentName == DbFunction.Expression<string>($"IF({o.StudentName} = {o.StudentName}, '李坤', '刘鑫')"));
+            await easiesProvider.UpdateAsync(() => new Student { Age = 18 }, o => o.Id == 2);
 
             //await easiesProvider.DeleteAsync<Student>();
             //await easiesProvider.DeleteAsync<Student>(o => o.Age == 18);

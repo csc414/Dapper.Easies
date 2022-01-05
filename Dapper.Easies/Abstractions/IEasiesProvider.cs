@@ -24,6 +24,8 @@ namespace Dapper.Easies
 
         Task<int> DeleteCorrelationAsync(IDbQuery query);
 
+        Task<int> UpdateAsync<T>(Expression<Func<T>> updateFields, Expression<Predicate<T>> predicate = null) where T : IDbTable;
+
         Task<int> UpdateAsync<T>(Expression<Func<T, T>> updateFields, Expression<Predicate<T>> predicate = null) where T : IDbTable;
 
         Task<int> UpdateAsync<T>(T entity) where T : IDbTable;
