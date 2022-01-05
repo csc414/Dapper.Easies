@@ -207,11 +207,21 @@ var query = easiesProvider.Query<Student>()
 var query = easiesProvider.Query<Student>()
               .Join<Class>((a, b) => a.ClassId == b.Id)
               .Where((a, b) => a.Age > 10 && DbFunction.Expression<bool>($"{a.Name} LIKE {name} OR {a.Name} IN {names}"));
+
+//也可以直接在Join 或 Where 中使用Expression
+var query = easiesProvider.Query<Student>()
+              .Join<Class>((a, b) => $"{a.ClassId} = {b.Id}")
+              .Where((a, b) => $"{a.Name} LIKE {name} OR {a.Name} IN {names}");
               
 //Expression还可以使用在Selector
 var query = easiesProvider.Query<Student>()
               .Join<Class>((a, b) => a.ClassId == b.Id)
-              .Select((a, b) => new { StudentName = a.Name, ClassName = b.Name, IsYoung = DbFunction.Expression<bool>($"IF({a.Age} < {10}, 1, 0)") })
+              .Select((a, b) => new { StudentName = a.Name, ClassName = b.Name, IsYoung = DbFunction.Expression<bool>($"IF({a.Age} < {10}, 1, 0)") });
+              
+//更新使用 Expression
+await easiesProvider.UpdateAsync<Student>(
+    o => new Student { Age = DbFunction.Expression<int>($"IF({o.Name} in {names}, 18, {a.Age})") }, 
+    o => o.Id > 0 && o.Name == DbFunction.Expression<string>($"IF({o.Name} LIKE {name}, '张三', '李四')"));
 ```
 关于Sql转换
 ------------------------------------------------------------
