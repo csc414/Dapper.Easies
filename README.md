@@ -2,6 +2,7 @@
 
 安装使用
 ------------------------------------------------------------
+`Install-Package Dapper.Easies.MySql`
 ```csharp
 var services = new ServiceCollection();
 services.AddEasiesProvider(builder =>
