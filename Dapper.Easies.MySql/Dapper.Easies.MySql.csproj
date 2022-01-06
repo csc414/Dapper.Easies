@@ -2,13 +2,13 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-      <Version>1.0.3</Version>
+      <Version>1.0.4</Version>
       <Description>基于Dapper.Easies的MySql扩展</Description>
       <Product>Dapper.Easies.MySql</Product>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MySqlConnector" Version="2.1.0" />
+    <PackageReference Include="MySqlConnector" Version="2.0.0" />
   </ItemGroup>
 
   <ItemGroup>
