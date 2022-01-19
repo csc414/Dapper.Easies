@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
-        <Version>1.0.4</Version>
+        <Version>1.0.5</Version>
         <Description>基于Dapper的轻量级ORM</Description>
         <Product>Dapper.Easies</Product>
     </PropertyGroup>

@@ -30,8 +30,18 @@ namespace Dapper.Easies.Demo
             cls.Id = Guid.NewGuid();
             cls.Name = "六年二班";
             cls.CreateTime = DateTime.Now;
-            await easiesProvider.InsertAsync(cls);
-            var i = await easiesProvider.DeleteAsync(cls);
+
+            var cls1 = new Class();
+            cls1.Id = Guid.NewGuid();
+            cls1.Name = "六年一班";
+            cls1.CreateTime = DateTime.Now;
+            var c = await easiesProvider.InsertAsync(new[] { cls, cls1 });
+
+            cls.Name = "六年三班";
+            cls1.Name = "六年四班";
+            var d = await easiesProvider.UpdateAsync(new[] { cls, cls1 });
+
+            var i = await easiesProvider.DeleteAsync(new[] { cls, cls1 });
 
             //var stu = new Student();
             //stu.ClassId = cls.Id;
@@ -56,6 +66,7 @@ namespace Dapper.Easies.Demo
                 .Join<Class>((student, cls) => student.ClassId == cls.Id)
                 .OrderBy((a, b) => a.Age)
                 .ThenBy((a, b) => b.CreateTime)
+                //.Select((a, b) => a.StudentName)
                 .Select((a, b) => new StudentResponse { Name = DbFunction.Expression<string>($"IF({a.StudentName} = {a.Age}, '李坤', '刘鑫')"), ClassName = b.Name })
                 .QueryAsync();
 
