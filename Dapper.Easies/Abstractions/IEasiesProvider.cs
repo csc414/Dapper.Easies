@@ -16,7 +16,11 @@ namespace Dapper.Easies
 
         Task<bool> InsertAsync<T>(T entity) where T : IDbTable;
 
+        Task<int> InsertAsync<T>(IEnumerable<T> entities) where T : IDbTable;
+
         Task<int> DeleteAsync<T>(T entity) where T : IDbTable;
+
+        Task<int> DeleteAsync<T>(IEnumerable<T> entities) where T : IDbTable;
 
         Task<int> DeleteAsync<T>(Expression<Predicate<T>> predicate = null) where T : IDbTable;
 
@@ -29,5 +33,7 @@ namespace Dapper.Easies
         Task<int> UpdateAsync<T>(Expression<Func<T, T>> updateFields, Expression<Predicate<T>> predicate = null) where T : IDbTable;
 
         Task<int> UpdateAsync<T>(T entity) where T : IDbTable;
+
+        Task<int> UpdateAsync<T>(IEnumerable<T> entities) where T : IDbTable;
     }
 }

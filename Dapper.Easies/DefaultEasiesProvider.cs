@@ -36,10 +36,10 @@ namespace Dapper.Easies
             if (entity == null)
                 throw new ArgumentNullException(nameof(entity));
 
-            var sql = _sqlConverter.ToInsertSql(entity, out var parameters, out var hasIdentity);
+            var sql = _sqlConverter.ToInsertSql<T>(out var hasIdentity);
             if (hasIdentity)
             {
-                var id = await Connection.ExecuteScalarAsync<long>(sql, parameters);
+                var id = await Connection.ExecuteScalarAsync<long>(sql, entity);
                 if (id > 0)
                 {
                     var propertyInfo = DbObject.Get(typeof(T)).IdentityKey.PropertyInfo;
@@ -50,7 +50,16 @@ namespace Dapper.Easies
                 return false;
             }
             else
-                return await Connection.ExecuteAsync(sql, parameters) > 0;
+                return await Connection.ExecuteAsync(sql, entity) > 0;
+        }
+
+        public Task<int> InsertAsync<T>(IEnumerable<T> entities) where T : IDbTable
+        {
+            if (entities == null)
+                throw new ArgumentNullException(nameof(entities));
+
+            var sql = _sqlConverter.ToInsertSql<T>(out _);
+            return Connection.ExecuteAsync(sql, entities);
         }
 
         public Task<int> DeleteAsync<T>(T entity) where T : IDbTable
@@ -58,8 +67,17 @@ namespace Dapper.Easies
             if (entity == null)
                 throw new ArgumentNullException(nameof(entity));
 
-            var sql = _sqlConverter.ToDeleteSql(entity, out var parameters);
-            return Connection.ExecuteAsync(sql, parameters);
+            var sql = _sqlConverter.ToDeleteSql<T>();
+            return Connection.ExecuteAsync(sql, entity);
+        }
+
+        public Task<int> DeleteAsync<T>(IEnumerable<T> entities) where T : IDbTable
+        {
+            if (entities == null)
+                throw new ArgumentNullException(nameof(entities));
+
+            var sql = _sqlConverter.ToDeleteSql<T>();
+            return Connection.ExecuteAsync(sql, entities);
         }
 
         public Task<int> DeleteAsync<T>(Expression<Predicate<T>> predicate = null) where T : IDbTable
@@ -109,8 +127,20 @@ namespace Dapper.Easies
 
         public Task<int> UpdateAsync<T>(T entity) where T : IDbTable
         {
-            var sql = _sqlConverter.ToUpdateSql(entity, out var parameters);
-            return Connection.ExecuteAsync(sql, parameters);
+            if (entity == null)
+                throw new ArgumentNullException(nameof(entity));
+
+            var sql = _sqlConverter.ToUpdateSql<T>();
+            return Connection.ExecuteAsync(sql, entity);
+        }
+
+        public Task<int> UpdateAsync<T>(IEnumerable<T> entities) where T : IDbTable
+        {
+            if (entities == null)
+                throw new ArgumentNullException(nameof(entities));
+
+            var sql = _sqlConverter.ToUpdateSql<T>();
+            return Connection.ExecuteAsync(sql, entities);
         }
 
         public IDbConnection Connection => _connection ?? (_connection = _connectionFactory.Create());
