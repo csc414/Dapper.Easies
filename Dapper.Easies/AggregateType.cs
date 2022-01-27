@@ -8,6 +8,8 @@ namespace Dapper.Easies
     {
         Count,
         Max,
-        Min
+        Min,
+        Avg,
+        Sum
     }
 }

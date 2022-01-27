@@ -23,6 +23,8 @@ namespace Dapper.Easies
 
         private ICollection<Expression> _whereExpressions;
 
+        private ICollection<Expression> _havingExpressions;
+
         public DbObject DbObject { get; }
 
         public IDictionary<Type, DbAlias> Alias { get; }
@@ -31,15 +33,19 @@ namespace Dapper.Easies
 
         public IDbConnection Connection => _connection.Connection;
 
-        public IEnumerable<JoinMetedata> JoinMetedatas => _joinMetedatas ?? Enumerable.Empty<JoinMetedata>();
+        public IEnumerable<JoinMetedata> JoinMetedatas => _joinMetedatas;
 
-        public IEnumerable<Expression> WhereExpressions => _whereExpressions ?? Enumerable.Empty<Expression>();
+        public IEnumerable<Expression> WhereExpressions => _whereExpressions;
+
+        public IEnumerable<Expression> HavingExpressions => _havingExpressions;
 
         public OrderByMetedata OrderByMetedata { get; internal set; }
 
         public OrderByMetedata ThenByMetedata { get; internal set; }
 
         public Expression SelectorExpression { get; internal set; }
+
+        public Expression GroupByExpression { get; internal set; }
 
         public int Skip { get; set; }
 
@@ -63,6 +69,14 @@ namespace Dapper.Easies
                 _whereExpressions = new List<Expression>();
 
             _whereExpressions.Add(whereExpression);
+        }
+
+        public void AddHaving(Expression havingExpression)
+        {
+            if (_havingExpressions == null)
+                _havingExpressions = new List<Expression>();
+
+            _havingExpressions.Add(havingExpression);
         }
     }
 }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Dapper.Easies
 {
-    public interface ISelectedQuery<T> : IDbQuery
+    public interface ISelectedDbQuery<T> : IDbQuery
     {
         Task<T> FirstAsync();
 
