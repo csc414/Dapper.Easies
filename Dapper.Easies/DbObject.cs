@@ -34,7 +34,12 @@ namespace Dapper.Easies
 
         internal bool Add(string name, DbProperty property) => _properties.TryAdd(name, property);
 
-        public static DbObject Get(Type type) => _objs[type];
+        public static DbObject Get(Type type)
+        {
+            if (_objs.TryGetValue(type, out var obj))
+                return obj;
+            return default;
+        }
 
         public static IEnumerable<DbObject> Objects => _objs.Values;
 

@@ -133,44 +133,61 @@ namespace Dapper.Easies
             if (expression == null)
                 return null;
 
+            if (expression.NodeType == ExpressionType.Lambda)
+                return GetExpression(((LambdaExpression)expression).Body, builder, sqlSyntax, context);
+
             if (expression.NodeType == ExpressionType.Convert)
                 return GetExpression(((UnaryExpression)expression).Operand, builder, sqlSyntax, context);
 
             if (expression.NodeType == ExpressionType.Call)
             {
                 var m = (MethodCallExpression)expression;
-                if (m.Method.IsStatic && typeof(DbFunction).IsAssignableFrom(m.Method.ReflectedType) && m.Method.Name.Equals("Expression", StringComparison.Ordinal))
+                if (m.Method.IsStatic && typeof(DbFunc).IsAssignableFrom(m.Method.ReflectedType))
                 {
-                    var arg = m.Arguments[0];
-                    if (arg.NodeType == ExpressionType.Call && arg is MethodCallExpression mm && mm.Method.Name.Equals("Format", StringComparison.Ordinal))
+                    if(m.Method.Name.Equals("Expr", StringComparison.Ordinal))
                     {
-                        var args = mm.Arguments.Select((o, j) => {
-                            if (j == 0)
-                                return GetValue(o);
+                        var arg = m.Arguments[0];
+                        if (arg.NodeType == ExpressionType.Call && arg is MethodCallExpression mm && mm.Method.Name.Equals("Format", StringComparison.Ordinal))
+                        {
+                            var args = mm.Arguments.Select((o, j) => {
+                                if (j == 0)
+                                    return GetValue(o);
 
-                            if (o.NodeType == ExpressionType.NewArrayInit)
-                            {
-                                var newArrayExpression = (NewArrayExpression)o;
-                                var args = newArrayExpression.Expressions.Select(e => GetExpression(e, builder, sqlSyntax, context)).ToArray();
-                                var ary = (object[])Activator.CreateInstance(newArrayExpression.Type, args.Length);
-                                for (int i = 0; i < ary.Length; ++i)
-                                    ary[i] = args[i];
-                                return ary;
-                            }
+                                if (o.NodeType == ExpressionType.NewArrayInit)
+                                {
+                                    var newArrayExpression = (NewArrayExpression)o;
+                                    var args = newArrayExpression.Expressions.Select(e => GetExpression(e, builder, sqlSyntax, context)).ToArray();
+                                    var ary = (object[])Activator.CreateInstance(newArrayExpression.Type, args.Length);
+                                    for (int i = 0; i < ary.Length; ++i)
+                                        ary[i] = args[i];
+                                    return ary;
+                                }
 
-                            return GetExpression(o, builder, sqlSyntax, context);
-                        }).ToArray();
+                                return GetExpression(o, builder, sqlSyntax, context);
+                            }).ToArray();
 
-                        return mm.Method.Invoke(null, args).ToString();
+                            return mm.Method.Invoke(null, args).ToString();
+                        }
+                        else
+                            return GetValue(arg).ToString();
                     }
                     else
-                        return GetValue(arg).ToString();
+                    {
+                        var result = sqlSyntax.Method(m.Method, m.Arguments.ToArray(), builder, exp => exp == null ? null : GetExpression(exp, builder, sqlSyntax, context), exp => exp == null ? null : GetValue(exp));
+                        if (result == null)
+                            throw new NotImplementedException($"MethodName：{m.Method.Name}");
+
+                        return result;
+                    }
                 }
             }
 
             if (expression is MemberExpression memberExpression && memberExpression.Expression?.NodeType == ExpressionType.Parameter)
             {
                 var table = DbObject.Get(memberExpression.Member.ReflectedType);
+                if (table == null)
+                    return memberExpression.Member.Name;
+
                 string alias = null;
                 if(context != null)
                     alias = $"{context.Alias[table.Type].Alias}.";

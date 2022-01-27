@@ -73,7 +73,7 @@ namespace Dapper.Easies.Tests
             var parser = new PredicateExpressionParser(_sqlSyntax, builder);
             var context = new QueryContext(null, null, DbObject.Get(typeof(Student)));
             var ary = new[] { "张三", "李四" };
-            Expression<Predicate<Student>> exp = (a) => !DbFunction.In(a.StudentName, ary) && DbFunction.NotIn(a.StudentName, ary);
+            Expression<Predicate<Student>> exp = (a) => !DbFunc.In(a.StudentName, ary) && DbFunc.NotIn(a.StudentName, ary);
             string sql = parser.ToSql(exp, context);
             Assert.Equal("NOT (t.Name IN @p0) AND t.Name NOT IN @p1", sql);
             IParameterLookup lookup = builder.GetDynamicParameters();
@@ -88,7 +88,7 @@ namespace Dapper.Easies.Tests
             var parser = new PredicateExpressionParser(_sqlSyntax, builder);
             var context = new QueryContext(null, null, DbObject.Get(typeof(Student)));
             var name = "张三";
-            Expression<Predicate<Student>> exp = (a) => DbFunction.Like(a.StudentName, $"%{name}%");
+            Expression<Predicate<Student>> exp = (a) => DbFunc.Like(a.StudentName, $"%{name}%");
             string sql = parser.ToSql(exp, context);
             Assert.Equal("t.Name LIKE @p0", sql);
             IParameterLookup lookup = builder.GetDynamicParameters();
@@ -102,7 +102,7 @@ namespace Dapper.Easies.Tests
             var parser = new PredicateExpressionParser(_sqlSyntax, builder);
             var context = new QueryContext(null, null, DbObject.Get(typeof(Student)));
             var name = "%张三%";
-            Expression<Predicate<Student>> exp = (a) => DbFunction.Expression<bool>($"{a.StudentName} LIKE {name}");
+            Expression<Predicate<Student>> exp = (a) => DbFunc.Expr<bool>($"{a.StudentName} LIKE {name}");
             string sql = parser.ToSql(exp, context);
             Assert.Equal("t.Name LIKE @p0", sql);
             IParameterLookup lookup = builder.GetDynamicParameters();

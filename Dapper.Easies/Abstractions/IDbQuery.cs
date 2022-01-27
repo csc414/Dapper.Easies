@@ -11,9 +11,9 @@ namespace Dapper.Easies
         internal QueryContext Context { get; }
     }
 
-    public interface IDbQuery<T> : IDbQuery, ISelectedQuery<T>, IAggregateQuery<T>
+    public interface IDbQuery<T> : IDbQuery, ISelectedDbQuery<T>, IAggregateDbQuery<T>
     {
-        ISelectedQuery<TResult> Select<TResult>(Expression<Func<T, TResult>> selector);
+        ISelectedDbQuery<TResult> Select<TResult>(Expression<Func<T, TResult>> selector);
 
         IDbQuery<T> Where(Expression<Func<T, bool>> predicate);
 
@@ -23,14 +23,16 @@ namespace Dapper.Easies
 
         IDbQuery<T, TJoin> Join<TJoin>(Expression<Func<T, TJoin, string>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject;
 
-        IOrderedDbQuery<T> OrderBy<TField>(params Expression<Func<T, TField>>[] orderField);
+        IOrderedDbQuery<T> OrderBy<TField>(params Expression<Func<T, TField>>[] orderFields);
 
-        IOrderedDbQuery<T> OrderByDescending<TField>(params Expression<Func<T, TField>>[] orderField);
+        IOrderedDbQuery<T> OrderByDescending<TField>(params Expression<Func<T, TField>>[] orderFields);
+
+        IGroupingDbQuery<T> GroupBy<TFields>(Expression<Func<T, TFields>> fields);
     }
 
-    public interface IDbQuery<T1, T2> : IDbQuery, ISelectedQuery<T1>, IAggregateQuery<T1, T2>
+    public interface IDbQuery<T1, T2> : IDbQuery, ISelectedDbQuery<T1>, IAggregateDbQuery<T1, T2>
     {
-        ISelectedQuery<TResult> Select<TResult>(Expression<Func<T1, T2, TResult>> selector);
+        ISelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, TResult>> selector);
 
         IDbQuery<T1, T2> Where(Expression<Func<T1, T2, bool>> predicate);
 
@@ -40,14 +42,14 @@ namespace Dapper.Easies
 
         IDbQuery<T1, T2, TJoin> Join<TJoin>(Expression<Func<T1, T2, TJoin, string>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject;
 
-        IOrderedDbQuery<T1, T2> OrderBy<TField>(params Expression<Func<T1, T2, TField>>[] orderField);
+        IOrderedDbQuery<T1, T2> OrderBy<TField>(params Expression<Func<T1, T2, TField>>[] orderFields);
 
-        IOrderedDbQuery<T1, T2> OrderByDescending<TField>(params Expression<Func<T1, T2, TField>>[] orderField);
+        IOrderedDbQuery<T1, T2> OrderByDescending<TField>(params Expression<Func<T1, T2, TField>>[] orderFields);
     }
 
-    public interface IDbQuery<T1, T2, T3> : IDbQuery, ISelectedQuery<T1>, IAggregateQuery<T1, T2, T3>
+    public interface IDbQuery<T1, T2, T3> : IDbQuery, ISelectedDbQuery<T1>, IAggregateDbQuery<T1, T2, T3>
     {
-        ISelectedQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, TResult>> selector);
+        ISelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, TResult>> selector);
 
         IDbQuery<T1, T2, T3> Where(Expression<Func<T1, T2, T3, bool>> predicate);
 
@@ -57,14 +59,14 @@ namespace Dapper.Easies
 
         IDbQuery<T1, T2, T3, TJoin> Join<TJoin>(Expression<Func<T1, T2, T3, TJoin, string>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject;
 
-        IOrderedDbQuery<T1, T2, T3> OrderBy<TField>(params Expression<Func<T1, T2, T3, TField>>[] orderField);
+        IOrderedDbQuery<T1, T2, T3> OrderBy<TField>(params Expression<Func<T1, T2, T3, TField>>[] orderFields);
 
-        IOrderedDbQuery<T1, T2, T3> OrderByDescending<TField>(params Expression<Func<T1, T2, T3, TField>>[] orderField);
+        IOrderedDbQuery<T1, T2, T3> OrderByDescending<TField>(params Expression<Func<T1, T2, T3, TField>>[] orderFields);
     }
 
-    public interface IDbQuery<T1, T2, T3, T4> : IDbQuery, ISelectedQuery<T1>, IAggregateQuery<T1, T2, T3, T4>
+    public interface IDbQuery<T1, T2, T3, T4> : IDbQuery, ISelectedDbQuery<T1>, IAggregateDbQuery<T1, T2, T3, T4>
     {
-        ISelectedQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, T4, TResult>> selector);
+        ISelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, T4, TResult>> selector);
 
         IDbQuery<T1, T2, T3, T4> Where(Expression<Func<T1, T2, T3, T4, bool>> predicate);
 
@@ -74,21 +76,21 @@ namespace Dapper.Easies
 
         IDbQuery<T1, T2, T3, T4, TJoin> Join<TJoin>(Expression<Func<T1, T2, T3, T4, TJoin, string>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject;
 
-        IOrderedDbQuery<T1, T2, T3, T4> OrderBy<TField>(params Expression<Func<T1, T2, T3, T4, TField>>[] orderField);
+        IOrderedDbQuery<T1, T2, T3, T4> OrderBy<TField>(params Expression<Func<T1, T2, T3, T4, TField>>[] orderFields);
 
-        IOrderedDbQuery<T1, T2, T3, T4> OrderByDescending<TField>(params Expression<Func<T1, T2, T3, T4, TField>>[] orderField);
+        IOrderedDbQuery<T1, T2, T3, T4> OrderByDescending<TField>(params Expression<Func<T1, T2, T3, T4, TField>>[] orderFields);
     }
 
-    public interface IDbQuery<T1, T2, T3, T4, T5> : IDbQuery, ISelectedQuery<T1>, IAggregateQuery<T1, T2, T3, T4, T5>
+    public interface IDbQuery<T1, T2, T3, T4, T5> : IDbQuery, ISelectedDbQuery<T1>, IAggregateDbQuery<T1, T2, T3, T4, T5>
     {
-        ISelectedQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, TResult>> selector);
+        ISelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, TResult>> selector);
 
         IDbQuery<T1, T2, T3, T4, T5> Where(Expression<Func<T1, T2, T3, T4, T5, bool>> predicate);
 
         IDbQuery<T1, T2, T3, T4, T5> Where(Expression<Func<T1, T2, T3, T4, T5, string>> expression);
 
-        IOrderedDbQuery<T1, T2, T3, T4, T5> OrderBy<TField>(params Expression<Func<T1, T2, T3, T4, T5, TField>>[] orderField);
+        IOrderedDbQuery<T1, T2, T3, T4, T5> OrderBy<TField>(params Expression<Func<T1, T2, T3, T4, T5, TField>>[] orderFields);
 
-        IOrderedDbQuery<T1, T2, T3, T4, T5> OrderByDescending<TField>(params Expression<Func<T1, T2, T3, T4, T5, TField>>[] orderField);
+        IOrderedDbQuery<T1, T2, T3, T4, T5> OrderByDescending<TField>(params Expression<Func<T1, T2, T3, T4, T5, TField>>[] orderFields);
     }
 }

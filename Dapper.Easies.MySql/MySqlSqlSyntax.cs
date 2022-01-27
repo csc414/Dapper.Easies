@@ -1,14 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 
 namespace Dapper.Easies.MySql
 {
     public class MySqlSqlSyntax : DefaultSqlSyntax
     {
-        public override string SelectFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> joins, string where, string orderBy, int skip, int take)
+        public override string SelectFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> joins, string where, string groupBy, string having, string orderBy, int skip, int take)
         {
-            var sql = base.SelectFormat(tableName, fields, joins, where, orderBy, skip, take);
+            var sql = base.SelectFormat(tableName, fields, joins, where, groupBy, having, orderBy, skip, take);
             if (take > 0)
                 sql = $"{sql} LIMIT {skip},{take}";
 
@@ -32,6 +34,17 @@ namespace Dapper.Easies.MySql
         public override string EscapeTableName(string name)
         {
             return $"`{name}`";
+        }
+
+        public override string Method(MethodInfo method, Expression[] args, ParameterBuilder parameter, Func<Expression, string> getExpr, Func<Expression, object> getValue)
+        {
+            switch (method.Name)
+            {
+                case "Rand":
+                    return "rand()";
+                default:
+                    return base.Method(method, args, parameter, getExpr, getValue);
+            }
         }
     }
 }
