@@ -189,25 +189,25 @@ await easiesProvider.DeleteAsync(query);
 await easiesProvider.DeleteCorrelationAsync(query);
 ```
 
-DbFunction
+DbFunc
 ------------------------------------------------------------
 ```csharp
 //使用Like
 var name = "张%";
 var query = easiesProvider.Query<Student>()
               .Join<Class>((a, b) => a.ClassId == b.Id)
-              .Where((a, b) => DbFunction.Like(a.Name, name));
+              .Where((a, b) => DbFunc.Like(a.Name, name));
 
 //使用In或NotIn
 var names = new [] { "张三", "李四" };
 var query = easiesProvider.Query<Student>()
               .Join<Class>((a, b) => a.ClassId == b.Id)
-              .Where((a, b) => DbFunction.In(a.Name, names) || DbFunction.NotIn(a.Name, names));
+              .Where((a, b) => DbFunc.In(a.Name, names) || DbFunc.NotIn(a.Name, names));
               
 //使用Expression实现Like和In，Expression非常强大，可在无法用Lambda实现的情况下使用自定义表达式，并且可以和Lambda表达式混用
 var query = easiesProvider.Query<Student>()
               .Join<Class>((a, b) => a.ClassId == b.Id)
-              .Where((a, b) => a.Age > 10 && DbFunction.Expression<bool>($"{a.Name} LIKE {name} OR {a.Name} IN {names}"));
+              .Where((a, b) => a.Age > 10 && DbFunc.Expr<bool>($"{a.Name} LIKE {name} OR {a.Name} IN {names}"));
 
 //也可以直接在Join 或 Where 中使用Expression
 var query = easiesProvider.Query<Student>()
@@ -217,12 +217,12 @@ var query = easiesProvider.Query<Student>()
 //Expression还可以使用在Selector
 var query = easiesProvider.Query<Student>()
               .Join<Class>((a, b) => a.ClassId == b.Id)
-              .Select((a, b) => new { StudentName = a.Name, ClassName = b.Name, IsYoung = DbFunction.Expression<bool>($"IF({a.Age} < {10}, 1, 0)") });
+              .Select((a, b) => new { StudentName = a.Name, ClassName = b.Name, IsYoung = DbFunc.Expr<bool>($"IF({a.Age} < {10}, 1, 0)") });
               
 //更新使用 Expression
 await easiesProvider.UpdateAsync<Student>(
-    o => new Student { Age = DbFunction.Expression<int>($"IF({o.Name} in {names}, 18, {a.Age})") }, 
-    o => o.Id > 0 && o.Name == DbFunction.Expression<string>($"IF({o.Name} LIKE {name}, '张三', '李四')"));
+    o => new Student { Age = DbFunc.Expr<int>($"IF({o.Name} in {names}, 18, {a.Age})") }, 
+    o => o.Id > 0 && o.Name == DbFunc.Expr<string>($"IF({o.Name} LIKE {name}, '张三', '李四')"));
 ```
 关于Sql转换
 ------------------------------------------------------------
