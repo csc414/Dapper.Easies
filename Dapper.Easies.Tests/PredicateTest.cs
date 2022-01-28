@@ -25,13 +25,14 @@ namespace Dapper.Easies.Tests
             var context = new QueryContext(null, null, DbObject.Get(typeof(Student)));
             Expression<Predicate<Student>> exp = o => o.Id == ((o.Id * 3) + (o.Id / 5)) * 2 && (o.Age > 18 || o.StudentName == "张三") && o.IsHandsome;
             string sql = parser.ToSql(exp, context);
-            Assert.Equal("t.Id = ((t.Id * @p0) + (t.Id / @p1)) * @p2 AND (t.Age > @p3 OR t.Name = @p4) AND t.IsHandsome", sql);
+            Assert.Equal("t.Id = ((t.Id * @p0) + (t.Id / @p1)) * @p2 AND (t.Age > @p3 OR t.Name = @p4) AND t.IsHandsome = @p5", sql);
             IParameterLookup lookup = builder.GetDynamicParameters();
             Assert.Equal(3, (int)lookup["p0"]);
             Assert.Equal(5, (int)lookup["p1"]);
             Assert.Equal(2, (int)lookup["p2"]);
             Assert.Equal(18, (int)lookup["p3"]);
             Assert.Equal("张三", (string)lookup["p4"]);
+            Assert.True((bool)lookup["p5"]);
         }
 
         [Fact]
@@ -42,9 +43,10 @@ namespace Dapper.Easies.Tests
             var context = new QueryContext(null, null, DbObject.Get(typeof(Student)));
             Expression<Predicate<Student>> exp = o =>  !(o.Id == 1) && !o.IsHandsome;
             string sql = parser.ToSql(exp, context);
-            Assert.Equal("NOT (t.Id = @p0) AND NOT (t.IsHandsome)", sql);
+            Assert.Equal("NOT (t.Id = @p0) AND NOT (t.IsHandsome = @p1)", sql);
             IParameterLookup lookup = builder.GetDynamicParameters();
             Assert.Equal(1, (int)lookup["p0"]);
+            Assert.True((bool)lookup["p1"]);
         }
 
         [Fact]

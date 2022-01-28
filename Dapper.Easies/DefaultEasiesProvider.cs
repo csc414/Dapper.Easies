@@ -94,14 +94,9 @@ namespace Dapper.Easies
             return DeleteAsync(query.Context);
         }
 
-        public Task<int> DeleteCorrelationAsync(IDbQuery query)
+        Task<int> DeleteAsync(QueryContext context)
         {
-            return DeleteAsync(query.Context, true);
-        }
-
-        Task<int> DeleteAsync(QueryContext context, bool correlation = false)
-        {
-            var sql = _sqlConverter.ToDeleteSql(context, correlation, out var parameters);
+            var sql = _sqlConverter.ToDeleteSql(context, out var parameters);
             return Connection.ExecuteAsync(sql, parameters);
         }
 

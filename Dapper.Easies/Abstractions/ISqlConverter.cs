@@ -15,7 +15,7 @@ namespace Dapper.Easies
 
         string ToDeleteSql<T>();
 
-        string ToDeleteSql(QueryContext context, bool correlation, out DynamicParameters parameters);
+        string ToDeleteSql(QueryContext context, out DynamicParameters parameters);
 
         string ToUpdateSql<T>();
 
