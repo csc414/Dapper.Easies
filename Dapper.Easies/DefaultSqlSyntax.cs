@@ -36,13 +36,13 @@ namespace Dapper.Easies
             return $"INSERT INTO {tableName}({string.Join(", ", fields)}) VALUES({string.Join(", ", paramNames)})";
         }
 
-        public virtual string DeleteFormat(string tableName, IEnumerable<string> deleteTableAlias, IEnumerable<string> joins, string where)
+        public virtual string DeleteFormat(string tableName, string tableAlias, IEnumerable<string> joins, string where)
         {
             var sql = new StringBuilder("DELETE");
-            if (deleteTableAlias != null)
-                sql.Append($" {string.Join(", ", deleteTableAlias)}");
+            if (tableAlias != null)
+                sql.Append($" {tableAlias}");
 
-            sql.Append($" FROM { tableName}");
+            sql.Append($" FROM {tableName} {tableAlias}");
 
             if (joins != null)
                 sql.AppendFormat(" {0}", string.Join(" ", joins));
@@ -53,9 +53,9 @@ namespace Dapper.Easies
             return sql.ToString();
         }
 
-        public virtual string UpdateFormat(string tableName, IEnumerable<string> updateFields, string where)
+        public virtual string UpdateFormat(string tableName, string tableAlias, IEnumerable<string> updateFields, string where)
         {
-            var sql = new StringBuilder($"UPDATE {tableName} SET {string.Join(", ", updateFields)}");
+            var sql = new StringBuilder($"UPDATE {tableName} {tableAlias} SET {string.Join(", ", updateFields)}");
 
             if (where != null)
                 sql.AppendFormat(" WHERE {0}", where);

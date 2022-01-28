@@ -105,16 +105,14 @@ namespace Dapper.Easies
             return sql;
         }
 
-        public string ToDeleteSql(QueryContext context, bool correlation, out DynamicParameters parameters)
+        public string ToDeleteSql(QueryContext context, out DynamicParameters parameters)
         {
             var parameterBuilder = new ParameterBuilder(_sqlSyntax);
             var parser = new PredicateExpressionParser(_sqlSyntax, parameterBuilder);
-            var deleteTableAlias = context.Alias.Select(o => o.Value.Alias);
-            if (!correlation)
-                deleteTableAlias = deleteTableAlias.Take(1);
+            var tableAlias = context.Alias.Values.First();
             var sql = _sqlSyntax.DeleteFormat(
-                _sqlSyntax.TableNameAlias(context.Alias.Values.First()),
-                deleteTableAlias,
+                tableAlias.Name,
+                tableAlias.Alias,
                 GetJoins(context, parser),
                 GetPredicate(context.WhereExpressions, context, parser));
             parameters = parameterBuilder.GetDynamicParameters();
@@ -145,8 +143,10 @@ namespace Dapper.Easies
                     throw new NotImplementedException($"BindingType：{binding.BindingType}");
             }
 
+            var tableAlias = context.Alias.Values.First();
             var sql = _sqlSyntax.UpdateFormat(
-                _sqlSyntax.TableNameAlias(context.Alias.Values.First()),
+                tableAlias.Name,
+                tableAlias.Alias,
                 fields,
                 GetPredicate(context.WhereExpressions, context, parser));
             parameters = parameterBuilder.GetDynamicParameters();
@@ -165,6 +165,7 @@ namespace Dapper.Easies
             var properties = table.Properties.Where(o => !o.PrimaryKey);
             var sql = _sqlSyntax.UpdateFormat(
                 table.EscapeName,
+                null,
                 properties.Select(o => $"{o.EscapeName} = {_sqlSyntax.ParameterName(o.PropertyInfo.Name)}"),
                 string.Join(_sqlSyntax.Operator(OperatorType.AndAlso), primaryKeys.Select(o => $"{o.EscapeName} = {_sqlSyntax.ParameterName(o.PropertyInfo.Name)}")));
             if (_options.DevelopmentMode)

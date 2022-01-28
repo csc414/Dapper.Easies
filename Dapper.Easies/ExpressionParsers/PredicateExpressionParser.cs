@@ -46,7 +46,7 @@ namespace Dapper.Easies
 
         internal override ParserData VisitLambda(LambdaExpression lambda)
         {
-            AppendSql(Visit(lambda.Body));
+            AppendSql(Visit(lambda.Body), true);
             return ParserData.Empty;
         }
 
@@ -83,7 +83,7 @@ namespace Dapper.Easies
                 var data = Visit(exp);
                 if (condition)
                     _binaryDeep--;
-                AppendSql(data);
+                AppendSql(data, !condition);
                 if (hasBracket)
                     _sql.Append(")");
             }
@@ -131,7 +131,7 @@ namespace Dapper.Easies
             {
                 _sql.Append(_sqlSyntax.Operator(OperatorType.Not));
                 _sql.Append("(");
-                AppendSql(Visit(u.Operand));
+                AppendSql(Visit(u.Operand), true);
                 _sql.Append(")");
             }
 
@@ -157,7 +157,7 @@ namespace Dapper.Easies
             return CreateConstant(GetValue(m), m);
         }
 
-        void AppendSql(ParserData data)
+        void AppendSql(ParserData data, bool andAlso = false)
         {
             switch (data.Type)
             {
@@ -165,6 +165,8 @@ namespace Dapper.Easies
                     {
                         var property = (DbObject.DbProperty)data.Value;
                         _sql.Append(GetTablePropertyAlias(property));
+                        if (andAlso && property.PropertyInfo.PropertyType == typeof(bool))
+                            _sql.AppendFormat("{0}{1}", _sqlSyntax.Operator(OperatorType.Equal), _parameters.AddParameter(true));
                     }
                     break;
                 case ParserDataType.Constant:

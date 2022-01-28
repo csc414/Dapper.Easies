@@ -17,6 +17,8 @@ namespace Dapper.Easies.Demo
             {
                 builder.DevelopmentMode();
                 builder.UseMySql("Host=localhost;UserName=root;Password=123456;Database=School;Port=3306;CharSet=utf8mb4;Connection Timeout=1200;Allow User Variables=true;");
+
+                //builder.UseSqlServer("Data Source=localhost;User Id=sa;Password=123456@Cxc;Initial Catalog=School;");
             });
             services.AddLogging(builder =>
             {
@@ -43,8 +45,15 @@ namespace Dapper.Easies.Demo
 
             var i = await easiesProvider.DeleteAsync(new[] { cls, cls1 });
 
-            var a = await easiesProvider.Query<Student>().Where(o => o.IsOk).GroupBy(o => o.Id).Having(o => DbFunc.Count() > 0).Select(o => new { o.Id, Count = DbFunc.Max(o.Age) }).OrderBy(o => o.Count).ThenByDescending(o => MySqlDbFunc.Rand()).FirstOrDefaultAsync();
-            
+            var a = await easiesProvider.Query<Student>()
+                .Where(o => o.Age == 18 || !o.IsOk)
+                .GroupBy(o => o.Id)
+                .Having(o => DbFunc.Count() > 0)
+                .Select(o => new { o.Id, Count = DbFunc.Max(o.Age) })
+                .OrderBy(o => o.Count)
+                .ThenByDescending(o => o.Id)
+                .FirstOrDefaultAsync();
+
             //var stu = new Student();
             //stu.ClassId = cls.Id;
             //stu.StudentName = "李坤1";
@@ -54,8 +63,7 @@ namespace Dapper.Easies.Demo
             var ary = new[] { 1, 2, 3 };
             var ls = new List<string> { "123", "456" };
             var dict = new Dictionary<string, string> { { "aa", "bb" } };
-            var student = await easiesProvider.GetAsync<Student>(2);
-            student.Age = 19;
+            var student = await easiesProvider.GetAsync<Student>(37);
             var count = await easiesProvider.Query<Student>()
                 .Join<Class>((student, cls) => $"{student.ClassId} != {Guid.Empty}")
                 .Where((a, b) => $"{a.StudentName} != {dict["aa"]}")
@@ -69,7 +77,7 @@ namespace Dapper.Easies.Demo
                 .OrderBy((a, b) => a.Age)
                 .ThenBy((a, b) => b.CreateTime)
                 //.Select((a, b) => a.StudentName)
-                .Select((a, b) => new StudentResponse { Name = DbFunc.Expr<string>($"IF({a.StudentName} = {a.Age}, '李坤', '刘鑫')"), ClassName = b.Name })
+                .Select((a, b) => new StudentResponse { Name = DbFunc.Expr<string>($"{a.StudentName}"), ClassName = b.Name })
                 .QueryAsync();
 
             foreach (var item in temps)
@@ -82,13 +90,12 @@ namespace Dapper.Easies.Demo
                 .Where((stu, cls) => stu.Age == 18);
 
             await easiesProvider.UpdateAsync(student);
-            await easiesProvider.UpdateAsync<Student>((o) => new Student { Age = DbFunc.Expr<int?>($"IF({o.Age} = {student.Age}, {o.Age}, {student.Age})") }, o => o.Id == 2 && o.StudentName == DbFunc.Expr<string>($"IF({o.StudentName} = {o.StudentName}, '李坤', '刘鑫')"));
+            await easiesProvider.UpdateAsync<Student>((o) => new Student { Age = DbFunc.Expr<int?>($"{student.Age}") }, o => o.Id == 2 && o.StudentName == DbFunc.Expr<string>($"{o.StudentName}"));
             await easiesProvider.UpdateAsync(() => new Student { Age = 18 }, o => o.Id == 2);
 
             //await easiesProvider.DeleteAsync<Student>();
-            //await easiesProvider.DeleteAsync<Student>(o => o.Age == 18);
-            //await easiesProvider.DeleteAsync(query);
-            //await easiesProvider.DeleteCorrelationAsync(query);
+            await easiesProvider.DeleteAsync<Student>(o => o.Age == 20);
+            await easiesProvider.DeleteAsync(query);
         }
 
         public class StudentResponse
