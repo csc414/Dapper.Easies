@@ -16,9 +16,9 @@ namespace Dapper.Easies.Demo
             services.AddEasiesProvider(builder =>
             {
                 builder.DevelopmentMode();
-                builder.UseMySql("Host=localhost;UserName=root;Password=123456;Database=School;Port=3306;CharSet=utf8mb4;Connection Timeout=1200;Allow User Variables=true;");
+                //builder.UseMySql("Host=localhost;UserName=root;Password=123456;Database=School;Port=3306;CharSet=utf8mb4;Connection Timeout=1200;Allow User Variables=true;");
 
-                //builder.UseSqlServer("Data Source=localhost;User Id=sa;Password=123456@Cxc;Initial Catalog=School;");
+                builder.UseSqlServer("Data Source=localhost;User Id=sa;Password=123456@Cxc;Initial Catalog=School;");
             });
             services.AddLogging(builder =>
             {
@@ -48,11 +48,18 @@ namespace Dapper.Easies.Demo
             var a = await easiesProvider.Query<Student>()
                 .Where(o => o.Age == 18 || !o.IsOk)
                 .GroupBy(o => o.Id)
-                .Having(o => DbFunc.Count() > 0)
+                .Having(o => MySqlDbFunc.Count() > 0)
                 .Select(o => new { o.Id, Count = DbFunc.Max(o.Age) })
                 .OrderBy(o => o.Count)
                 .ThenByDescending(o => o.Id)
                 .FirstOrDefaultAsync();
+
+            var bb = await easiesProvider.Query<Student>()
+                .Join<Class>((a, b) => a.ClassId == b.Id)
+                .GroupBy((a, b) => b.Name)
+                .Having((a, b) => DbFunc.Avg(a.Age) > 12)
+                .Select((a, b) => new { ClassName = b.Name, AvgAge = DbFunc.Avg(a.Age) })
+                .QueryAsync();
 
             //var stu = new Student();
             //stu.ClassId = cls.Id;

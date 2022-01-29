@@ -80,20 +80,20 @@ namespace Dapper.Easies
             return _context.Connection.ExecuteScalarAsync<TResult>(_context.Converter.ToQuerySql(_context, out var parameters, aggregateInfo: new AggregateInfo(AggregateType.Min, field)), parameters);
         }
 
-        protected Task<long> AvgAsync<TResult>(Expression field)
+        protected Task<decimal> AvgAsync<TResult>(Expression field)
         {
             if (field == null)
                 throw new ArgumentException("字段不能为空");
 
-            return _context.Connection.ExecuteScalarAsync<long>(_context.Converter.ToQuerySql(_context, out var parameters, aggregateInfo: new AggregateInfo(AggregateType.Avg, field)), parameters);
+            return _context.Connection.ExecuteScalarAsync<decimal>(_context.Converter.ToQuerySql(_context, out var parameters, aggregateInfo: new AggregateInfo(AggregateType.Avg, field)), parameters);
         }
 
-        protected Task<long> SumAsync<TResult>(Expression field)
+        protected Task<decimal> SumAsync<TResult>(Expression field)
         {
             if (field == null)
                 throw new ArgumentException("字段不能为空");
 
-            return _context.Connection.ExecuteScalarAsync<long>(_context.Converter.ToQuerySql(_context, out var parameters, aggregateInfo: new AggregateInfo(AggregateType.Sum, field)), parameters);
+            return _context.Connection.ExecuteScalarAsync<decimal>(_context.Converter.ToQuerySql(_context, out var parameters, aggregateInfo: new AggregateInfo(AggregateType.Sum, field)), parameters);
         }
     }
 
@@ -176,9 +176,9 @@ namespace Dapper.Easies
 
         public Task<TResult> MinAsync<TResult>(Expression<Func<T, TResult>> field) => base.MinAsync<TResult>(field);
 
-        public Task<long> AvgAsync<TField>(Expression<Func<T, TField>> field) => base.AvgAsync<TField>(field);
+        public Task<decimal> AvgAsync<TField>(Expression<Func<T, TField>> field) => base.AvgAsync<TField>(field);
 
-        public Task<long> SumAsync<TField>(Expression<Func<T, TField>> field) => base.SumAsync<TField>(field);
+        public Task<decimal> SumAsync<TField>(Expression<Func<T, TField>> field) => base.SumAsync<TField>(field);
 
         // ----------------------------------------------- Group By -----------------------------------------------
         public IGroupingDbQuery<T> GroupBy<TFields>(Expression<Func<T, TFields>> fields)
@@ -296,9 +296,9 @@ namespace Dapper.Easies
 
         public Task<TResult> MinAsync<TResult>(Expression<Func<T1, T2, TResult>> field) => base.MinAsync<TResult>(field);
 
-        public Task<long> AvgAsync<TField>(Expression<Func<T1, T2, TField>> field) => base.AvgAsync<TField>(field);
+        public Task<decimal> AvgAsync<TField>(Expression<Func<T1, T2, TField>> field) => base.AvgAsync<TField>(field);
 
-        public Task<long> SumAsync<TField>(Expression<Func<T1, T2, TField>> field) => base.SumAsync<TField>(field);
+        public Task<decimal> SumAsync<TField>(Expression<Func<T1, T2, TField>> field) => base.SumAsync<TField>(field);
 
         // ----------------------------------------------- Group By -----------------------------------------------
         public IGroupingDbQuery<T1, T2> GroupBy<TFields>(Expression<Func<T1, T2, TFields>> fields)
@@ -416,9 +416,9 @@ namespace Dapper.Easies
 
         public Task<TResult> MinAsync<TResult>(Expression<Func<T1, T2, T3, TResult>> field) => base.MinAsync<TResult>(field);
 
-        public Task<long> AvgAsync<TField>(Expression<Func<T1, T2, T3, TField>> field) => base.AvgAsync<TField>(field);
+        public Task<decimal> AvgAsync<TField>(Expression<Func<T1, T2, T3, TField>> field) => base.AvgAsync<TField>(field);
 
-        public Task<long> SumAsync<TField>(Expression<Func<T1, T2, T3, TField>> field) => base.SumAsync<TField>(field);
+        public Task<decimal> SumAsync<TField>(Expression<Func<T1, T2, T3, TField>> field) => base.SumAsync<TField>(field);
 
         // ----------------------------------------------- Group By -----------------------------------------------
         public IGroupingDbQuery<T1, T2, T3> GroupBy<TFields>(Expression<Func<T1, T2, T3, TFields>> fields)
@@ -536,9 +536,9 @@ namespace Dapper.Easies
 
         public Task<TResult> MinAsync<TResult>(Expression<Func<T1, T2, T3, T4, TResult>> field) => base.MinAsync<TResult>(field);
 
-        public Task<long> AvgAsync<TField>(Expression<Func<T1, T2, T3, T4, TField>> field) => base.AvgAsync<TField>(field);
+        public Task<decimal> AvgAsync<TField>(Expression<Func<T1, T2, T3, T4, TField>> field) => base.AvgAsync<TField>(field);
 
-        public Task<long> SumAsync<TField>(Expression<Func<T1, T2, T3, T4, TField>> field) => base.SumAsync<TField>(field);
+        public Task<decimal> SumAsync<TField>(Expression<Func<T1, T2, T3, T4, TField>> field) => base.SumAsync<TField>(field);
 
         // ----------------------------------------------- Group By -----------------------------------------------
         public IGroupingDbQuery<T1, T2, T3, T4> GroupBy<TFields>(Expression<Func<T1, T2, T3, T4, TFields>> fields)
@@ -644,9 +644,9 @@ namespace Dapper.Easies
 
         public Task<TResult> MinAsync<TResult>(Expression<Func<T1, T2, T3, T4, T5, TResult>> field) => base.MinAsync<TResult>(field);
 
-        public Task<long> AvgAsync<TField>(Expression<Func<T1, T2, T3, T4, T5, TField>> field) => base.AvgAsync<TField>(field);
+        public Task<decimal> AvgAsync<TField>(Expression<Func<T1, T2, T3, T4, T5, TField>> field) => base.AvgAsync<TField>(field);
 
-        public Task<long> SumAsync<TField>(Expression<Func<T1, T2, T3, T4, T5, TField>> field) => base.SumAsync<TField>(field);
+        public Task<decimal> SumAsync<TField>(Expression<Func<T1, T2, T3, T4, T5, TField>> field) => base.SumAsync<TField>(field);
 
         // ----------------------------------------------- Group By -----------------------------------------------
         public IGroupingDbQuery<T1, T2, T3, T4, T5> GroupBy<TFields>(Expression<Func<T1, T2, T3, T4, T5, TFields>> fields)

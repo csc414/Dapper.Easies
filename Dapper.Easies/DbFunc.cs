@@ -21,16 +21,6 @@ namespace Dapper.Easies
             throw new InvalidOperationException("Do not directly call this method.");
         }
 
-        public static long Count()
-        {
-            throw new InvalidOperationException("Do not directly call this method.");
-        }
-
-        public static long Count<T>(T field)
-        {
-            throw new InvalidOperationException("Do not directly call this method.");
-        }
-
         public static T Min<T>(T field)
         {
             throw new InvalidOperationException("Do not directly call this method.");
@@ -41,12 +31,22 @@ namespace Dapper.Easies
             throw new InvalidOperationException("Do not directly call this method.");
         }
 
-        public static long Avg<T>(T field)
+        public static T Avg<T>(T field)
         {
             throw new InvalidOperationException("Do not directly call this method.");
         }
 
-        public static long Sum<T>(T field)
+        public static T Avg<T>(object field)
+        {
+            throw new InvalidOperationException("Do not directly call this method.");
+        }
+
+        public static T Sum<T>(T field)
+        {
+            throw new InvalidOperationException("Do not directly call this method.");
+        }
+
+        public static T Sum<T>(object field)
         {
             throw new InvalidOperationException("Do not directly call this method.");
         }

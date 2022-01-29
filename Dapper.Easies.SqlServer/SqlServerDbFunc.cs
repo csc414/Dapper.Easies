@@ -4,19 +4,14 @@ using System.Text;
 
 namespace Dapper.Easies
 {
-    public class MySqlDbFunc : DbFunc
+    public class SqlServerDbFunc : DbFunc
     {
-        public static double Rand()
+        public static int Count()
         {
             throw new InvalidOperationException("Do not directly call this method.");
         }
 
-        public static long Count()
-        {
-            throw new InvalidOperationException("Do not directly call this method.");
-        }
-
-        public static long Count<T>(T field)
+        public static int Count<T>(T field)
         {
             throw new InvalidOperationException("Do not directly call this method.");
         }
