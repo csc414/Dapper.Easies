@@ -17,6 +17,10 @@ namespace Dapper.Easies.Demo
 
         public int? Age { get; set; }
 
+        public double? FloatTest { get; set; }
+
+        public decimal? DecimalTest { get; set; }
+
         public bool IsOk { get; set; }
 
         public DateTime CreateTime { get; set; }

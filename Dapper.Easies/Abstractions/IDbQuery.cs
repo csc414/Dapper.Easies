@@ -45,6 +45,8 @@ namespace Dapper.Easies
         IOrderedDbQuery<T1, T2> OrderBy<TField>(params Expression<Func<T1, T2, TField>>[] orderFields);
 
         IOrderedDbQuery<T1, T2> OrderByDescending<TField>(params Expression<Func<T1, T2, TField>>[] orderFields);
+
+        IGroupingDbQuery<T1, T2> GroupBy<TFields>(Expression<Func<T1, T2, TFields>> fields);
     }
 
     public interface IDbQuery<T1, T2, T3> : IDbQuery, ISelectedDbQuery<T1>, IAggregateDbQuery<T1, T2, T3>
@@ -62,6 +64,8 @@ namespace Dapper.Easies
         IOrderedDbQuery<T1, T2, T3> OrderBy<TField>(params Expression<Func<T1, T2, T3, TField>>[] orderFields);
 
         IOrderedDbQuery<T1, T2, T3> OrderByDescending<TField>(params Expression<Func<T1, T2, T3, TField>>[] orderFields);
+
+        IGroupingDbQuery<T1, T2, T3> GroupBy<TFields>(Expression<Func<T1, T2, T3, TFields>> fields);
     }
 
     public interface IDbQuery<T1, T2, T3, T4> : IDbQuery, ISelectedDbQuery<T1>, IAggregateDbQuery<T1, T2, T3, T4>
@@ -79,6 +83,8 @@ namespace Dapper.Easies
         IOrderedDbQuery<T1, T2, T3, T4> OrderBy<TField>(params Expression<Func<T1, T2, T3, T4, TField>>[] orderFields);
 
         IOrderedDbQuery<T1, T2, T3, T4> OrderByDescending<TField>(params Expression<Func<T1, T2, T3, T4, TField>>[] orderFields);
+
+        IGroupingDbQuery<T1, T2, T3, T4> GroupBy<TFields>(Expression<Func<T1, T2, T3, T4, TFields>> fields);
     }
 
     public interface IDbQuery<T1, T2, T3, T4, T5> : IDbQuery, ISelectedDbQuery<T1>, IAggregateDbQuery<T1, T2, T3, T4, T5>
@@ -92,5 +98,7 @@ namespace Dapper.Easies
         IOrderedDbQuery<T1, T2, T3, T4, T5> OrderBy<TField>(params Expression<Func<T1, T2, T3, T4, T5, TField>>[] orderFields);
 
         IOrderedDbQuery<T1, T2, T3, T4, T5> OrderByDescending<TField>(params Expression<Func<T1, T2, T3, T4, T5, TField>>[] orderFields);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5> GroupBy<TFields>(Expression<Func<T1, T2, T3, T4, T5, TFields>> fields);
     }
 }
