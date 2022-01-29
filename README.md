@@ -3,6 +3,10 @@
 安装使用
 ------------------------------------------------------------
 `Install-Package Dapper.Easies.MySql`
+
+或
+
+`Install-Package Dapper.Easies.SqlServer`
 ```csharp
 var services = new ServiceCollection();
 services.AddEasiesProvider(builder =>
@@ -172,6 +176,14 @@ var maxPage = Convert.ToInt32(Math.Ceiling(count * 1f / size));
 if (page > maxPage)
     page = maxPage;
 await query.Skip((page - 1) * size).Take(size).QueryAsync();
+
+//分组例子
+var query = await easiesProvider.Query<Student>()
+                .Join<Class>((a, b) => a.ClassId == b.Id)
+                .GroupBy((a, b) => b.Name)
+                .Having((a, b) => DbFunc.Avg(a.Age) > 12)
+                .Select((a, b) => new { ClassName = b.Name, AvgAge = DbFunc.Avg(a.Age), Count = DbFunc.Count() })
+                .QueryAsync();
 ```
 
 高级删除
