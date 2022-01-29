@@ -184,6 +184,8 @@ namespace Dapper.Easies
         public IGroupingDbQuery<T> GroupBy<TFields>(Expression<Func<T, TFields>> fields)
         {
             _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
             return this;
         }
 
@@ -302,6 +304,8 @@ namespace Dapper.Easies
         public IGroupingDbQuery<T1, T2> GroupBy<TFields>(Expression<Func<T1, T2, TFields>> fields)
         {
             _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
             return this;
         }
 
@@ -420,6 +424,8 @@ namespace Dapper.Easies
         public IGroupingDbQuery<T1, T2, T3> GroupBy<TFields>(Expression<Func<T1, T2, T3, TFields>> fields)
         {
             _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
             return this;
         }
 
@@ -538,6 +544,8 @@ namespace Dapper.Easies
         public IGroupingDbQuery<T1, T2, T3, T4> GroupBy<TFields>(Expression<Func<T1, T2, T3, T4, TFields>> fields)
         {
             _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
             return this;
         }
 
@@ -644,6 +652,8 @@ namespace Dapper.Easies
         public IGroupingDbQuery<T1, T2, T3, T4, T5> GroupBy<TFields>(Expression<Func<T1, T2, T3, T4, T5, TFields>> fields)
         {
             _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
             return this;
         }
 
