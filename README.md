@@ -198,9 +198,6 @@ var query = easiesProvider.Query<Student>()
 
 //把查询条件作为删除条件，根据条件删除主操作表 Student
 await easiesProvider.DeleteAsync(query);
-
-//把查询条件作为删除条件，根据条件删除主操作表和关联的表 Student 和 Class 表
-await easiesProvider.DeleteCorrelationAsync(query);
 ```
 
 DbFunc
