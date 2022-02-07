@@ -5,6 +5,10 @@
       <Version>1.0.7</Version>
       <Description>基于Dapper.Easies的MySql扩展</Description>
       <Product>Dapper.Easies.MySql</Product>
+	  <Authors>cxc</Authors>
+	  <PackageProjectUrl>https://www.nuget.org/packages/Dapper.Easies.MySql</PackageProjectUrl>
+	  <RepositoryType>git</RepositoryType>
+	  <RepositoryUrl>https://github.com/csc414/Dapper.Easies</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>

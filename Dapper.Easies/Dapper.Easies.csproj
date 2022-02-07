@@ -5,6 +5,10 @@
         <Version>1.0.7</Version>
         <Description>基于Dapper的轻量级ORM</Description>
         <Product>Dapper.Easies</Product>
+		<Authors>cxc</Authors>
+		<PackageProjectUrl>https://www.nuget.org/packages/Dapper.Easies</PackageProjectUrl>
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/csc414/Dapper.Easies</RepositoryUrl>
     </PropertyGroup>
 
     <ItemGroup>
