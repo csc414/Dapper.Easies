@@ -17,8 +17,10 @@ services.AddEasiesProvider(builder =>
     //开启开发模式会向 Logger 输出生成的Sql。
     builder.DevelopmentMode();
     
-    //目前只支持MySql
+    //目前只支持MySql, SqlServer
     builder.UseMySql("连接字符串");
+    
+    builder.UseSqlServer("连接字符串");
 });
 
 var serviceProvider = services.BuildServiceProvider();
