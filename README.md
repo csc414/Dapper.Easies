@@ -1,4 +1,4 @@
-# Dapper.Easies - 是一个使用Lambda表达式就能轻易读写数据库的轻量级Orm，它基于Dapper。
+# Dapper.Easies - 是基于[Dapper](https://github.com/DapperLib/Dapper "Dapper")非常轻量的一个组件。
 
 安装使用
 ------------------------------------------------------------
@@ -79,6 +79,9 @@ public class DbPropertyAttribute : Attribute
 
 创建模型
 ------------------------------------------------------------
+模型需继承 `IDbTable` 或 `IDbView` 接口。
+
+继承 `IDbView` 的模型只能参与查询。
 ```csharp
 //学生表
 [DbObject("tb_student")]
@@ -126,8 +129,11 @@ stu.Age = 10;
 stu.CreateTime = DateTime.Now;
 await easiesProvider.InsertAsync(stu);
 //因为Student是自增Id，新增后 stu.Id 就有值了
+
+//批量新增，注意批量新增无法回填自增Id
+await easiesProvider.InsertAsync(new[] { stu });
 ```
-查询以及更新
+更新
 ------------------------------------------------------------
 ```csharp
 //根据主键查询学生
@@ -137,19 +143,38 @@ stu.Age = 11;
 //此更新操作会更新除主键外所有字段
 await easiesProvider.UpdateAsync(stu);
 
+//批量更新
+await easiesProvider.UpdateAsync(new[] { stu });
+
 //此更新操作会按条件更新部分字段
 await easiesProvider.UpdateAsync<Student>(o => new Student { Age = 12 }, o => o.Id == stu.Id);
 ```
 删除
 ------------------------------------------------------------
 ```csharp
+var stu = await easiesProvider.GetAsync<Student>(1);
+
+//删除
+await easiesProvider.DeleteAsync(stu);
+
+//批量删除
+await easiesProvider.DeleteAsync(new[] { stu });
+
 //全表删除，慎用
 await easiesProvider.DeleteAsync<Student>();
 
 //按条件删除
 await easiesProvider.DeleteAsync<Student>(o => o.Age == 12);
+
+//查询年龄大于10岁并且是六年一班
+var query = easiesProvider.Query<Student>()
+              .Join<Class>((a, b) => a.ClassId == b.Id)
+              .Where((a, b) => a.Age > 10 && b.Name == "六年一班");
+
+//把查询条件作为删除条件，根据条件删除主操作表 Student
+await easiesProvider.DeleteAsync(query);
 ```
-高级查询
+查询
 ------------------------------------------------------------
 ```csharp
 //查询年龄大于10岁，按年龄倒序后按名称排序的第一个学生
@@ -188,18 +213,6 @@ var query = await easiesProvider.Query<Student>()
                 .QueryAsync();
 ```
 
-高级删除
-------------------------------------------------------------
-```csharp
-//查询年龄大于10岁并且是六年一班
-var query = easiesProvider.Query<Student>()
-              .Join<Class>((a, b) => a.ClassId == b.Id)
-              .Where((a, b) => a.Age > 10 && b.Name == "六年一班");
-
-//把查询条件作为删除条件，根据条件删除主操作表 Student
-await easiesProvider.DeleteAsync(query);
-```
-
 DbFunc
 ------------------------------------------------------------
 ```csharp
@@ -215,26 +228,52 @@ var query = easiesProvider.Query<Student>()
               .Join<Class>((a, b) => a.ClassId == b.Id)
               .Where((a, b) => DbFunc.In(a.Name, names) || DbFunc.NotIn(a.Name, names));
               
-//使用Expression实现Like和In，Expression非常强大，可在无法用Lambda实现的情况下使用自定义表达式，并且可以和Lambda表达式混用
+//使用Expr实现Like和In，Expr非常强大，可在无法用Lambda实现的情况下使用自定义表达式，并且可以和Lambda表达式混用
 var query = easiesProvider.Query<Student>()
               .Join<Class>((a, b) => a.ClassId == b.Id)
               .Where((a, b) => a.Age > 10 && DbFunc.Expr<bool>($"{a.Name} LIKE {name} OR {a.Name} IN {names}"));
 
-//也可以直接在Join 或 Where 中使用Expression
+//也可以直接在Join 或 Where 中使用Expr
 var query = easiesProvider.Query<Student>()
               .Join<Class>((a, b) => $"{a.ClassId} = {b.Id}")
               .Where((a, b) => $"{a.Name} LIKE {name} OR {a.Name} IN {names}");
               
-//Expression还可以使用在Selector
+//Expr还可以使用在Selector
 var query = easiesProvider.Query<Student>()
               .Join<Class>((a, b) => a.ClassId == b.Id)
               .Select((a, b) => new { StudentName = a.Name, ClassName = b.Name, IsYoung = DbFunc.Expr<bool>($"IF({a.Age} < {10}, 1, 0)") });
               
-//更新使用 Expression
+//更新使用 Expr
 await easiesProvider.UpdateAsync<Student>(
     o => new Student { Age = DbFunc.Expr<int>($"IF({o.Name} in {names}, 18, {a.Age})") }, 
     o => o.Id > 0 && o.Name == DbFunc.Expr<string>($"IF({o.Name} LIKE {name}, '张三', '李四')"));
 ```
+
+关于事务
+------------------------------------------------------------
+基于 [TransactionScope](https://docs.microsoft.com/zh-cn/dotnet/api/system.transactions.transactionscope?view=net-6.0 "TransactionScope") 做了简单的封装。
+```csharp
+//在回调函数中的代码将会在同一个事务中执行，事务的回滚是基于异常，如需基于逻辑判断触发回滚可主动抛出异常。
+await easiesProvider.TransactionScopeAsync(async () =>
+{
+    var cls = new Class();
+    cls.Id = Guid.NewGuid();
+    cls.Name = "六年一班";
+    cls.CreateTime = DateTime.Now;
+    await easiesProvider.InsertAsync(cls);
+
+    var stu = new Student();
+    stu.ClassId = cls.Id;
+    stu.Name = "张三";
+    stu.Age = 10;
+    stu.CreateTime = DateTime.Now;
+    await easiesProvider.InsertAsync(stu);
+});
+```
+关于批量操作
+------------------------------------------------------------
+批量新增，更新，删除是基于 `Dapper` 的 [Execute a Command multiple times](https://github.com/DapperLib/Dapper#execute-a-command-multiple-times "Execute a Command multiple times")
+
 关于Sql转换
 ------------------------------------------------------------
-所有函数或本地对象取值将在客户端计算后得到的值并且参数化，杜绝了Sql注入，请开启开发模式查看生成的Sql。
+所有函数或本地对象取值将在客户端计算后得到的值并且参数化，完全杜绝了Sql注入，可在开发过程中开启 `DevelopmentMode` 查看生成的Sql。
