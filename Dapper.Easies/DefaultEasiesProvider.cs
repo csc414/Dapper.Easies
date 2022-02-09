@@ -25,7 +25,7 @@ namespace Dapper.Easies
 
         public IDbQuery<T> Query<T>() where T : IDbObject => new DbQuery<T>(new QueryContext(this, _sqlConverter, DbObject.Get(typeof(T))));
 
-        public Task<T> GetAsync<T>(params object[] ids) where T : IDbTable
+        public Task<T> GetAsync<T>(params object[] ids) where T : IDbObject
         {
             var sql = _sqlConverter.ToGetSql<T>(ids, out var parameters);
             return Connection.QueryFirstOrDefaultAsync<T>(sql, parameters);
