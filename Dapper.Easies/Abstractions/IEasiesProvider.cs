@@ -12,7 +12,7 @@ namespace Dapper.Easies
     {
         IDbQuery<T> Query<T>() where T : IDbObject;
 
-        Task<T> GetAsync<T>(params object[] ids) where T : IDbTable;
+        Task<T> GetAsync<T>(params object[] ids) where T : IDbObject;
 
         Task<bool> InsertAsync<T>(T entity) where T : IDbTable;
 
