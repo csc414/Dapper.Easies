@@ -1,4 +1,4 @@
-# Dapper.Easies - 是基于[Dapper](https://github.com/DapperLib/Dapper "Dapper")非常轻量的一个组件。
+# Dapper.Easies - 是基于[Dapper](https://github.com/DapperLib/Dapper "Dapper")非常轻量的一个Orm组件。
 
 安装使用
 ------------------------------------------------------------
