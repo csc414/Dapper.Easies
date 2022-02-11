@@ -9,16 +9,16 @@ namespace Dapper.Easies.MySql
 {
     public class MySqlDbConnectionFactory : IDbConnectionFactory
     {
-        private readonly EasiesOptions _options;
+        private readonly string _connectionString;
 
-        public MySqlDbConnectionFactory(EasiesOptions options)
+        public MySqlDbConnectionFactory(string connectionString)
         {
-            _options = options;
+            _connectionString = connectionString;
         }
 
         public IDbConnection Create()
         {
-            return new MySqlConnection(_options.ConnectionString);
+            return new MySqlConnection(_connectionString);
         }
     }
 }

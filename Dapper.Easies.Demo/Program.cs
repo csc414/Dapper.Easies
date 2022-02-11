@@ -16,9 +16,9 @@ namespace Dapper.Easies.Demo
             services.AddEasiesProvider(builder =>
             {
                 builder.DevelopmentMode();
-                //builder.UseMySql("Host=localhost;UserName=root;Password=123456;Database=School;Port=3306;CharSet=utf8mb4;Connection Timeout=1200;Allow User Variables=true;");
+                builder.UseMySql("Host=localhost;UserName=root;Password=123456;Database=School;Port=3306;CharSet=utf8mb4;Connection Timeout=1200;Allow User Variables=true;");
 
-                builder.UseSqlServer("Data Source=localhost;User Id=sa;Password=123456@Cxc;Initial Catalog=School;");
+                builder.UseSqlServer("MSSQL", "Data Source=localhost;User Id=sa;Password=123456@Cxc;Initial Catalog=School;");
             });
             services.AddLogging(builder =>
             {
@@ -38,16 +38,33 @@ namespace Dapper.Easies.Demo
             cls1.Name = "六年一班";
             cls1.CreateTime = DateTime.Now;
             var c = await easiesProvider.InsertAsync(new[] { cls, cls1 });
-
+            
             cls.Name = "六年三班";
             cls1.Name = "六年四班";
             var d = await easiesProvider.UpdateAsync(new[] { cls, cls1 });
 
             var i = await easiesProvider.DeleteAsync(new[] { cls, cls1 });
 
+            var cls2 = new MClass();
+            cls2.Id = Guid.NewGuid();
+            cls2.Name = "六年二班";
+            cls2.CreateTime = DateTime.Now;
+
+            var cls22 = new MClass();
+            cls22.Id = Guid.NewGuid();
+            cls22.Name = "六年一班";
+            cls22.CreateTime = DateTime.Now;
+            var cc = await easiesProvider.InsertAsync(new[] { cls2, cls22 });
+
+            cls2.Name = "六年三班";
+            cls22.Name = "六年四班";
+            var dd = await easiesProvider.UpdateAsync(new[] { cls2, cls22 });
+
+            var ii = await easiesProvider.DeleteAsync(new[] { cls2, cls22 });
+
             var a = await easiesProvider.Query<Student>()
                 .Where(o => o.Age == 18 || !o.IsOk)
-                .GroupBy(o => o.Id)
+                .GroupBy(o => new { o.Id })
                 .Having(o => MySqlDbFunc.Count() > 0)
                 .Select(o => new { o.Id, Count = DbFunc.Max(o.Age) })
                 .OrderBy(o => o.Count)
@@ -58,10 +75,10 @@ namespace Dapper.Easies.Demo
                 .Join<Class>((a, b) => a.ClassId == b.Id)
                 .GroupBy((a, b) => b.Name)
                 .Having((a, b) => DbFunc.Avg(a.Age) > 12)
-                .Select((a, b) => new { ClassName = b.Name, AvgAge = DbFunc.Avg(a.Age) })
+                .Select((a, b) => new { ClassName = b.Name, AvgAge = DbFunc.Avg<decimal>(a.Age) })
                 .QueryAsync();
 
-            //var stu = new Student();
+            //var stu = new Student(); 
             //stu.ClassId = cls.Id;
             //stu.StudentName = "李坤1";
             //stu.Age = 18;

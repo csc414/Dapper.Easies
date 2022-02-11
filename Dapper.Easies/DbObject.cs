@@ -19,6 +19,9 @@ namespace Dapper.Easies
             DbName = dbName;
             Type = type;
         }
+        public ISqlSyntax SqlSyntax { get; internal set; }
+
+        public string ConnectionStringName { get; internal set; }
 
         public string DbName { get; }
 
@@ -68,23 +71,26 @@ namespace Dapper.Easies
             public PropertyInfo PropertyInfo { get; }
         }
 
-        internal static void Initialize(ISqlSyntax sqlSyntax)
+        internal static void Initialize(EasiesOptions options)
         {
             var assemblies = GetRuntimeAssemblies();
             var type = typeof(IDbObject);
             var objs = assemblies.SelectMany(o => o.GetTypes().Where(t => t.IsClass && !t.IsAbstract && !t.IsGenericType && type.IsAssignableFrom(t)));
             foreach (var t in objs)
             {
-                var obj = new DbObject(t.GetCustomAttribute<DbObjectAttribute>()?.TableName ?? t.Name, t);
-                obj.EscapeName = sqlSyntax.EscapeTableName(obj.DbName);
+                var objAttr = t.GetCustomAttribute<DbObjectAttribute>();
+                var obj = new DbObject(objAttr?.TableName ?? t.Name, t);
+                obj.ConnectionStringName = objAttr?.ConnectionStringName;
+                obj.SqlSyntax = options.GetSqlSyntax(obj.ConnectionStringName);
+                obj.EscapeName = obj.SqlSyntax.EscapeTableName(obj.DbName);
                 foreach (var p in t.GetTypeInfo().DeclaredProperties)
                 {
                     var attr = p.GetCustomAttribute<DbPropertyAttribute>();
                     var property = new DbProperty(attr?.PropertyName ?? p.Name, p);
                     property.PrimaryKey = attr?.PrimaryKey ?? false;
                     property.Ignore = attr?.Ignore ?? false;
-                    property.EscapeName = sqlSyntax.EscapePropertyName(property.DbName);
-                    property.EscapeNameAsAlias = sqlSyntax.PropertyNameAlias(new DbAlias(property.DbName, property.PropertyInfo.Name));
+                    property.EscapeName = obj.SqlSyntax.EscapePropertyName(property.DbName);
+                    property.EscapeNameAsAlias = obj.SqlSyntax.PropertyNameAlias(new DbAlias(property.DbName, property.PropertyInfo.Name));
                     obj.Add(p.Name, property);
                     if (attr != null && attr.PrimaryKey && attr.Identity && obj.IdentityKey == null)
                     {

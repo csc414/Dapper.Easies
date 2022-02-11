@@ -12,30 +12,28 @@ namespace Dapper.Easies
     {
         private readonly EasiesOptions _options;
 
-        private readonly ISqlSyntax _sqlSyntax;
-
         private readonly ILogger _logger;
 
-        public DefaultSqlConverter(EasiesOptions options, ISqlSyntax sqlSyntax, ILoggerFactory factory = null)
+        public DefaultSqlConverter(EasiesOptions options, ILoggerFactory factory = null)
         {
             _options = options;
-            _sqlSyntax = sqlSyntax;
             _logger = factory?.CreateLogger<DefaultSqlConverter>();
-            DbObject.Initialize(sqlSyntax);
+            DbObject.Initialize(options);
         }
 
         public string ToQuerySql(QueryContext context, out DynamicParameters parameters, int? take = null, AggregateInfo aggregateInfo = null)
         {
-            var parameterBuilder = new ParameterBuilder(_sqlSyntax);
-            var parser = new PredicateExpressionParser(_sqlSyntax, parameterBuilder);
-            var sql = _sqlSyntax.SelectFormat(
-                _sqlSyntax.TableNameAlias(context.Alias.Values.First()),
-                GetFields(context, aggregateInfo, parameterBuilder),
-                GetJoins(context, parser),
-                GetPredicate(context.WhereExpressions, context, parser),
-                GetGroupBy(context, parameterBuilder),
-                GetPredicate(context.HavingExpressions, context, parser),
-                aggregateInfo == null ? GetOrderBy(context, parameterBuilder) : null,
+            var sqlSyntax = context.DbObject.SqlSyntax;
+            var parameterBuilder = new ParameterBuilder(sqlSyntax);
+            var parser = new PredicateExpressionParser(sqlSyntax, parameterBuilder);
+            var sql = sqlSyntax.SelectFormat(
+                sqlSyntax.TableNameAlias(context.Alias.Values.First()),
+                GetFields(sqlSyntax, context, aggregateInfo, parameterBuilder),
+                GetJoins(sqlSyntax, context, parser),
+                GetPredicate(sqlSyntax, context.WhereExpressions, context, parser),
+                GetGroupBy(sqlSyntax, context, parameterBuilder),
+                GetPredicate(sqlSyntax, context.HavingExpressions, context, parser),
+                aggregateInfo == null ? GetOrderBy(sqlSyntax, context, parameterBuilder) : null,
                 context.Skip,
                 take ?? context.Take);
             parameters = parameterBuilder.GetDynamicParameters();
@@ -51,14 +49,15 @@ namespace Dapper.Easies
             if (primaryKeys.Length == 0)
                 throw new ArgumentException("获取失败，实体类没有主键");
 
+            var sqlSyntax = table.SqlSyntax;
             var dynamicParameters = new DynamicParameters();
-            var sql = _sqlSyntax.SelectFormat(
+            var sql = sqlSyntax.SelectFormat(
                 table.EscapeName,
                 table.Properties.Select(o => o.EscapeNameAsAlias),
                 null,
-                string.Join(_sqlSyntax.Operator(OperatorType.AndAlso), primaryKeys.Select((o, i) =>
+                string.Join(sqlSyntax.Operator(OperatorType.AndAlso), primaryKeys.Select((o, i) =>
                 {
-                    var name = _sqlSyntax.ParameterName(o.PropertyInfo.Name);
+                    var name = sqlSyntax.ParameterName(o.PropertyInfo.Name);
                     dynamicParameters.Add(name, ids[i]);
                     return $"{o.EscapeName} = {name}";
                 })),
@@ -76,12 +75,13 @@ namespace Dapper.Easies
         public string ToInsertSql<T>(out bool hasIdentityKey)
         {
             var table = DbObject.Get(typeof(T));
+            var sqlSyntax = table.SqlSyntax;
             hasIdentityKey = table.IdentityKey != null;
             var properties = table.Properties.Where(o => !o.IdentityKey);
-            var sql = _sqlSyntax.InsertFormat(
+            var sql = sqlSyntax.InsertFormat(
                 table.EscapeName,
                 properties.Select(o => o.EscapeName),
-                properties.Select(o => _sqlSyntax.ParameterName(o.PropertyInfo.Name)),
+                properties.Select(o => sqlSyntax.ParameterName(o.PropertyInfo.Name)),
                 hasIdentityKey);
             if (_options.DevelopmentMode)
                 _logger?.LogSql(sql);
@@ -95,11 +95,12 @@ namespace Dapper.Easies
             if (primaryKeys.Length == 0)
                 throw new ArgumentException("删除失败，实体类没有主键");
 
-            var sql = _sqlSyntax.DeleteFormat(
+            var sqlSyntax = table.SqlSyntax;
+            var sql = sqlSyntax.DeleteFormat(
                 table.EscapeName,
                 null,
                 null,
-                string.Join(_sqlSyntax.Operator(OperatorType.AndAlso), primaryKeys.Select(o => $"{o.EscapeName} = {_sqlSyntax.ParameterName(o.PropertyInfo.Name)}")));
+                string.Join(sqlSyntax.Operator(OperatorType.AndAlso), primaryKeys.Select(o => $"{o.EscapeName} = {sqlSyntax.ParameterName(o.PropertyInfo.Name)}")));
             if (_options.DevelopmentMode)
                 _logger?.LogSql(sql);
             return sql;
@@ -107,14 +108,15 @@ namespace Dapper.Easies
 
         public string ToDeleteSql(QueryContext context, out DynamicParameters parameters)
         {
-            var parameterBuilder = new ParameterBuilder(_sqlSyntax);
-            var parser = new PredicateExpressionParser(_sqlSyntax, parameterBuilder);
+            var sqlSyntax = context.DbObject.SqlSyntax;
+            var parameterBuilder = new ParameterBuilder(sqlSyntax);
+            var parser = new PredicateExpressionParser(sqlSyntax, parameterBuilder);
             var tableAlias = context.Alias.Values.First();
-            var sql = _sqlSyntax.DeleteFormat(
+            var sql = sqlSyntax.DeleteFormat(
                 tableAlias.Name,
                 tableAlias.Alias,
-                GetJoins(context, parser),
-                GetPredicate(context.WhereExpressions, context, parser));
+                GetJoins(sqlSyntax, context, parser),
+                GetPredicate(sqlSyntax, context.WhereExpressions, context, parser));
             parameters = parameterBuilder.GetDynamicParameters();
             if (_options.DevelopmentMode)
                 _logger?.LogParametersSql(sql, parameters);
@@ -127,8 +129,9 @@ namespace Dapper.Easies
             if (!(lambda.Body is MemberInitExpression initExp))
                 throw new NotImplementedException($"NodeType：{lambda.Body.NodeType}");
 
-            var parameterBuilder = new ParameterBuilder(_sqlSyntax);
-            var parser = new PredicateExpressionParser(_sqlSyntax, parameterBuilder);
+            var sqlSyntax = context.DbObject.SqlSyntax;
+            var parameterBuilder = new ParameterBuilder(sqlSyntax);
+            var parser = new PredicateExpressionParser(sqlSyntax, parameterBuilder);
             var fields = new List<string>();
             foreach (var binding in initExp.Bindings)
             {
@@ -136,7 +139,7 @@ namespace Dapper.Easies
                 {
                     var table = DbObject.Get(binding.Member.ReflectedType);
                     var alias = context.Alias[table.Type];
-                    var value = ExpressionParser.GetExpression(assignment.Expression, parameterBuilder, _sqlSyntax, context);
+                    var value = ExpressionParser.GetExpression(assignment.Expression, parameterBuilder, sqlSyntax, context);
                     fields.Add($"{alias.Alias}.{table[binding.Member.Name].EscapeName} = {value}");
                 }
                 else
@@ -144,11 +147,11 @@ namespace Dapper.Easies
             }
 
             var tableAlias = context.Alias.Values.First();
-            var sql = _sqlSyntax.UpdateFormat(
+            var sql = sqlSyntax.UpdateFormat(
                 tableAlias.Name,
                 tableAlias.Alias,
                 fields,
-                GetPredicate(context.WhereExpressions, context, parser));
+                GetPredicate(sqlSyntax, context.WhereExpressions, context, parser));
             parameters = parameterBuilder.GetDynamicParameters();
             if (_options.DevelopmentMode)
                 _logger?.LogParametersSql(sql, parameters);
@@ -162,29 +165,30 @@ namespace Dapper.Easies
             if (primaryKeys.Length == 0)
                 throw new ArgumentException("更新失败，实体类没有主键");
 
+            var sqlSyntax = table.SqlSyntax;
             var properties = table.Properties.Where(o => !o.PrimaryKey);
-            var sql = _sqlSyntax.UpdateFormat(
+            var sql = sqlSyntax.UpdateFormat(
                 table.EscapeName,
                 null,
-                properties.Select(o => $"{o.EscapeName} = {_sqlSyntax.ParameterName(o.PropertyInfo.Name)}"),
-                string.Join(_sqlSyntax.Operator(OperatorType.AndAlso), primaryKeys.Select(o => $"{o.EscapeName} = {_sqlSyntax.ParameterName(o.PropertyInfo.Name)}")));
+                properties.Select(o => $"{o.EscapeName} = {sqlSyntax.ParameterName(o.PropertyInfo.Name)}"),
+                string.Join(sqlSyntax.Operator(OperatorType.AndAlso), primaryKeys.Select(o => $"{o.EscapeName} = {sqlSyntax.ParameterName(o.PropertyInfo.Name)}")));
             if (_options.DevelopmentMode)
                 _logger?.LogSql(sql);
             return sql;
         }
 
-        string GetPredicate(IEnumerable<Expression> expressions, QueryContext context, PredicateExpressionParser parser)
+        string GetPredicate(ISqlSyntax sqlSyntax, IEnumerable<Expression> expressions, QueryContext context, PredicateExpressionParser parser)
         {
             if (expressions?.Any() == true)
-                return string.Join(_sqlSyntax.Operator(OperatorType.AndAlso), expressions.Select(o => parser.ToSql(o, context)));
+                return string.Join(sqlSyntax.Operator(OperatorType.AndAlso), expressions.Select(o => parser.ToSql(o, context)));
             return null;
         }
 
-        IEnumerable<string> GetFields(QueryContext context, AggregateInfo aggregateInfo, ParameterBuilder builder)
+        IEnumerable<string> GetFields(ISqlSyntax sqlSyntax, QueryContext context, AggregateInfo aggregateInfo, ParameterBuilder builder)
         {
             if (aggregateInfo != null)
             {
-                var expr = ExpressionParser.GetExpression(aggregateInfo.Expression, builder, _sqlSyntax, context);
+                var expr = ExpressionParser.GetExpression(aggregateInfo.Expression, builder, sqlSyntax, context);
                 switch (aggregateInfo.Type)
                 {
                     case AggregateType.Count:
@@ -215,7 +219,7 @@ namespace Dapper.Easies
                     {
                         if (binding is MemberAssignment assignment)
                         {
-                            fields.Add($"{_sqlSyntax.PropertyNameAlias(new DbAlias(ExpressionParser.GetExpression(assignment.Expression, builder, _sqlSyntax, context), assignment.Member.Name, true))}");
+                            fields.Add($"{sqlSyntax.PropertyNameAlias(new DbAlias(ExpressionParser.GetExpression(assignment.Expression, builder, sqlSyntax, context), assignment.Member.Name, true))}");
                         }
                         else
                             throw new NotImplementedException($"BindingType：{binding.BindingType}");
@@ -227,11 +231,11 @@ namespace Dapper.Easies
                     {
                         var member = newExp.Members[i];
                         var arg = newExp.Arguments[i];
-                        fields.Add($"{_sqlSyntax.PropertyNameAlias(new DbAlias(ExpressionParser.GetExpression(arg, builder, _sqlSyntax, context), member.Name, true))}");
+                        fields.Add($"{sqlSyntax.PropertyNameAlias(new DbAlias(ExpressionParser.GetExpression(arg, builder, sqlSyntax, context), member.Name, true))}");
                     }
                 }
                 else if (lambda.Body is MemberExpression memberExp)
-                    return new[] { ExpressionParser.GetExpression(memberExp, builder, _sqlSyntax, context) };
+                    return new[] { ExpressionParser.GetExpression(memberExp, builder, sqlSyntax, context) };
                 else
                     throw new NotImplementedException($"NodeType：{lambda.Body.NodeType}");
 
@@ -247,54 +251,54 @@ namespace Dapper.Easies
             }
         }
 
-        string GetOrderBy(QueryContext context, ParameterBuilder builder)
+        string GetOrderBy(ISqlSyntax sqlSyntax, QueryContext context, ParameterBuilder builder)
         {
             if (context.OrderByMetedata == null)
                 return null;
 
-            var orderBy = GetOrderByFields(context, builder, context.OrderByMetedata);
+            var orderBy = GetOrderByFields(sqlSyntax, context, builder, context.OrderByMetedata);
             if (context.ThenByMetedata == null)
-                return _sqlSyntax.OrderBy(orderBy, context.OrderByMetedata.SortType, null, null);
+                return sqlSyntax.OrderBy(orderBy, context.OrderByMetedata.SortType, null, null);
 
-            var thenBy = GetOrderByFields(context, builder, context.ThenByMetedata);
-            return _sqlSyntax.OrderBy(orderBy, context.OrderByMetedata.SortType, thenBy, context.ThenByMetedata.SortType);
+            var thenBy = GetOrderByFields(sqlSyntax, context, builder, context.ThenByMetedata);
+            return sqlSyntax.OrderBy(orderBy, context.OrderByMetedata.SortType, thenBy, context.ThenByMetedata.SortType);
         }
 
-        string GetGroupBy(QueryContext context, ParameterBuilder builder)
+        string GetGroupBy(ISqlSyntax sqlSyntax, QueryContext context, ParameterBuilder builder)
         {
             if (context.GroupByExpression == null)
                 return null;
 
             var lambda = (LambdaExpression)context.GroupByExpression;
             if (lambda.Body is MemberExpression memberExp)
-                return _sqlSyntax.GroupBy(new[] { ExpressionParser.GetExpression(memberExp, builder, _sqlSyntax, context) });
+                return sqlSyntax.GroupBy(new[] { ExpressionParser.GetExpression(memberExp, builder, sqlSyntax, context) });
             else if (lambda.Body is NewExpression newExp)
             {
                 var fields = new List<string>();
                 for (int i = 0; i < newExp.Members.Count; i++)
                 {
                     var arg = newExp.Arguments[i];
-                    fields.Add(ExpressionParser.GetExpression(arg, builder, _sqlSyntax, context));
+                    fields.Add(ExpressionParser.GetExpression(arg, builder, sqlSyntax, context));
                 }
 
-                return _sqlSyntax.GroupBy(fields);
+                return sqlSyntax.GroupBy(fields);
             }
 
             throw new NotImplementedException($"NodeType：{lambda.Body.NodeType}");
         }
 
-        IEnumerable<string> GetOrderByFields(QueryContext context, ParameterBuilder builder, OrderByMetedata orderByMetedata)
+        IEnumerable<string> GetOrderByFields(ISqlSyntax sqlSyntax, QueryContext context, ParameterBuilder builder, OrderByMetedata orderByMetedata)
         {
             foreach (var exp in orderByMetedata.Expressions)
             {
-                yield return ExpressionParser.GetExpression(exp, builder, _sqlSyntax, context);
+                yield return ExpressionParser.GetExpression(exp, builder, sqlSyntax, context);
             }
         }
 
-        IEnumerable<string> GetJoins(QueryContext context, PredicateExpressionParser parser)
+        IEnumerable<string> GetJoins(ISqlSyntax sqlSyntax, QueryContext context, PredicateExpressionParser parser)
         {
             if (context.JoinMetedatas?.Any() == true)
-                return context.JoinMetedatas.Select(o => _sqlSyntax.Join(_sqlSyntax.TableNameAlias(context.Alias[o.DbObject.Type]), o.Type, parser.ToSql(o.JoinExpression, context)));
+                return context.JoinMetedatas.Select(o => sqlSyntax.Join(sqlSyntax.TableNameAlias(context.Alias[o.DbObject.Type]), o.Type, parser.ToSql(o.JoinExpression, context)));
             return null;
         }
     }

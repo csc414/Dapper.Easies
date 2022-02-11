@@ -11,15 +11,17 @@ namespace Dapper.Easies
 {
     public class DefaultEasiesProvider : IEasiesProvider, IDisposable
     {
-        private readonly IDbConnectionFactory _connectionFactory;
+        private readonly EasiesOptions _options;
 
         private readonly ISqlConverter _sqlConverter;
 
         private IDbConnection _connection;
 
-        public DefaultEasiesProvider(IDbConnectionFactory connectionFactory, ISqlConverter sqlConverter)
+        private Dictionary<string, IDbConnection> _connections = new Dictionary<string, IDbConnection>(StringComparer.Ordinal);
+
+        public DefaultEasiesProvider(EasiesOptions options, ISqlConverter sqlConverter)
         {
-            _connectionFactory = connectionFactory;
+            _options = options;
             _sqlConverter = sqlConverter;
         }
 
@@ -28,7 +30,7 @@ namespace Dapper.Easies
         public Task<T> GetAsync<T>(params object[] ids) where T : IDbObject
         {
             var sql = _sqlConverter.ToGetSql<T>(ids, out var parameters);
-            return Connection.QueryFirstOrDefaultAsync<T>(sql, parameters);
+            return GetConnection<T>().QueryFirstOrDefaultAsync<T>(sql, parameters);
         }
 
         public async Task<bool> InsertAsync<T>(T entity) where T : IDbTable
@@ -39,7 +41,7 @@ namespace Dapper.Easies
             var sql = _sqlConverter.ToInsertSql<T>(out var hasIdentity);
             if (hasIdentity)
             {
-                var id = await Connection.ExecuteScalarAsync<long>(sql, entity);
+                var id = await GetConnection<T>().ExecuteScalarAsync<long>(sql, entity);
                 if (id > 0)
                 {
                     var propertyInfo = DbObject.Get(typeof(T)).IdentityKey.PropertyInfo;
@@ -50,7 +52,7 @@ namespace Dapper.Easies
                 return false;
             }
             else
-                return await Connection.ExecuteAsync(sql, entity) > 0;
+                return await GetConnection<T>().ExecuteAsync(sql, entity) > 0;
         }
 
         public Task<int> InsertAsync<T>(IEnumerable<T> entities) where T : IDbTable
@@ -59,7 +61,7 @@ namespace Dapper.Easies
                 throw new ArgumentNullException(nameof(entities));
 
             var sql = _sqlConverter.ToInsertSql<T>(out _);
-            return Connection.ExecuteAsync(sql, entities);
+            return GetConnection<T>().ExecuteAsync(sql, entities);
         }
 
         public Task<int> DeleteAsync<T>(T entity) where T : IDbTable
@@ -68,7 +70,7 @@ namespace Dapper.Easies
                 throw new ArgumentNullException(nameof(entity));
 
             var sql = _sqlConverter.ToDeleteSql<T>();
-            return Connection.ExecuteAsync(sql, entity);
+            return GetConnection<T>().ExecuteAsync(sql, entity);
         }
 
         public Task<int> DeleteAsync<T>(IEnumerable<T> entities) where T : IDbTable
@@ -77,7 +79,7 @@ namespace Dapper.Easies
                 throw new ArgumentNullException(nameof(entities));
 
             var sql = _sqlConverter.ToDeleteSql<T>();
-            return Connection.ExecuteAsync(sql, entities);
+            return GetConnection<T>().ExecuteAsync(sql, entities);
         }
 
         public Task<int> DeleteAsync<T>(Expression<Predicate<T>> predicate = null) where T : IDbTable
@@ -97,7 +99,7 @@ namespace Dapper.Easies
         Task<int> DeleteAsync(QueryContext context)
         {
             var sql = _sqlConverter.ToDeleteSql(context, out var parameters);
-            return Connection.ExecuteAsync(sql, parameters);
+            return GetConnection(context.DbObject.ConnectionStringName).ExecuteAsync(sql, parameters);
         }
 
         public Task<int> UpdateAsync<T>(Expression<Func<T>> updateFields, Expression<Predicate<T>> predicate = null) where T : IDbTable
@@ -117,7 +119,7 @@ namespace Dapper.Easies
                 context.AddWhere(predicate);
 
             var sql = _sqlConverter.ToUpdateFieldsSql(updateFields, context, out var parameters);
-            return Connection.ExecuteAsync(sql, parameters);
+            return GetConnection<T>().ExecuteAsync(sql, parameters);
         }
 
         public Task<int> UpdateAsync<T>(T entity) where T : IDbTable
@@ -126,7 +128,7 @@ namespace Dapper.Easies
                 throw new ArgumentNullException(nameof(entity));
 
             var sql = _sqlConverter.ToUpdateSql<T>();
-            return Connection.ExecuteAsync(sql, entity);
+            return GetConnection<T>().ExecuteAsync(sql, entity);
         }
 
         public Task<int> UpdateAsync<T>(IEnumerable<T> entities) where T : IDbTable
@@ -135,18 +137,37 @@ namespace Dapper.Easies
                 throw new ArgumentNullException(nameof(entities));
 
             var sql = _sqlConverter.ToUpdateSql<T>();
-            return Connection.ExecuteAsync(sql, entities);
+            return GetConnection<T>().ExecuteAsync(sql, entities);
         }
 
-        public IDbConnection Connection => _connection ?? (_connection = _connectionFactory.Create());
+        public IDbConnection Connection => _connection ?? (_connection = GetConnection(EasiesOptions.DefaultName));
 
         public void Dispose()
         {
-            if (_connection != null)
+            _connection = null;
+
+            if (_connections.Count > 0)
             {
-                _connection.Dispose();
-                _connection = null;
+                foreach(var connection in _connections)
+                    connection.Value.Dispose();
+
+                _connections.Clear();
             }
+        }
+
+        IDbConnection GetConnection<T>() => GetConnection(DbObject.Get(typeof(T))?.ConnectionStringName);
+
+        public IDbConnection GetConnection(string connectionStringName)
+        {
+            if (connectionStringName == null)
+                connectionStringName = EasiesOptions.DefaultName;
+
+            if (_connections.TryGetValue(connectionStringName, out var connection))
+                return connection;
+
+            connection = _options.GetConnectionFactory(connectionStringName).Create();
+            _connections.Add(connectionStringName, connection);
+            return connection;
         }
     }
 }
