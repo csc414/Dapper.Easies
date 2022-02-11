@@ -11,7 +11,7 @@
 var services = new ServiceCollection();
 services.AddEasiesProvider(builder =>
 {
-    //生命周期默认是 Scoped，在一个生命周期中 共享同一个 DbConnection
+    //生命周期默认是 Scoped，在 IEasiesProvider 生命周期中将共用一个 DbConnection ，可根据自身需求配置
     builder.Lifetime = ServiceLifetime.Scoped;
 
     //开启开发模式会向 Logger 输出生成的Sql。
@@ -259,6 +259,16 @@ var query = easiesProvider.Query<Student>()
 await easiesProvider.UpdateAsync<Student>(
     o => new Student { Age = DbFunc.Expr<int>($"IF({o.Name} in {names}, 18, {a.Age})") }, 
     o => o.Id > 0 && o.Name == DbFunc.Expr<string>($"IF({o.Name} LIKE {name}, '张三', '李四')"));
+```
+
+原生Sql执行
+------------------------------------------------------------
+```csharp
+//不需要释放，在IEasiesProvider生命周期会共用同一个DbConnection
+await easiesProvider.Connection.ExecuteAsync(...);
+
+//多库
+await easiesProvider.GetConnection("多库配置名").ExecuteAsync(...);
 ```
 
 关于事务
