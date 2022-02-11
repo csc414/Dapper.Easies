@@ -11,7 +11,7 @@
 var services = new ServiceCollection();
 services.AddEasiesProvider(builder =>
 {
-    //生命周期默认是 Scoped
+    //生命周期默认是 Scoped，在一个生命周期中 共享同一个 DbConnection
     builder.Lifetime = ServiceLifetime.Scoped;
 
     //开启开发模式会向 Logger 输出生成的Sql。
@@ -20,7 +20,7 @@ services.AddEasiesProvider(builder =>
     //目前只支持MySql, SqlServer
     builder.UseMySql("连接字符串");
     
-    builder.UseSqlServer("连接字符串");
+    builder.UseSqlServer("多库配置名", "连接字符串");
 });
 
 var serviceProvider = services.BuildServiceProvider();
@@ -42,7 +42,15 @@ public class DbObjectAttribute : Attribute
         TableName = tableName;
     }
 
-    public string TableName { get; set; }
+    /// <summary>
+    /// 表名
+    /// </summary>
+    public string TableName { get; }
+
+    /// <summary>
+    /// 连接字符串配置名 留空等同于 EasiesOptions.DefaultName = "Default";
+    /// </summary>
+    public string ConnectionStringName { get; set; }
 }
 
 //模型字段可使用该特性描述数据库中字段的一些属性
@@ -111,6 +119,10 @@ public class Class : IDbTable
 
     public DateTime CreateTime { get; set; }
 }
+
+//不同的库只需配置 ConnectionStringName 即可
+[DbObject("tb_class", ConnectionStringName = "多库配置名")]
+...
 ```
 
 新增
