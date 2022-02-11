@@ -31,7 +31,7 @@ namespace Dapper.Easies
 
         public ISqlConverter Converter { get; }
 
-        public IDbConnection Connection => _connection.Connection;
+        public IDbConnection Connection => _connection.GetConnection(DbObject.ConnectionStringName);
 
         public IEnumerable<JoinMetedata> JoinMetedatas => _joinMetedatas;
 
@@ -56,6 +56,9 @@ namespace Dapper.Easies
             var dbObject = DbObject.Get(joinType);
             if (!Alias.TryAdd(dbObject.Type, new DbAlias(dbObject.EscapeName, $"t{Alias.Count}")))
                 throw new ArgumentException($"请勿重复连接表 {dbObject.Type.Name}.");
+
+            if (DbObject.ConnectionStringName != dbObject.ConnectionStringName)
+                throw new ArgumentException($"无法连接来自不同配置的表");
 
             if (_joinMetedatas == null)
                 _joinMetedatas = new List<JoinMetedata>();

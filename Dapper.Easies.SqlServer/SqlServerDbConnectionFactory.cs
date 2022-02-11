@@ -5,16 +5,16 @@ namespace Dapper.Easies.SqlServer
 {
     public class SqlServerDbConnectionFactory : IDbConnectionFactory
     {
-        private readonly EasiesOptions _options;
+        private readonly string _connectionString;
 
-        public SqlServerDbConnectionFactory(EasiesOptions options)
+        public SqlServerDbConnectionFactory(string connectionString)
         {
-            _options = options;
+            _connectionString = connectionString;
         }
 
         public IDbConnection Create()
         {
-            return new SqlConnection(_options.ConnectionString);
+            return new SqlConnection(_connectionString);
         }
     }
 }

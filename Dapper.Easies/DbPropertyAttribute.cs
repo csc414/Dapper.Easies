@@ -15,9 +15,9 @@ namespace Dapper.Easies
         }
 
         /// <summary>
-        /// 数据库字段名
+        /// 实际表字段名
         /// </summary>
-        public string PropertyName { get; set; }
+        public string PropertyName { get; }
 
         /// <summary>
         /// 是否主键
@@ -25,12 +25,12 @@ namespace Dapper.Easies
         public bool PrimaryKey { get; set; }
 
         /// <summary>
-        /// 是否自增长，在 PrimaryKey 等于 true 的情况下才生效
+        /// 是否自增长，在 PrimaryKey 同时等于 true 的情况下才生效
         /// </summary>
         public bool Identity { get; set; }
 
         /// <summary>
-        /// 忽略该字段
+        /// 是否忽略该字段
         /// </summary>
         public bool Ignore { get; set; }
     }

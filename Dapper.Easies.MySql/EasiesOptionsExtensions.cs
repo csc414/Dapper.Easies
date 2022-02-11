@@ -12,9 +12,16 @@ namespace Microsoft.Extensions.DependencyInjection
     {
         public static EasiesOptionsBuilder UseMySql(this EasiesOptionsBuilder options, string connectionString)
         {
-            options.Options.ConnectionString = connectionString;
-            options.Services.AddSingleton<IDbConnectionFactory, MySqlDbConnectionFactory>();
-            options.Services.Replace(new ServiceDescriptor(typeof(ISqlSyntax), typeof(MySqlSqlSyntax), ServiceLifetime.Singleton));
+            return options.UseMySql(EasiesOptions.DefaultName, connectionString);
+        }
+
+        public static EasiesOptionsBuilder UseMySql(this EasiesOptionsBuilder options, string name, string connectionString)
+        {
+            if(string.IsNullOrWhiteSpace(name))
+                throw new ArgumentNullException(nameof(name));
+
+            options.Options.ConnectionFactory[name] = new MySqlDbConnectionFactory(connectionString);
+            options.Options.SqlSyntax[name] = new MySqlSqlSyntax();
             return options;
         }
     }

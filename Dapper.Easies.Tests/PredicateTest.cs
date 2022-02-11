@@ -14,7 +14,9 @@ namespace Dapper.Easies.Tests
         public PredicateTest()
         {
             _sqlSyntax = new DefaultSqlSyntax();
-            DbObject.Initialize(_sqlSyntax);
+            var options = new EasiesOptions();
+            options.SqlSyntax.Add(EasiesOptions.DefaultName, _sqlSyntax);
+            DbObject.Initialize(options);
         }
 
         [Fact]
