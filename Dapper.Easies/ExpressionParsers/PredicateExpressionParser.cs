@@ -93,8 +93,12 @@ namespace Dapper.Easies
 
         internal override ParserData VisitMemberAccess(MemberExpression m)
         {
-            if (m.Expression is ParameterExpression)
-                return CreateParserData(ParserDataType.Property, DbObject.Get(m.Member.ReflectedType)[m.Member.Name], m);
+            var parameterExpression = m.Expression;
+            if (parameterExpression?.NodeType == ExpressionType.Convert)
+                parameterExpression = ((UnaryExpression)m.Expression).Operand;
+
+            if (parameterExpression is ParameterExpression parameter)
+                return CreateParserData(ParserDataType.Property, DbObject.Get(parameter.Type)[m.Member.Name], m);
             else
             {
                 ParserData parserData = null;
