@@ -83,7 +83,7 @@ namespace Dapper.Easies
                 obj.ConnectionStringName = objAttr?.ConnectionStringName;
                 obj.SqlSyntax = options.GetSqlSyntax(obj.ConnectionStringName);
                 obj.EscapeName = obj.SqlSyntax.EscapeTableName(obj.DbName);
-                foreach (var p in t.GetTypeInfo().DeclaredProperties)
+                foreach (var p in t.GetTypeInfo().GetProperties(BindingFlags.Instance | BindingFlags.Public))
                 {
                     var attr = p.GetCustomAttribute<DbPropertyAttribute>();
                     var property = new DbProperty(attr?.PropertyName ?? p.Name, p);
