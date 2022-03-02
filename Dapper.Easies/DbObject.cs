@@ -71,6 +71,11 @@ namespace Dapper.Easies
             public PropertyInfo PropertyInfo { get; }
         }
 
+        internal static string GetTablePropertyAlias(QueryContext context, DbProperty property)
+        {
+            return string.Format("{0}.{1}", context.Alias[property.PropertyInfo.ReflectedType].Alias, property.EscapeName);
+        }
+
         internal static void Initialize(EasiesOptions options)
         {
             var assemblies = GetRuntimeAssemblies();

@@ -7,16 +7,20 @@ using System.Text;
 
 namespace Dapper.Easies
 {
-    public class QueryContext
+    public class QueryContext : ICloneable
     {
         private readonly IConnection _connection;
 
-        public QueryContext(IConnection connection, ISqlConverter sqlConverter, DbObject dbObject)
+        public QueryContext(IConnection connection, ISqlConverter sqlConverter, DbObject dbObject) : this(connection, sqlConverter, dbObject, new[] { new KeyValuePair<Type, DbAlias>(dbObject.Type, new DbAlias(dbObject.EscapeName, "t")) })
+        {
+        }
+
+        public QueryContext(IConnection connection, ISqlConverter sqlConverter, DbObject dbObject, IEnumerable<KeyValuePair<Type, DbAlias>> alias)
         {
             _connection = connection;
             Converter = sqlConverter;
             DbObject = dbObject;
-            Alias = new Dictionary<Type, DbAlias> { { dbObject.Type, new DbAlias(dbObject.EscapeName, "t") } };
+            Alias = new Dictionary<Type, DbAlias>(alias);
         }
 
         private ICollection<JoinMetedata> _joinMetedatas;
@@ -80,6 +84,24 @@ namespace Dapper.Easies
                 _havingExpressions = new List<Expression>();
 
             _havingExpressions.Add(havingExpression);
+        }
+
+        public object Clone()
+        {
+            var context = new QueryContext(_connection, Converter, DbObject, Alias);
+            if (_havingExpressions != null)
+                context._havingExpressions = new List<Expression>(_havingExpressions);
+            if (_joinMetedatas != null)
+                context._joinMetedatas = new List<JoinMetedata>(_joinMetedatas);
+            if (_whereExpressions != null)
+                context._whereExpressions = new List<Expression>(_whereExpressions);
+            context.OrderByMetedata = OrderByMetedata;
+            context.ThenByMetedata = ThenByMetedata;
+            context.SelectorExpression = SelectorExpression;
+            context.GroupByExpression = GroupByExpression;
+            context.Skip = Skip;
+            context.Take = Take;
+            return context;
         }
     }
 }

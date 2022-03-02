@@ -11,6 +11,13 @@ namespace Dapper.Easies
     public interface IEasiesProvider : IConnection
     {
         /// <summary>
+        /// 强类型实体
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        DbEntity<T> Entity<T>() where T : IDbTable;
+
+        /// <summary>
         /// 高级查询
         /// </summary>
         /// <typeparam name="T"></typeparam>

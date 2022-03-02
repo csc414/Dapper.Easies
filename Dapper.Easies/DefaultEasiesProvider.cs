@@ -25,6 +25,8 @@ namespace Dapper.Easies
             _sqlConverter = sqlConverter;
         }
 
+        public DbEntity<T> Entity<T>() where T : IDbTable => new DbEntity<T>(this);
+
         public IDbQuery<T> Query<T>() where T : IDbObject => new DbQuery<T>(new QueryContext(this, _sqlConverter, DbObject.Get(typeof(T))));
 
         public Task<T> GetAsync<T>(params object[] ids) where T : IDbObject

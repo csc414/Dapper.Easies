@@ -186,6 +186,7 @@ namespace Dapper.Easies
 
         IEnumerable<string> GetFields(ISqlSyntax sqlSyntax, QueryContext context, AggregateInfo aggregateInfo, ParameterBuilder builder)
         {
+            DbObject specificDbObject = null;
             if (aggregateInfo != null)
             {
                 var expr = ExpressionParser.GetExpression(aggregateInfo.Expression, builder, sqlSyntax, context);
@@ -211,10 +212,10 @@ namespace Dapper.Easies
 
             if (context.SelectorExpression != null)
             {
-                var fields = new List<string>();
                 var lambda = (LambdaExpression)context.SelectorExpression;
                 if (lambda.Body is MemberInitExpression initExp)
                 {
+                    var fields = new List<string>();
                     foreach (var binding in initExp.Bindings)
                     {
                         if (binding is MemberAssignment assignment)
@@ -224,31 +225,29 @@ namespace Dapper.Easies
                         else
                             throw new NotImplementedException($"BindingType：{binding.BindingType}");
                     }
+                    return fields;
                 }
                 else if (lambda.Body is NewExpression newExp)
                 {
+                    var fields = new List<string>();
                     for (int i = 0; i < newExp.Members.Count; i++)
                     {
                         var member = newExp.Members[i];
                         var arg = newExp.Arguments[i];
                         fields.Add($"{sqlSyntax.PropertyNameAlias(new DbAlias(ExpressionParser.GetExpression(arg, builder, sqlSyntax, context), member.Name, true))}");
                     }
+                    return fields;
                 }
-                else if (lambda.Body is MemberExpression memberExp)
-                    return new[] { ExpressionParser.GetExpression(memberExp, builder, sqlSyntax, context) };
+                else if (lambda.Body.NodeType == ExpressionType.MemberAccess || lambda.Body.NodeType == ExpressionType.Call)
+                    return new[] { ExpressionParser.GetExpression(lambda.Body, builder, sqlSyntax, context) };
+                else if (lambda.Body is ParameterExpression parameter)
+                    specificDbObject = DbObject.Get(parameter.Type);
                 else
                     throw new NotImplementedException($"NodeType：{lambda.Body.NodeType}");
-
-                return fields;
             }
 
-            if (context.JoinMetedatas?.Any() == true)
-                return new[] { $"{context.Alias[context.DbObject.Type].Alias}.*" };
-            else
-            {
-                var alias = context.Alias[context.DbObject.Type];
-                return context.DbObject.Properties.Select(o => $"{alias.Alias}.{o.EscapeNameAsAlias}");
-            }
+            var alias = context.Alias[specificDbObject?.Type ?? context.DbObject.Type];
+            return (specificDbObject ?? context.DbObject).Properties.Select(o => $"{alias.Alias}.{o.EscapeNameAsAlias}");
         }
 
         string GetOrderBy(ISqlSyntax sqlSyntax, QueryContext context, ParameterBuilder builder)

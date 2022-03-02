@@ -144,17 +144,35 @@ namespace Dapper.Easies
 
         internal override ParserData VisitMethodCall(MethodCallExpression m)
         {
-            if (m.Method.IsStatic && typeof(DbFunc).IsAssignableFrom(m.Method.ReflectedType))
+            if (m.Method.IsStatic)
             {
-                if (m.Method.Name.Equals("Expr", StringComparison.Ordinal))
-                    return CreateSql(GetExpression(m, _parameters, _sqlSyntax, _context));
-                else
+                if (_dbObjectExtensions == m.Method.ReflectedType)
                 {
-                    var result = _sqlSyntax.Method(m.Method, m.Arguments.ToArray(), _parameters, exp => exp == null ? null : GetExpression(exp, _parameters, _sqlSyntax, _context), exp => exp == null ? null : GetValue(exp));
-                    if (result == null)
-                        throw new NotImplementedException($"MethodName：{m.Method.Name}");
+                    if (m.Method.Name.Equals("Property", StringComparison.Ordinal))
+                    {
+                        var parameterExpression = m.Arguments[0];
+                        if (parameterExpression.NodeType == ExpressionType.Convert)
+                            parameterExpression = ((UnaryExpression)parameterExpression).Operand;
 
-                    return CreateSql(result);
+                        if (parameterExpression is ParameterExpression parameter)
+                        {
+                            var name = GetValue(m.Arguments[1]);
+                            return CreateParserData(ParserDataType.Property, DbObject.Get(parameter.Type)[name?.ToString()], m);
+                        }
+                    }
+                }
+                else if (_dbFuncType.IsAssignableFrom(m.Method.ReflectedType))
+                {
+                    if (m.Method.Name.Equals("Expr", StringComparison.Ordinal))
+                        return CreateSql(GetExpression(m, _parameters, _sqlSyntax, _context));
+                    else
+                    {
+                        var result = _sqlSyntax.Method(m.Method, m.Arguments.ToArray(), _parameters, exp => exp == null ? null : GetExpression(exp, _parameters, _sqlSyntax, _context), exp => exp == null ? null : GetValue(exp));
+                        if (result == null)
+                            throw new NotImplementedException($"MethodName：{m.Method.Name}");
+
+                        return CreateSql(result);
+                    }
                 }
             }
 
@@ -168,7 +186,7 @@ namespace Dapper.Easies
                 case ParserDataType.Property:
                     {
                         var property = (DbObject.DbProperty)data.Value;
-                        _sql.Append(GetTablePropertyAlias(property));
+                        _sql.Append(DbObject.GetTablePropertyAlias(_context, property));
                         if (andAlso && property.PropertyInfo.PropertyType == typeof(bool))
                             _sql.AppendFormat("{0}{1}", _sqlSyntax.Operator(OperatorType.Equal), _parameters.AddParameter(true));
                     }
@@ -180,11 +198,6 @@ namespace Dapper.Easies
                     _sql.Append(data.Value);
                     break;
             }
-        }
-
-        string GetTablePropertyAlias(DbObject.DbProperty property)
-        {
-            return string.Format("{0}.{1}", _context.Alias[property.PropertyInfo.ReflectedType].Alias, property.EscapeName);
         }
     }
 }

@@ -10,6 +10,10 @@ namespace Dapper.Easies
 {
     internal abstract class ExpressionParser
     {
+        protected static Type _dbFuncType = typeof(DbFunc);
+
+        protected static Type _dbObjectExtensions = typeof(DbObjectExtensions);
+
         private int _deep = 0;
 
         internal ParserData Visit(Expression exp)
@@ -142,42 +146,72 @@ namespace Dapper.Easies
             if (expression.NodeType == ExpressionType.Call)
             {
                 var m = (MethodCallExpression)expression;
-                if (m.Method.IsStatic && typeof(DbFunc).IsAssignableFrom(m.Method.ReflectedType))
+                if (m.Method.IsStatic)
                 {
-                    if(m.Method.Name.Equals("Expr", StringComparison.Ordinal))
+                    if(_dbObjectExtensions == m.Method.ReflectedType)
                     {
-                        var arg = m.Arguments[0];
-                        if (arg.NodeType == ExpressionType.Call && arg is MethodCallExpression mm && mm.Method.Name.Equals("Format", StringComparison.Ordinal))
+                        if (m.Method.Name.Equals("Property", StringComparison.Ordinal))
                         {
-                            var args = mm.Arguments.Select((o, j) => {
-                                if (j == 0)
-                                    return GetValue(o);
+                            if (m.Method.Name.Equals("Property", StringComparison.Ordinal))
+                            {
+                                var parameterExpression = m.Arguments[0];
+                                if (parameterExpression.NodeType == ExpressionType.Convert)
+                                    parameterExpression = ((UnaryExpression)parameterExpression).Operand;
 
-                                if (o.NodeType == ExpressionType.NewArrayInit)
+                                if (parameterExpression is ParameterExpression parameter)
                                 {
-                                    var newArrayExpression = (NewArrayExpression)o;
-                                    var args = newArrayExpression.Expressions.Select(e => GetExpression(e, builder, sqlSyntax, context)).ToArray();
-                                    var ary = (object[])Activator.CreateInstance(newArrayExpression.Type, args.Length);
-                                    for (int i = 0; i < ary.Length; ++i)
-                                        ary[i] = args[i];
-                                    return ary;
+                                    var name = GetValue(m.Arguments[1])?.ToString();
+
+                                    var table = DbObject.Get(parameter.Type);
+                                    if (table == null)
+                                        return name;
+
+                                    string alias = null;
+                                    if (context != null)
+                                        alias = $"{context.Alias[table.Type].Alias}.";
+
+                                    return $"{alias}{table[name].EscapeName}";
                                 }
+                            }
+                        }
+                    }
+                    else if(_dbFuncType.IsAssignableFrom(m.Method.ReflectedType))
+                    { 
+                        if(m.Method.Name.Equals("Expr", StringComparison.Ordinal))
+                        {
+                            var arg = m.Arguments[0];
+                            if (arg.NodeType == ExpressionType.Call && arg is MethodCallExpression mm && mm.Method.Name.Equals("Format", StringComparison.Ordinal))
+                            {
+                                var args = mm.Arguments.Select((o, j) => {
+                                    if (j == 0)
+                                        return GetValue(o);
 
-                                return GetExpression(o, builder, sqlSyntax, context);
-                            }).ToArray();
+                                    if (o.NodeType == ExpressionType.NewArrayInit)
+                                    {
+                                        var newArrayExpression = (NewArrayExpression)o;
+                                        var args = newArrayExpression.Expressions.Select(e => GetExpression(e, builder, sqlSyntax, context)).ToArray();
+                                        var ary = (object[])Activator.CreateInstance(newArrayExpression.Type, args.Length);
+                                        for (int i = 0; i < ary.Length; ++i)
+                                            ary[i] = args[i];
+                                        return ary;
+                                    }
 
-                            return mm.Method.Invoke(null, args).ToString();
+                                    return GetExpression(o, builder, sqlSyntax, context);
+                                }).ToArray();
+
+                                return mm.Method.Invoke(null, args).ToString();
+                            }
+                            else
+                                return GetValue(arg).ToString();
                         }
                         else
-                            return GetValue(arg).ToString();
-                    }
-                    else
-                    {
-                        var result = sqlSyntax.Method(m.Method, m.Arguments.ToArray(), builder, exp => exp == null ? null : GetExpression(exp, builder, sqlSyntax, context), exp => exp == null ? null : GetValue(exp));
-                        if (result == null)
-                            throw new NotImplementedException($"MethodName：{m.Method.Name}");
+                        {
+                            var result = sqlSyntax.Method(m.Method, m.Arguments.ToArray(), builder, exp => exp == null ? null : GetExpression(exp, builder, sqlSyntax, context), exp => exp == null ? null : GetValue(exp));
+                            if (result == null)
+                                throw new NotImplementedException($"MethodName：{m.Method.Name}");
 
-                        return result;
+                            return result;
+                        }
                     }
                 }
             }
