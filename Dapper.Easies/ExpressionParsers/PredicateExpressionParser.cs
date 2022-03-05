@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Dapper.Easies
@@ -71,16 +69,17 @@ namespace Dapper.Easies
                 _sql.Append(operatorStr);
                 PrivateVisit(b.Right);
             }
-
+            
             void PrivateVisit(Expression exp)
             {
                 var condition = b.NodeType != ExpressionType.AndAlso && b.NodeType != ExpressionType.OrElse;
                 var hasBracket = (_binaryDeep > 0 && exp is BinaryExpression) || (!condition && exp is BinaryExpression binary && binary.NodeType == ExpressionType.OrElse);
+
                 if (hasBracket)
                     _sql.Append("(");
                 if (condition)
                     _binaryDeep++;
-                var data = Visit(exp);
+                var data = !condition || HasParameter(exp) ? Visit(exp) : CreateConstant(GetValue(exp));
                 if (condition)
                     _binaryDeep--;
                 AppendSql(data, !condition);
