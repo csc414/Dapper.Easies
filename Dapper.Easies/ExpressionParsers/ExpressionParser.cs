@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
 
 namespace Dapper.Easies
 {
@@ -148,41 +144,39 @@ namespace Dapper.Easies
                 var m = (MethodCallExpression)expression;
                 if (m.Method.IsStatic)
                 {
-                    if(_dbObjectExtensions == m.Method.ReflectedType)
+                    if (_dbObjectExtensions == m.Method.ReflectedType)
                     {
                         if (m.Method.Name.Equals("Property", StringComparison.Ordinal))
                         {
-                            if (m.Method.Name.Equals("Property", StringComparison.Ordinal))
+                            var parameterExpression = m.Arguments[0];
+                            if (parameterExpression.NodeType == ExpressionType.Convert)
+                                parameterExpression = ((UnaryExpression)parameterExpression).Operand;
+
+                            if (parameterExpression is ParameterExpression parameter)
                             {
-                                var parameterExpression = m.Arguments[0];
-                                if (parameterExpression.NodeType == ExpressionType.Convert)
-                                    parameterExpression = ((UnaryExpression)parameterExpression).Operand;
+                                var name = GetValue(m.Arguments[1])?.ToString();
 
-                                if (parameterExpression is ParameterExpression parameter)
-                                {
-                                    var name = GetValue(m.Arguments[1])?.ToString();
+                                var table = DbObject.Get(parameter.Type);
+                                if (table == null)
+                                    return name;
 
-                                    var table = DbObject.Get(parameter.Type);
-                                    if (table == null)
-                                        return name;
+                                string alias = null;
+                                if (context != null)
+                                    alias = $"{context.Alias[table.Type].Alias}.";
 
-                                    string alias = null;
-                                    if (context != null)
-                                        alias = $"{context.Alias[table.Type].Alias}.";
-
-                                    return $"{alias}{table[name].EscapeName}";
-                                }
+                                return $"{alias}{table[name].EscapeName}";
                             }
                         }
                     }
-                    else if(_dbFuncType.IsAssignableFrom(m.Method.ReflectedType))
-                    { 
-                        if(m.Method.Name.Equals("Expr", StringComparison.Ordinal))
+                    else if (_dbFuncType.IsAssignableFrom(m.Method.ReflectedType))
+                    {
+                        if (m.Method.Name.Equals("Expr", StringComparison.Ordinal))
                         {
                             var arg = m.Arguments[0];
                             if (arg.NodeType == ExpressionType.Call && arg is MethodCallExpression mm && mm.Method.Name.Equals("Format", StringComparison.Ordinal))
                             {
-                                var args = mm.Arguments.Select((o, j) => {
+                                var args = mm.Arguments.Select((o, j) =>
+                                {
                                     if (j == 0)
                                         return GetValue(o);
 
@@ -223,7 +217,7 @@ namespace Dapper.Easies
                     return memberExpression.Member.Name;
 
                 string alias = null;
-                if(context != null)
+                if (context != null)
                     alias = $"{context.Alias[table.Type].Alias}.";
 
                 return $"{alias}{table[memberExpression.Member.Name].EscapeName}";
@@ -232,67 +226,85 @@ namespace Dapper.Easies
             return builder.AddParameter(GetValue(expression));
         }
 
+        internal static bool HasParameter(Expression exp)
+        {
+            switch (exp.NodeType)
+            {
+                case ExpressionType.Lambda:
+                    return HasParameter(((LambdaExpression)exp).Body);
+                case ExpressionType.Parameter:
+                    return true;
+                case ExpressionType.Add:
+                case ExpressionType.AddChecked:
+                case ExpressionType.Subtract:
+                case ExpressionType.SubtractChecked:
+                case ExpressionType.Multiply:
+                case ExpressionType.MultiplyChecked:
+                case ExpressionType.Divide:
+                case ExpressionType.Modulo:
+                case ExpressionType.Power:
+                case ExpressionType.And:
+                case ExpressionType.AndAlso:
+                case ExpressionType.Or:
+                case ExpressionType.OrElse:
+                case ExpressionType.LessThan:
+                case ExpressionType.LessThanOrEqual:
+                case ExpressionType.GreaterThan:
+                case ExpressionType.GreaterThanOrEqual:
+                case ExpressionType.Equal:
+                case ExpressionType.NotEqual:
+                case ExpressionType.Coalesce:
+                case ExpressionType.ArrayIndex:
+                    var binary = (BinaryExpression)exp;
+                    if (HasParameter(binary.Left))
+                        return true;
+
+                    if (HasParameter(binary.Right))
+                        return true;
+                    break;
+                case ExpressionType.ArrayLength:
+                case ExpressionType.Convert:
+                case ExpressionType.Not:
+                    var unary = (UnaryExpression)exp;
+                    if (HasParameter(unary.Operand))
+                        return true;
+                    break;
+                case ExpressionType.MemberAccess:
+                    var member = (MemberExpression)exp;
+                    if (member.Expression != null && HasParameter(member.Expression))
+                        return true;
+                    break;
+                case ExpressionType.Call:
+                    var methodCall = (MethodCallExpression)exp;
+                    if (_dbFuncType.IsAssignableFrom(methodCall.Method.ReflectedType))
+                        return true;
+
+                    if (methodCall.Object != null && HasParameter(methodCall.Object))
+                        return true;
+
+                    foreach (var arg in methodCall.Arguments)
+                    {
+                        if (HasParameter(arg))
+                            return true;
+                    }
+                    break;
+            }
+
+            return false;
+        }
+
         internal static object GetValue(Expression expression)
         {
             if (expression == null)
                 return null;
 
-            if (expression.NodeType == ExpressionType.Convert)
-                return GetValue(((UnaryExpression)expression).Operand);
-
             if (expression.NodeType == ExpressionType.Constant)
                 return ((ConstantExpression)expression).Value;
 
-            if (expression is MemberExpression memberExpression)
-            {
-                var obj = GetValue(memberExpression.Expression);
-                if (memberExpression.Member is PropertyInfo propertyInfo)
-                    return propertyInfo.GetValue(obj);
+            if (expression.NodeType == ExpressionType.Convert)
+                return GetValue(((UnaryExpression)expression).Operand);
 
-                if (memberExpression.Member is FieldInfo fieldInfo)
-                    return fieldInfo.GetValue(obj);
-            }
-
-            if (expression is MethodCallExpression methodCallExpression)
-            {
-                var args = methodCallExpression.Arguments.Select(o => GetValue(o)).ToArray();
-                object obj = null;
-                if (methodCallExpression.Object != null)
-                    obj = GetValue(methodCallExpression.Object);
-                return methodCallExpression.Method.Invoke(obj, args);
-            }
-
-            if (expression is NewArrayExpression newArrayExpression)
-            {
-                var args = newArrayExpression.Expressions.Select(o => GetValue(o)).ToArray();
-                var ary = (object[])Activator.CreateInstance(newArrayExpression.Type, args.Length);
-                for (int i = 0; i < ary.Length; ++i)
-                    ary[i] = args[i];
-                return ary;
-            }
-
-            if (expression is BinaryExpression binaryExpression)
-            {
-                switch (expression.NodeType)
-                {
-                    case ExpressionType.Coalesce:
-                        {
-                            var value = GetValue(binaryExpression.Left);
-                            if (value == null)
-                                value = GetValue(binaryExpression.Right);
-                            return value;
-                        }
-                    case ExpressionType.ArrayIndex:
-                        {
-                            var array = (Array)GetValue(binaryExpression.Left);
-                            var index = (long)Convert.ChangeType(GetValue(binaryExpression.Right), typeof(long));
-                            return array.GetValue(index);
-                        }
-                }
-
-            }
-
-            throw new NotImplementedException($"NodeType：{expression.NodeType}");
+            return Expression.Lambda(expression).Compile().DynamicInvoke();
         }
     }
 
