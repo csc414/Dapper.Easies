@@ -55,6 +55,8 @@ namespace Dapper.Easies
 
         public int Take { get; set; }
 
+        public bool Distinct { get; set; }
+
         public void AddJoin(Type joinType, Expression joinExpression, JoinType type)
         {
             var dbObject = DbObject.Get(joinType);

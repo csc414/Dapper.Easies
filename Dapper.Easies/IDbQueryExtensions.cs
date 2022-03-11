@@ -25,5 +25,11 @@ namespace Dapper.Easies
             var type = typeof(DbQuery<>).MakeGenericType(typeof(T).GetGenericArguments());
             return (T)Activator.CreateInstance(type, BindingFlags.Instance | BindingFlags.NonPublic, null, new[] { query.Context.Clone() }, null);
         }
+
+        public static T Distinct<T>(this T query) where T : IDbQuery
+        {
+            query.Context.Distinct = true;
+            return query;
+        }
     }
 }

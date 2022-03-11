@@ -9,9 +9,14 @@ namespace Dapper.Easies
 {
     public class DefaultSqlSyntax : ISqlSyntax
     {
-        public virtual string SelectFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> joins, string where, string groupBy, string having, string orderBy, int skip, int take)
+        public virtual string SelectFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> joins, string where, string groupBy, string having, string orderBy, int skip, int take, bool distinct)
         {
-            var sql = new StringBuilder($"SELECT {string.Join(", ", fields)} FROM {tableName}");
+            var sql = new StringBuilder($"SELECT");
+            if (distinct)
+                sql.AppendFormat(" DISTINCT");
+
+            sql.AppendFormat(" {0}", string.Join(", ", fields));
+            sql.AppendFormat(" FROM {0}", tableName);
 
             if (joins != null)
                 sql.AppendFormat(" {0}", string.Join(" ", joins));

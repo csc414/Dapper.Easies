@@ -8,9 +8,9 @@ namespace Dapper.Easies.MySql
 {
     public class MySqlSqlSyntax : DefaultSqlSyntax
     {
-        public override string SelectFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> joins, string where, string groupBy, string having, string orderBy, int skip, int take)
+        public override string SelectFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> joins, string where, string groupBy, string having, string orderBy, int skip, int take, bool distinct)
         {
-            var sql = base.SelectFormat(tableName, fields, joins, where, groupBy, having, orderBy, skip, take);
+            var sql = base.SelectFormat(tableName, fields, joins, where, groupBy, having, orderBy, skip, take, distinct);
             if (take > 0)
                 sql = $"{sql} LIMIT {skip},{take}";
 

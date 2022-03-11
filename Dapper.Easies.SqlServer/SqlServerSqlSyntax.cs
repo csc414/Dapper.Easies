@@ -8,9 +8,12 @@ namespace Dapper.Easies.SqlServer
 {
     public class SqlServerSqlSyntax : DefaultSqlSyntax
     {
-        public override string SelectFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> joins, string where, string groupBy, string having, string orderBy, int skip, int take)
+        public override string SelectFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> joins, string where, string groupBy, string having, string orderBy, int skip, int take, bool distinct)
         {
             var sql = new StringBuilder("SELECT");
+            if (distinct)
+                sql.AppendFormat(" DISTINCT");
+
             if (skip == 0 && take > 0)
                 sql.AppendFormat(" TOP {0}", take);
 
