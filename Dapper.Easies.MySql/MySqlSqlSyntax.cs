@@ -8,9 +8,9 @@ namespace Dapper.Easies.MySql
 {
     public class MySqlSqlSyntax : DefaultSqlSyntax
     {
-        public override string SelectFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> joins, string where, string groupBy, string having, string orderBy, int skip, int take)
+        public override string SelectFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> joins, string where, string groupBy, string having, string orderBy, int skip, int take, bool distinct)
         {
-            var sql = base.SelectFormat(tableName, fields, joins, where, groupBy, having, orderBy, skip, take);
+            var sql = base.SelectFormat(tableName, fields, joins, where, groupBy, having, orderBy, skip, take, distinct);
             if (take > 0)
                 sql = $"{sql} LIMIT {skip},{take}";
 
@@ -44,6 +44,23 @@ namespace Dapper.Easies.MySql
                     return "rand()";
                 default:
                     return base.Method(method, args, parameter, getExpr, getValue);
+            }
+        }
+
+        public override string DateTimeMethod(string name, Func<string> getPropertyName)
+        {
+            switch (name)
+            {
+                case "Date":
+                    return $"DATE({getPropertyName()})";
+                case "Hour":
+                    return $"HOUR({getPropertyName()})";
+                case "Minute":
+                    return $"MINUTE({getPropertyName()})";
+                case "Second":
+                    return $"SECOND({getPropertyName()})";
+                default:
+                    return base.DateTimeMethod(name, getPropertyName);
             }
         }
     }

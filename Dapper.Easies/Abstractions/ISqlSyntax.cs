@@ -8,7 +8,7 @@ namespace Dapper.Easies
 {
     public interface ISqlSyntax
     {
-        string SelectFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> joins, string where, string groupBy, string having, string orderBy, int skip, int take);
+        string SelectFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> joins, string where, string groupBy, string having, string orderBy, int skip, int take, bool distinct);
 
         string InsertFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> paramNames, bool hasIdentityKey);
 
@@ -35,5 +35,7 @@ namespace Dapper.Easies
         string GroupBy(IEnumerable<string> groupBy);
 
         string Method(MethodInfo method, Expression[] args, ParameterBuilder parameter, Func<Expression, string> getExpr, Func<Expression, object> getValue);
+
+        string DateTimeMethod(string name, Func<string> getPropertyName);
     }
 }

@@ -35,7 +35,8 @@ namespace Dapper.Easies
                 GetPredicate(sqlSyntax, context.HavingExpressions, context, parser),
                 aggregateInfo == null ? GetOrderBy(sqlSyntax, context, parameterBuilder) : null,
                 context.Skip,
-                take ?? context.Take);
+                take ?? context.Take,
+                context.Distinct);
             parameters = parameterBuilder.GetDynamicParameters();
             if (_options.DevelopmentMode)
                 _logger?.LogParametersSql(sql, parameters);
@@ -65,7 +66,8 @@ namespace Dapper.Easies
                 null,
                 null,
                 0,
-                1);
+                1,
+                false);
             parameters = dynamicParameters;
             if (_options.DevelopmentMode)
                 _logger?.LogParametersSql(sql, parameters);

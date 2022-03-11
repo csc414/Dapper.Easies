@@ -8,9 +8,12 @@ namespace Dapper.Easies.SqlServer
 {
     public class SqlServerSqlSyntax : DefaultSqlSyntax
     {
-        public override string SelectFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> joins, string where, string groupBy, string having, string orderBy, int skip, int take)
+        public override string SelectFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> joins, string where, string groupBy, string having, string orderBy, int skip, int take, bool distinct)
         {
             var sql = new StringBuilder("SELECT");
+            if (distinct)
+                sql.AppendFormat(" DISTINCT");
+
             if (skip == 0 && take > 0)
                 sql.AppendFormat(" TOP {0}", take);
 
@@ -67,6 +70,23 @@ namespace Dapper.Easies.SqlServer
                 sql.AppendFormat(" WHERE {0}", where);
 
             return sql.ToString();
+        }
+
+        public override string DateTimeMethod(string name, Func<string> getPropertyName)
+        {
+            switch (name)
+            {
+                case "Date":
+                    return $"CONVERT(varchar(10), {getPropertyName()}, 23)";
+                case "Hour":
+                    return $"DATEPART(HOUR, {getPropertyName()})";
+                case "Minute":
+                    return $"DATEPART(MINUTE, {getPropertyName()})";
+                case "Second":
+                    return $"DATEPART(SECOND, {getPropertyName()})";
+                default:
+                    return base.DateTimeMethod(name, getPropertyName);
+            }
         }
     }
 }

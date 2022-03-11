@@ -210,17 +210,31 @@ namespace Dapper.Easies
                 }
             }
 
-            if (expression is MemberExpression memberExpression && memberExpression.Expression?.NodeType == ExpressionType.Parameter)
+            if (expression is MemberExpression memberExpression)
             {
-                var table = DbObject.Get(memberExpression.Expression.Type);
-                if (table == null)
-                    return memberExpression.Member.Name;
+                if(memberExpression.Expression?.NodeType == ExpressionType.Parameter)
+                {
+                    var table = DbObject.Get(memberExpression.Expression.Type);
+                    if (table == null)
+                        return memberExpression.Member.Name;
 
-                string alias = null;
-                if (context != null)
-                    alias = $"{context.Alias[table.Type].Alias}.";
+                    string alias = null;
+                    if (context != null)
+                        alias = $"{context.Alias[table.Type].Alias}.";
 
-                return $"{alias}{table[memberExpression.Member.Name].EscapeName}";
+                    return $"{alias}{table[memberExpression.Member.Name].EscapeName}";
+                }
+                else if(memberExpression.Expression is MemberExpression m && m.Expression?.NodeType == ExpressionType.Parameter)
+                {
+                    if (m.Type == typeof(DateTime))
+                    {
+                        var dateTimeMethod = sqlSyntax.DateTimeMethod(memberExpression.Member.Name, () => GetExpression(memberExpression.Expression, builder, sqlSyntax, context));
+                        if (dateTimeMethod == null)
+                            throw new NotImplementedException($"DateTime Method：{memberExpression.Member.Name}");
+
+                        return dateTimeMethod;
+                    }
+                }
             }
 
             return builder.AddParameter(GetValue(expression));
