@@ -69,7 +69,7 @@ namespace Dapper.Easies
                 _sql.Append(operatorStr);
                 PrivateVisit(b.Right);
             }
-            
+
             void PrivateVisit(Expression exp)
             {
                 var condition = b.NodeType != ExpressionType.AndAlso && b.NodeType != ExpressionType.OrElse;
@@ -98,6 +98,18 @@ namespace Dapper.Easies
 
             if (parameterExpression is ParameterExpression parameter)
                 return CreateParserData(ParserDataType.Property, DbObject.Get(parameter.Type)[m.Member.Name], m);
+            else if (parameterExpression is MemberExpression memberExpression && memberExpression.Expression?.NodeType == ExpressionType.Parameter)
+            {
+                var parserData = VisitMemberAccess(memberExpression);
+                if(parserData.Type == ParserDataType.Property)
+                {
+                    var dateTimeMethod = _sqlSyntax.DateTimeMethod(m.Member.Name, () => DbObject.GetTablePropertyAlias(_context, (DbObject.DbProperty)parserData.Value));
+                    if (dateTimeMethod == null)
+                        throw new NotImplementedException($"DateTime Method：{m.Member.Name}");
+
+                    return CreateParserData(ParserDataType.Sql, dateTimeMethod);
+                }
+            }
             else
             {
                 ParserData parserData = null;
@@ -109,9 +121,9 @@ namespace Dapper.Easies
 
                 if (m.Member is FieldInfo fieldInfo)
                     return CreateParserData(ParserDataType.Constant, fieldInfo.GetValue(parserData?.Value));
-
-                throw new NotImplementedException($"ExpressionType：{m.NodeType}");
             }
+
+            throw new NotImplementedException($"ExpressionType：{m.NodeType}");
         }
 
         internal override ParserData VisitConstant(ConstantExpression c)

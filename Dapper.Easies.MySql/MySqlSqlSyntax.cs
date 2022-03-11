@@ -46,5 +46,22 @@ namespace Dapper.Easies.MySql
                     return base.Method(method, args, parameter, getExpr, getValue);
             }
         }
+
+        public override string DateTimeMethod(string name, Func<string> getPropertyName)
+        {
+            switch (name)
+            {
+                case "Date":
+                    return $"DATE({getPropertyName()})";
+                case "Hour":
+                    return $"HOUR({getPropertyName()})";
+                case "Minute":
+                    return $"MINUTE({getPropertyName()})";
+                case "Second":
+                    return $"SECOND({getPropertyName()})";
+                default:
+                    return base.DateTimeMethod(name, getPropertyName);
+            }
+        }
     }
 }

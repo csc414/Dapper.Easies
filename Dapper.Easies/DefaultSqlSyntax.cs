@@ -183,6 +183,21 @@ namespace Dapper.Easies
             }
         }
 
+        public virtual string DateTimeMethod(string name, Func<string> getPropertyName)
+        {
+            switch (name)
+            {
+                case "Year":
+                    return $"YEAR({getPropertyName()})";
+                case "Month":
+                    return $"MONTH({getPropertyName()})";
+                case "Day":
+                    return $"DAY({getPropertyName()})";
+                default:
+                    return null;
+            }
+        }
+
         public string GroupBy(IEnumerable<string> groupBy)
         {
             return $"GROUP BY {string.Join(", ", groupBy)}";

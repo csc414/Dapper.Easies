@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-      <Version>1.1.2</Version>
+      <Version>1.1.4</Version>
       <Description>基于Dapper.Easies的MySql扩展</Description>
 	  <Authors>cxc</Authors>
 	  <PackageProjectUrl>https://github.com/csc414/Dapper.Easies</PackageProjectUrl>

@@ -35,5 +35,7 @@ namespace Dapper.Easies
         string GroupBy(IEnumerable<string> groupBy);
 
         string Method(MethodInfo method, Expression[] args, ParameterBuilder parameter, Func<Expression, string> getExpr, Func<Expression, object> getValue);
+
+        string DateTimeMethod(string name, Func<string> getPropertyName);
     }
 }

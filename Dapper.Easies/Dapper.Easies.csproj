@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
-        <Version>1.1.3</Version>
+        <Version>1.1.4</Version>
         <Description>基于Dapper的轻量级ORM</Description>
 		<Authors>cxc</Authors>
 		<PackageProjectUrl>https://github.com/csc414/Dapper.Easies</PackageProjectUrl>

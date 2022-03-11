@@ -68,5 +68,22 @@ namespace Dapper.Easies.SqlServer
 
             return sql.ToString();
         }
+
+        public override string DateTimeMethod(string name, Func<string> getPropertyName)
+        {
+            switch (name)
+            {
+                case "Date":
+                    return $"CONVERT(varchar(10), {getPropertyName()}, 23)";
+                case "Hour":
+                    return $"DATEPART(HOUR, {getPropertyName()})";
+                case "Minute":
+                    return $"DATEPART(MINUTE, {getPropertyName()})";
+                case "Second":
+                    return $"DATEPART(SECOND, {getPropertyName()})";
+                default:
+                    return base.DateTimeMethod(name, getPropertyName);
+            }
+        }
     }
 }
