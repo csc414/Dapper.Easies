@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace Dapper.Easies
 {
@@ -212,7 +213,7 @@ namespace Dapper.Easies
 
             if (expression is MemberExpression memberExpression)
             {
-                if(memberExpression.Expression?.NodeType == ExpressionType.Parameter)
+                if (memberExpression.Expression?.NodeType == ExpressionType.Parameter)
                 {
                     var table = DbObject.Get(memberExpression.Expression.Type);
                     if (table == null)
@@ -224,16 +225,24 @@ namespace Dapper.Easies
 
                     return $"{alias}{table[memberExpression.Member.Name].EscapeName}";
                 }
-                else if(memberExpression.Expression is MemberExpression m && m.Expression?.NodeType == ExpressionType.Parameter)
+                else if(memberExpression.Expression is MemberExpression m && HasParameter(m.Expression))
                 {
-                    if (m.Type == typeof(DateTime))
+                    if (memberExpression.Member.Name != "Value" && memberExpression.Member.ReflectedType.Name != "Nullable`1")
                     {
-                        var dateTimeMethod = sqlSyntax.DateTimeMethod(memberExpression.Member.Name, () => GetExpression(memberExpression.Expression, builder, sqlSyntax, context));
-                        if (dateTimeMethod == null)
-                            throw new NotImplementedException($"DateTime Method：{memberExpression.Member.Name}");
+                        if (m.Member.Name == "Value" && m.Member.ReflectedType.Name == "Nullable`1")
+                            m = (MemberExpression)m.Expression;
 
-                        return dateTimeMethod;
+                        if (m.Type == typeof(DateTime) || m.Type == typeof(DateTime?))
+                        {
+                            var dateTimeMethod = sqlSyntax.DateTimeMethod(memberExpression.Member.Name, () => GetExpression(m, builder, sqlSyntax, context));
+                            if (dateTimeMethod == null)
+                                throw new NotImplementedException($"DateTime Method：{memberExpression.Member.Name}");
+
+                            return dateTimeMethod;
+                        }
                     }
+                    
+                    return GetExpression(m, builder, sqlSyntax, context);
                 }
             }
 
@@ -242,6 +251,9 @@ namespace Dapper.Easies
 
         internal static bool HasParameter(Expression exp)
         {
+            if (exp == null)
+                return false;
+
             switch (exp.NodeType)
             {
                 case ExpressionType.Lambda:
