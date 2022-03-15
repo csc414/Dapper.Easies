@@ -55,5 +55,10 @@ namespace Dapper.Easies
         {
             throw new InvalidOperationException("Do not directly call this method.");
         }
+
+        public static object Expr(string expr)
+        {
+            throw new InvalidOperationException("Do not directly call this method.");
+        }
     }
 }
