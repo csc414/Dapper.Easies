@@ -98,16 +98,21 @@ namespace Dapper.Easies
 
             if (parameterExpression is ParameterExpression parameter)
                 return CreateParserData(ParserDataType.Property, DbObject.Get(parameter.Type)[m.Member.Name], m);
-            else if (parameterExpression is MemberExpression memberExpression && memberExpression.Expression?.NodeType == ExpressionType.Parameter)
+            else if (parameterExpression is MemberExpression memberExpression && HasParameter(memberExpression.Expression))
             {
                 var parserData = VisitMemberAccess(memberExpression);
-                if(parserData.Type == ParserDataType.Property)
+                if(parserData.Type == ParserDataType.Property && parserData.Value is DbObject.DbProperty dbProperty)
                 {
-                    var dateTimeMethod = _sqlSyntax.DateTimeMethod(m.Member.Name, () => DbObject.GetTablePropertyAlias(_context, (DbObject.DbProperty)parserData.Value));
-                    if (dateTimeMethod == null)
-                        throw new NotImplementedException($"DateTime Method：{m.Member.Name}");
+                    if (dbProperty.PropertyInfo.PropertyType.Name == "Nullable`1" && m.Member.Name == "Value")
+                        return parserData;
+                    else if (dbProperty.PropertyInfo.PropertyType == typeof(DateTime) || dbProperty.PropertyInfo.PropertyType == typeof(DateTime?))
+                    {
+                        var dateTimeMethod = _sqlSyntax.DateTimeMethod(m.Member.Name, () => DbObject.GetTablePropertyAlias(_context, dbProperty));
+                        if (dateTimeMethod == null)
+                            throw new NotImplementedException($"DateTime Method：{m.Member.Name}");
 
-                    return CreateParserData(ParserDataType.Sql, dateTimeMethod);
+                        return CreateParserData(ParserDataType.Sql, dateTimeMethod);
+                    }
                 }
             }
             else
