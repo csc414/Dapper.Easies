@@ -65,39 +65,6 @@ namespace Dapper.Easies
         Task<int> DeleteAsync<T>(IEnumerable<T> entities) where T : IDbTable;
 
         /// <summary>
-        /// 根据查询条件删除实体对象
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="predicate"></param>
-        /// <returns></returns>
-        Task<int> DeleteAsync<T>(Expression<Predicate<T>> predicate = null) where T : IDbTable;
-
-        /// <summary>
-        /// 根据高级查询条件删除实体对象
-        /// </summary>
-        /// <param name="query"></param>
-        /// <returns></returns>
-        Task<int> DeleteAsync(IDbQuery query);
-
-        /// <summary>
-        /// 根据查询条件更新部分字段
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="updateFields"></param>
-        /// <param name="predicate"></param>
-        /// <returns></returns>
-        Task<int> UpdateAsync<T>(Expression<Func<T>> updateFields, Expression<Predicate<T>> predicate = null) where T : IDbTable;
-
-        /// <summary>
-        /// 根据查询条件更新部分字段
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="updateFields"></param>
-        /// <param name="predicate"></param>
-        /// <returns></returns>
-        Task<int> UpdateAsync<T>(Expression<Func<T, T>> updateFields, Expression<Predicate<T>> predicate = null) where T : IDbTable;
-
-        /// <summary>
         /// 更新实体对象除主键外的所有字段
         /// </summary>
         /// <typeparam name="T"></typeparam>

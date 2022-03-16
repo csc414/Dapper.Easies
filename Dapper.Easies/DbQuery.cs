@@ -170,6 +170,26 @@ namespace Dapper.Easies
             return _context.Connection.QueryAsync<T>(_context.Converter.ToQuerySql(_context, out var parameters), parameters);
         }
 
+        public async Task<bool> ExistAsync()
+        {
+            return await base.CountAsync(null) > 0;
+        }
+
+        public Task<int> DeleteAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<int> UpdateAsync(Expression<Func<T>> updateFields)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<int> UpdateAsync(Expression<Func<T, T>> updateFields)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<long> CountAsync(Expression<Func<T, object>> field) => base.CountAsync(field);
 
         public Task<TResult> MaxAsync<TResult>(Expression<Func<T, TResult>> field) => base.MaxAsync<TResult>(field);

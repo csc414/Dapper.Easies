@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Dapper.Easies
 {
-    public interface IOrderedDbQuery<T> : IDbQuery<T>
+    public interface IOrderedDbQuery<T> : IGeneralDbQuery<T>
     {
         IOrderedDbQuery<T> ThenBy<TField>(params Expression<Func<T, TField>>[] orderFields);
 

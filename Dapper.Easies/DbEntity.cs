@@ -53,30 +53,6 @@ namespace Dapper.Easies
         public Task<int> DeleteAsync(IEnumerable<T> entities) => _provider.DeleteAsync(entities);
 
         /// <summary>
-        /// 根据查询条件删除实体对象
-        /// </summary>
-        /// <param name="predicate"></param>
-        /// <returns></returns>
-        public Task<int> DeleteAsync(Expression<Predicate<T>> predicate = null) => _provider
-            .DeleteAsync(predicate);
-
-        /// <summary>
-        /// 根据查询条件更新部分字段
-        /// </summary>
-        /// <param name="updateFields"></param>
-        /// <param name="predicate"></param>
-        /// <returns></returns>
-        public Task<int> UpdateAsync(Expression<Func<T>> updateFields, Expression<Predicate<T>> predicate = null) => _provider.UpdateAsync(updateFields, predicate);
-
-        /// <summary>
-        /// 根据查询条件更新部分字段
-        /// </summary>
-        /// <param name="updateFields"></param>
-        /// <param name="predicate"></param>
-        /// <returns></returns>
-        public Task<int> UpdateAsync(Expression<Func<T, T>> updateFields, Expression<Predicate<T>> predicate = null) => _provider.UpdateAsync(updateFields, predicate);
-
-        /// <summary>
         /// 更新实体对象除主键外的所有字段
         /// </summary>
         /// <param name="entity"></param>
@@ -111,6 +87,14 @@ namespace Dapper.Easies
         public Task<T> FirstOrDefaultAsync() => _provider.Query<T>().FirstOrDefaultAsync();
 
         public Task<IEnumerable<T>> QueryAsync() => _provider.Query<T>().QueryAsync();
+
+        public Task<bool> ExistAsync() => _provider.Query<T>().ExistAsync();
+
+        public Task<int> DeleteAsync() => _provider.Query<T>().DeleteAsync();
+
+        public Task<int> UpdateAsync(Expression<Func<T>> updateFields) => _provider.Query<T>().UpdateAsync(updateFields);
+
+        public Task<int> UpdateAsync(Expression<Func<T, T>> updateFields) => _provider.Query<T>().UpdateAsync(updateFields);
 
         public Task<long> CountAsync(Expression<Func<T, object>> field = null) => _provider.Query<T>().CountAsync(field);
 

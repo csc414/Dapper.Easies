@@ -114,12 +114,18 @@ namespace Dapper.Easies.Demo
                 .Where((stu, cls) => stu.Age == 18);
 
             await easiesProvider.UpdateAsync(student);
-            await easiesProvider.UpdateAsync<Student>((o) => new Student { Age = DbFunc.Expr<int?>($"{student.Age}") }, o => o.Id == 2 && o.StudentName == DbFunc.Expr<string>($"{o.StudentName}"));
-            await easiesProvider.UpdateAsync(() => new Student { Age = 18 }, o => o.Id == 2);
 
-            //await easiesProvider.DeleteAsync<Student>();
-            await easiesProvider.DeleteAsync<Student>(o => o.Age == 20);
-            await easiesProvider.DeleteAsync(query);
+            await easiesProvider.Query<Student>()
+                .Where(o => o.Id == 2 && o.StudentName == DbFunc.Expr<string>($"{o.StudentName}"))
+                .UpdateAsync(o => new Student { Age = DbFunc.Expr<int?>($"{student.Age}") });
+
+            await easiesProvider.Query<Student>()
+                .Where(o => o.Id == 2)
+                .UpdateAsync(() => new Student { Age = 18 });
+
+            //await easiesProvider.Query<Student>().DeleteAsync();
+
+            await easiesProvider.Query<Student>().Where(o => o.Age == 20).DeleteAsync();
         }
 
         public class StudentResponse
