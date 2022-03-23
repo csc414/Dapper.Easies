@@ -177,17 +177,18 @@ namespace Dapper.Easies
 
         public Task<int> DeleteAsync()
         {
-            throw new NotImplementedException();
+            var sql = _context.Converter.ToDeleteSql(_context, out var parameters);
+            return _context.Connection.ExecuteAsync(sql, parameters);
         }
 
-        public Task<int> UpdateAsync(Expression<Func<T>> updateFields)
-        {
-            throw new NotImplementedException();
-        }
+        public Task<int> UpdateAsync(Expression<Func<T>> updateFields) => InternalUpdateAsync(updateFields);
 
-        public Task<int> UpdateAsync(Expression<Func<T, T>> updateFields)
+        public Task<int> UpdateAsync(Expression<Func<T, T>> updateFields) => InternalUpdateAsync(updateFields);
+
+        Task<int> InternalUpdateAsync(Expression updateFields)
         {
-            throw new NotImplementedException();
+            var sql = _context.Converter.ToUpdateFieldsSql(updateFields, _context, out var parameters);
+            return _context.Connection.ExecuteAsync(sql, parameters);
         }
 
         public Task<long> CountAsync(Expression<Func<T, object>> field) => base.CountAsync(field);

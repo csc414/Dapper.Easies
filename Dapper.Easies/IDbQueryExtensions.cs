@@ -20,7 +20,7 @@ namespace Dapper.Easies
             return query;
         }
 
-        public static T Copy<T>(this T query) where T : IDbQuery
+        public static T NewQuery<T>(this T query) where T : IDbQuery
         {
             var type = typeof(DbQuery<>).MakeGenericType(typeof(T).GetGenericArguments());
             return (T)Activator.CreateInstance(type, BindingFlags.Instance | BindingFlags.NonPublic, null, new[] { query.Context.Clone() }, null);
