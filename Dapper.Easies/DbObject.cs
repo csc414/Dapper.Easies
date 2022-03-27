@@ -16,7 +16,7 @@ namespace Dapper.Easies
 
         public DbObject(string dbName, Type type)
         {
-            DbName = dbName;
+            _dbName = dbName;
             Type = type;
         }
 
@@ -26,9 +26,41 @@ namespace Dapper.Easies
 
         public string ConnectionStringName { get; internal set; }
 
-        public string DbName { get; }
+        private string _dbName;
 
-        public string EscapeName { get; internal set; }
+        public string DbName { 
+            get 
+            {
+                var holder = DynamicDbMappingScope._locals.Value;
+                if(holder != null)
+                {
+                    if (holder.TableNameMap.TryGetValue(this, out var map))
+                        return map.name;
+                }
+
+                return _dbName;
+            } 
+        }
+
+        private string _escapeName;
+
+        public string EscapeName { 
+            get
+            {
+                var holder = DynamicDbMappingScope._locals.Value;
+                if (holder != null)
+                {
+                    if (holder.TableNameMap.TryGetValue(this, out var map))
+                        return map.escapeName;
+                }
+
+                return _escapeName;
+            }
+            internal set
+            {
+                _escapeName = value;
+            }
+        }
 
         public Type Type { get; }
 

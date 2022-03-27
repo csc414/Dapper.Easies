@@ -28,7 +28,7 @@ namespace Dapper.Easies.Demo
             var serviceProvider = services.BuildServiceProvider();
 
             var easiesProvider = serviceProvider.GetRequiredService<IEasiesProvider>();
-            
+
             var cls = new Class();
             cls.Id = Guid.NewGuid();
             cls.Name = "六年二班";
@@ -38,13 +38,20 @@ namespace Dapper.Easies.Demo
             cls1.Id = Guid.NewGuid();
             cls1.Name = "六年一班";
             cls1.CreateTime = DateTime.Now;
-            var c = await easiesProvider.InsertAsync(new[] { cls, cls1 });
-            
-            cls.Name = "六年三班";
-            cls1.Name = "六年四班";
-            var d = await easiesProvider.UpdateAsync(new[] { cls, cls1 });
 
-            var i = await easiesProvider.DeleteAsync(new[] { cls, cls1 });
+            using (new DynamicDbMappingScope(map => map.SetTableName<Class>("bnt_class1")))
+            {
+                var c = await easiesProvider.InsertAsync(new[] { cls, cls1 });
+
+                using (new DynamicDbMappingScope(map => map.SetTableName<Class>("bnt_class2")))
+                {
+                    cls.Name = "六年三班";
+                    cls1.Name = "六年四班";
+                    var d = await easiesProvider.UpdateAsync(new[] { cls, cls1 });
+                }
+
+                var i = await easiesProvider.DeleteAsync(new[] { cls, cls1 });
+            }
 
             var cls2 = new MClass();
             cls2.Id = Guid.NewGuid();
