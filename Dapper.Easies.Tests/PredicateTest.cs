@@ -16,6 +16,7 @@ namespace Dapper.Easies.Tests
             _sqlSyntax = new DefaultSqlSyntax();
             var options = new EasiesOptions();
             options.SqlSyntax.Add(EasiesOptions.DefaultName, _sqlSyntax);
+            options.ConnectionFactory.Add(EasiesOptions.DefaultName, default);
             DbObject.Initialize(options);
         }
 
