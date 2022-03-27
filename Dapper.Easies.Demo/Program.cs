@@ -15,6 +15,7 @@ namespace Dapper.Easies.Demo
             var services = new ServiceCollection();
             services.AddEasiesProvider(builder =>
             {
+                builder.Lifetime = ServiceLifetime.Singleton;
                 builder.DevelopmentMode();
                 builder.UseMySql("Host=localhost;UserName=root;Password=123456;Database=School;Port=3306;CharSet=utf8mb4;Connection Timeout=1200;Allow User Variables=true;");
 
@@ -27,7 +28,7 @@ namespace Dapper.Easies.Demo
             var serviceProvider = services.BuildServiceProvider();
 
             var easiesProvider = serviceProvider.GetRequiredService<IEasiesProvider>();
-
+            
             var cls = new Class();
             cls.Id = Guid.NewGuid();
             cls.Name = "六年二班";

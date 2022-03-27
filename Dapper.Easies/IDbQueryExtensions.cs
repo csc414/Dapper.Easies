@@ -22,6 +22,9 @@ namespace Dapper.Easies
 
         public static T NewQuery<T>(this T query) where T : IDbQuery
         {
+            if (query.Context == null)
+                return query;
+
             var type = typeof(DbQuery<>).MakeGenericType(typeof(T).GetGenericArguments());
             return (T)Activator.CreateInstance(type, BindingFlags.Instance | BindingFlags.NonPublic, null, new[] { query.Context.Clone() }, null);
         }

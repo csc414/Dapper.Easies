@@ -21,7 +21,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new ArgumentNullException(nameof(name));
 
             options.Options.ConnectionFactory[name] = new MySqlDbConnectionFactory(connectionString);
-            options.Options.SqlSyntax[name] = new MySqlSqlSyntax();
+            options.Options.SqlSyntax[name] = MySqlSqlSyntax.Instance;
             return options;
         }
     }

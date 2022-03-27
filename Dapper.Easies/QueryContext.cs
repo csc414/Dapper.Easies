@@ -9,13 +9,13 @@ namespace Dapper.Easies
 {
     public class QueryContext : ICloneable
     {
-        private readonly IConnection _connection;
+        private readonly IDbConnectionCache _connection;
 
-        public QueryContext(IConnection connection, ISqlConverter sqlConverter, DbObject dbObject) : this(connection, sqlConverter, dbObject, new[] { new KeyValuePair<Type, DbAlias>(dbObject.Type, new DbAlias(dbObject.EscapeName, "t")) })
+        public QueryContext(IDbConnectionCache connection, ISqlConverter sqlConverter, DbObject dbObject) : this(connection, sqlConverter, dbObject, new[] { new KeyValuePair<Type, DbAlias>(dbObject.Type, new DbAlias(dbObject.EscapeName, "t")) })
         {
         }
 
-        public QueryContext(IConnection connection, ISqlConverter sqlConverter, DbObject dbObject, IEnumerable<KeyValuePair<Type, DbAlias>> alias)
+        public QueryContext(IDbConnectionCache connection, ISqlConverter sqlConverter, DbObject dbObject, IEnumerable<KeyValuePair<Type, DbAlias>> alias)
         {
             _connection = connection;
             Converter = sqlConverter;
@@ -35,7 +35,7 @@ namespace Dapper.Easies
 
         public ISqlConverter Converter { get; }
 
-        public IDbConnection Connection => _connection.GetConnection(DbObject.ConnectionStringName);
+        public IDbConnection Connection => _connection.GetConnection(DbObject.ConnectionFactory);
 
         public IEnumerable<JoinMetedata> JoinMetedatas => _joinMetedatas;
 

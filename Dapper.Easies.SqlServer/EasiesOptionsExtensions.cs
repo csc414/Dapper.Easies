@@ -18,7 +18,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new ArgumentNullException(nameof(name));
 
             options.Options.ConnectionFactory[name] = new SqlServerDbConnectionFactory(connectionString);
-            options.Options.SqlSyntax[name] = new SqlServerSqlSyntax();
+            options.Options.SqlSyntax[name] = SqlServerSqlSyntax.Instance;
             return options;
         }
     }

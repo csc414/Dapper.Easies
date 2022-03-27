@@ -8,6 +8,8 @@ namespace Dapper.Easies.MySql
 {
     public class MySqlSqlSyntax : DefaultSqlSyntax
     {
+        internal static MySqlSqlSyntax Instance { get; } = new MySqlSqlSyntax();
+
         public override string SelectFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> joins, string where, string groupBy, string having, string orderBy, int skip, int take, bool distinct)
         {
             var sql = base.SelectFormat(tableName, fields, joins, where, groupBy, having, orderBy, skip, take, distinct);

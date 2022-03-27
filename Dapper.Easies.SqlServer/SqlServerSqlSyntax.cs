@@ -8,6 +8,8 @@ namespace Dapper.Easies.SqlServer
 {
     public class SqlServerSqlSyntax : DefaultSqlSyntax
     {
+        internal static SqlServerSqlSyntax Instance { get; } = new SqlServerSqlSyntax();
+
         public override string SelectFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> joins, string where, string groupBy, string having, string orderBy, int skip, int take, bool distinct)
         {
             var sql = new StringBuilder("SELECT");

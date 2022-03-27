@@ -19,6 +19,9 @@ namespace Dapper.Easies
             DbName = dbName;
             Type = type;
         }
+
+        public IDbConnectionFactory ConnectionFactory { get; internal set; }
+
         public ISqlSyntax SqlSyntax { get; internal set; }
 
         public string ConnectionStringName { get; internal set; }
@@ -36,6 +39,8 @@ namespace Dapper.Easies
         public DbProperty this[string name] => _properties[name];
 
         internal bool Add(string name, DbProperty property) => _properties.TryAdd(name, property);
+
+        public static DbObject Get<T>() => Get(typeof(T));
 
         public static DbObject Get(Type type)
         {
@@ -86,6 +91,7 @@ namespace Dapper.Easies
                 var objAttr = t.GetCustomAttribute<DbObjectAttribute>();
                 var obj = new DbObject(objAttr?.TableName ?? t.Name, t);
                 obj.ConnectionStringName = objAttr?.ConnectionStringName;
+                obj.ConnectionFactory = options.GetConnectionFactory(obj.ConnectionStringName);
                 obj.SqlSyntax = options.GetSqlSyntax(obj.ConnectionStringName);
                 obj.EscapeName = obj.SqlSyntax.EscapeTableName(obj.DbName);
                 foreach (var p in t.GetTypeInfo().GetProperties(BindingFlags.Instance | BindingFlags.Public))

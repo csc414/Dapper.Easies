@@ -8,8 +8,20 @@ using System.Transactions;
 
 namespace Dapper.Easies
 {
-    public interface IEasiesProvider : IConnection
+    public interface IEasiesProvider
     {
+        /// <summary>
+        /// Default 配置的 DbConnection，
+        /// </summary>
+        IDbConnection Connection { get; }
+
+        /// <summary>
+        /// 根据配置名取 DbConnection
+        /// </summary>
+        /// <param name="connectionStringName"></param>
+        /// <returns></returns>
+        IDbConnection GetConnection(string connectionStringName);
+
         /// <summary>
         /// 强类型实体
         /// </summary>

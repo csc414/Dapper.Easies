@@ -10,7 +10,7 @@ namespace Dapper.Easies
     {
         private readonly IEasiesProvider _provider;
 
-        QueryContext IDbQuery.Context => throw new NotImplementedException();
+        QueryContext IDbQuery.Context { get; }
 
         internal DbEntity(IEasiesProvider provider)
         {
