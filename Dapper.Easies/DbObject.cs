@@ -108,9 +108,9 @@ namespace Dapper.Easies
             public PropertyInfo PropertyInfo { get; }
         }
 
-        internal static string GetTablePropertyAlias(QueryContext context, DbProperty property)
+        internal static string GetTablePropertyAlias(QueryContext context, DbProperty property, int aliasIndex)
         {
-            return string.Format("{0}.{1}", context.Alias[property.PropertyInfo.ReflectedType].Alias, property.EscapeName);
+            return string.Format("{0}.{1}", context.Alias[aliasIndex].Alias, property.EscapeName);
         }
 
         internal static void Initialize(EasiesOptions options)

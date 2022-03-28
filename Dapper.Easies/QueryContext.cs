@@ -11,16 +11,16 @@ namespace Dapper.Easies
     {
         private readonly IDbConnectionCache _connection;
 
-        public QueryContext(IDbConnectionCache connection, ISqlConverter sqlConverter, DbObject dbObject) : this(connection, sqlConverter, dbObject, new[] { new KeyValuePair<Type, DbAlias>(dbObject.Type, new DbAlias(dbObject.EscapeName, "t")) })
+        public QueryContext(IDbConnectionCache connection, ISqlConverter sqlConverter, DbObject dbObject) : this(connection, sqlConverter, dbObject, new[] { new DbAlias(dbObject.EscapeName, "t") })
         {
         }
 
-        public QueryContext(IDbConnectionCache connection, ISqlConverter sqlConverter, DbObject dbObject, IEnumerable<KeyValuePair<Type, DbAlias>> alias)
+        public QueryContext(IDbConnectionCache connection, ISqlConverter sqlConverter, DbObject dbObject, IEnumerable<DbAlias> alias)
         {
             _connection = connection;
             Converter = sqlConverter;
             DbObject = dbObject;
-            Alias = new Dictionary<Type, DbAlias>(alias);
+            Alias = new List<DbAlias>(alias);
         }
 
         private ICollection<JoinMetedata> _joinMetedatas;
@@ -31,7 +31,7 @@ namespace Dapper.Easies
 
         public DbObject DbObject { get; }
 
-        public IDictionary<Type, DbAlias> Alias { get; }
+        public IList<DbAlias> Alias { get; }
 
         public ISqlConverter Converter { get; }
 
@@ -60,8 +60,6 @@ namespace Dapper.Easies
         public void AddJoin(Type joinType, Expression joinExpression, JoinType type)
         {
             var dbObject = DbObject.Get(joinType);
-            if (!Alias.TryAdd(dbObject.Type, new DbAlias(dbObject.EscapeName, $"t{Alias.Count}")))
-                throw new ArgumentException($"请勿重复连接表 {dbObject.Type.Name}.");
 
             if (DbObject.ConnectionStringName != dbObject.ConnectionStringName)
                 throw new ArgumentException($"无法连接来自不同配置的表");
@@ -69,6 +67,8 @@ namespace Dapper.Easies
             if (_joinMetedatas == null)
                 _joinMetedatas = new List<JoinMetedata>();
 
+            var alias = new DbAlias(dbObject.EscapeName, $"t{Alias.Count}");
+            Alias.Add(alias);
             _joinMetedatas.Add(new JoinMetedata { DbObject = dbObject, JoinExpression = joinExpression, Type = type });
         }
 

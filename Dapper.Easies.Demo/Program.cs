@@ -29,6 +29,19 @@ namespace Dapper.Easies.Demo
 
             var easiesProvider = serviceProvider.GetRequiredService<IEasiesProvider>();
 
+            await easiesProvider.Query<Class>()
+                .Join<Class>((a, b) => a.CreateTime == b.CreateTime)
+                .QueryAsync();
+
+            //await easiesProvider.Query<Student>()
+            //    .UpdateAsync(o => new Student { Age = o.Age + 1 });
+
+            await easiesProvider.Query<Student>()
+                .Join<Class>((a, b) => a.ClassId == b.Id)
+                .OrderBy((a, b) => b.CreateTime)
+                .Select((a, b) => b)
+                .QueryAsync();
+
             var cls = new Class();
             cls.Id = Guid.NewGuid();
             cls.Name = "六年二班";

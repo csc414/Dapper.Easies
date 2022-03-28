@@ -97,7 +97,7 @@ namespace Dapper.Easies
                 parameterExpression = ((UnaryExpression)m.Expression).Operand;
 
             if (parameterExpression is ParameterExpression parameter)
-                return CreateParserData(ParserDataType.Property, DbObject.Get(parameter.Type)[m.Member.Name], m);
+                return CreateParserData(ParserDataType.Property, DbObject.Get(parameter.Type)[m.Member.Name], parameter);
             else if (parameterExpression is MemberExpression memberExpression && HasParameter(memberExpression.Expression))
             {
                 var parserData = VisitMemberAccess(memberExpression);
@@ -107,7 +107,11 @@ namespace Dapper.Easies
                         return parserData;
                     else if (dbProperty.PropertyInfo.PropertyType == typeof(DateTime) || dbProperty.PropertyInfo.PropertyType == typeof(DateTime?))
                     {
-                        var dateTimeMethod = _sqlSyntax.DateTimeMethod(m.Member.Name, () => DbObject.GetTablePropertyAlias(_context, dbProperty));
+                        var dateTimeMethod = _sqlSyntax.DateTimeMethod(m.Member.Name, () =>
+                        {
+                            var aliasIndex = Lambda.Parameters.IndexOf((ParameterExpression)parserData.Expression);
+                            return DbObject.GetTablePropertyAlias(_context, dbProperty, aliasIndex);
+                        });
                         if (dateTimeMethod == null)
                             throw new NotImplementedException($"DateTime Method：{m.Member.Name}");
 
@@ -180,10 +184,10 @@ namespace Dapper.Easies
                 else if (_dbFuncType.IsAssignableFrom(m.Method.ReflectedType))
                 {
                     if (m.Method.Name.Equals("Expr", StringComparison.Ordinal))
-                        return CreateSql(GetExpression(m, _parameters, _sqlSyntax, _context));
+                        return CreateSql(GetExpression(m, _parameters, _sqlSyntax, _context, Lambda.Parameters));
                     else
                     {
-                        var result = _sqlSyntax.Method(m.Method, m.Arguments.ToArray(), _parameters, exp => exp == null ? null : GetExpression(exp, _parameters, _sqlSyntax, _context), exp => exp == null ? null : GetValue(exp));
+                        var result = _sqlSyntax.Method(m.Method, m.Arguments.ToArray(), _parameters, exp => exp == null ? null : GetExpression(exp, _parameters, _sqlSyntax, _context, Lambda.Parameters), exp => exp == null ? null : GetValue(exp));
                         if (result == null)
                             throw new NotImplementedException($"MethodName：{m.Method.Name}");
 
@@ -202,7 +206,8 @@ namespace Dapper.Easies
                 case ParserDataType.Property:
                     {
                         var property = (DbObject.DbProperty)data.Value;
-                        _sql.Append(DbObject.GetTablePropertyAlias(_context, property));
+                        var aliasIndex = Lambda.Parameters.IndexOf((ParameterExpression)data.Expression);
+                        _sql.Append(DbObject.GetTablePropertyAlias(_context, property, aliasIndex));
                         if (andAlso && property.PropertyInfo.PropertyType == typeof(bool))
                             _sql.AppendFormat("{0}{1}", _sqlSyntax.Operator(OperatorType.Equal), _parameters.AddParameter(true));
                     }
