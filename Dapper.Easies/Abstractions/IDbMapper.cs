@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Dapper.Easies.Abstractions
+namespace Dapper.Easies
 {
     public interface IDbMapper
     {
