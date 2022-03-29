@@ -60,5 +60,25 @@ namespace Dapper.Easies
         {
             throw new InvalidOperationException("Do not directly call this method.");
         }
+
+        public static long Count()
+        {
+            throw new InvalidOperationException("Do not directly call this method.");
+        }
+
+        public static long Count<T>(T field)
+        {
+            throw new InvalidOperationException("Do not directly call this method.");
+        }
+
+        public static T Count<T>()
+        {
+            throw new InvalidOperationException("Do not directly call this method.");
+        }
+
+        public static T Count<T>(object field)
+        {
+            throw new InvalidOperationException("Do not directly call this method.");
+        }
     }
 }

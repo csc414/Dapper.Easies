@@ -34,7 +34,6 @@ namespace Dapper.Easies.Demo
                 .Select((a, b) => a.Age)
                 .GetPagerAsync(1, 10);
 
-
             await easiesProvider.Query<Student>()
                 .UpdateAsync(o => new Student { Age = o.Age + 1 });
 
@@ -54,42 +53,42 @@ namespace Dapper.Easies.Demo
             cls1.Name = "六年一班";
             cls1.CreateTime = DateTime.Now;
 
-            using (new DynamicDbMappingScope(map => map.SetTableName<Class>("bnt_class1")))
-            {
-                var c = await easiesProvider.InsertAsync(new[] { cls, cls1 });
+            //using (new DynamicDbMappingScope(map => map.SetTableName<Class>("bnt_class1")))
+            //{
+            //    var c = await easiesProvider.InsertAsync(new[] { cls, cls1 });
 
-                using (new DynamicDbMappingScope(map => map.SetTableName<Class>("bnt_class2")))
-                {
-                    cls.Name = "六年三班";
-                    cls1.Name = "六年四班";
-                    var d = await easiesProvider.UpdateAsync(new[] { cls, cls1 });
-                }
+            //    using (new DynamicDbMappingScope(map => map.SetTableName<Class>("bnt_class2")))
+            //    {
+            //        cls.Name = "六年三班";
+            //        cls1.Name = "六年四班";
+            //        var d = await easiesProvider.UpdateAsync(new[] { cls, cls1 });
+            //    }
 
-                var i = await easiesProvider.DeleteAsync(new[] { cls, cls1 });
-            }
+            //    var i = await easiesProvider.DeleteAsync(new[] { cls, cls1 });
+            //}
 
-            var cls2 = new MClass();
-            cls2.Id = Guid.NewGuid();
-            cls2.Name = "六年二班";
-            cls2.CreateTime = DateTime.Now;
+            //var cls2 = new MClass();
+            //cls2.Id = Guid.NewGuid();
+            //cls2.Name = "六年二班";
+            //cls2.CreateTime = DateTime.Now;
 
-            var cls22 = new MClass();
-            cls22.Id = Guid.NewGuid();
-            cls22.Name = "六年一班";
-            cls22.CreateTime = DateTime.Now;
-            var cc = await easiesProvider.InsertAsync(new[] { cls2, cls22 });
+            //var cls22 = new MClass();
+            //cls22.Id = Guid.NewGuid();
+            //cls22.Name = "六年一班";
+            //cls22.CreateTime = DateTime.Now;
+            //var cc = await easiesProvider.InsertAsync(new[] { cls2, cls22 });
 
-            cls2.Name = "六年三班";
-            cls22.Name = "六年四班";
-            var dd = await easiesProvider.UpdateAsync(new[] { cls2, cls22 });
+            //cls2.Name = "六年三班";
+            //cls22.Name = "六年四班";
+            //var dd = await easiesProvider.UpdateAsync(new[] { cls2, cls22 });
 
-            var ii = await easiesProvider.DeleteAsync(new[] { cls2, cls22 });
+            //var ii = await easiesProvider.DeleteAsync(new[] { cls2, cls22 });
 
             var a = await easiesProvider.Query<Student>()
                 .Where(o => o.Age == 18 || !o.IsOk)
                 .GroupBy(o => new { o.Id })
-                .Having(o => MySqlDbFunc.Count() > 0)
-                .Select(o => new { o.Id, Count = DbFunc.Max(o.Age) })
+                .Having(o => DbFunc.Count(o.Id) > 0)
+                .Select(o => new { o.Id, Count = DbFunc.Sum<decimal>(o.Age) })
                 .OrderBy(o => o.Count)
                 .ThenByDescending(o => o.Id)
                 .FirstOrDefaultAsync();

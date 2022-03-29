@@ -38,17 +38,6 @@ namespace Dapper.Easies.MySql
             return $"`{name}`";
         }
 
-        public override string Method(MethodInfo method, Expression[] args, ParameterBuilder parameter, Func<Expression, string> getExpr, Func<Expression, object> getValue)
-        {
-            switch (method.Name)
-            {
-                case "Rand":
-                    return "rand()";
-                default:
-                    return base.Method(method, args, parameter, getExpr, getValue);
-            }
-        }
-
         public override string DateTimeMethod(string name, Func<string> getPropertyName)
         {
             switch (name)
