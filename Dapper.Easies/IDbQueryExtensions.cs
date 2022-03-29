@@ -45,7 +45,7 @@ namespace Dapper.Easies
             if (page > max_page)
                 return (Enumerable.Empty<T>(), total, max_page);
 
-            var data = await baseQuery.QueryAsync();
+            var data = await baseQuery.Skip((page - 1) * size).Take(size).QueryAsync();
             return (data, total, max_page);
         }
     }

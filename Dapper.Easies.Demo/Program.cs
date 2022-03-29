@@ -91,7 +91,7 @@ namespace Dapper.Easies.Demo
                 .Select(o => new { o.Id, Count = DbFunc.Sum<decimal>(o.Age) })
                 .OrderBy(o => o.Count)
                 .ThenByDescending(o => o.Id)
-                .FirstOrDefaultAsync();
+                .GetPagerAsync(1, 10);
 
             var bb = await easiesProvider.Query<Student>()
                 .Join<Class>((a, b) => a.ClassId == b.Id)
