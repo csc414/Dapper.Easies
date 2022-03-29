@@ -12,7 +12,14 @@ namespace Dapper.Easies
 
         protected static Type _dbObjectExtensions = typeof(DbObjectExtensions);
 
-        protected LambdaExpression Lambda => _lambda;
+        private ReadOnlyCollection<ParameterExpression> _parameters;
+
+        protected void SetParameters(ReadOnlyCollection<ParameterExpression> parameters)
+        {
+            _parameters = parameters;
+        }
+
+        protected ReadOnlyCollection<ParameterExpression> Parameters => _parameters ?? _lambda?.Parameters;
 
         private LambdaExpression _lambda;
 
@@ -223,14 +230,14 @@ namespace Dapper.Easies
                     var table = DbObject.Get(parameter.Type);
                     if (table == null)
                         return memberExpression.Member.Name;
-                    
+
                     string alias = null;
                     if (context != null)
                         alias = $"{context.Alias[parameters.IndexOf(parameter)].Alias}.";
 
                     return $"{alias}{table[memberExpression.Member.Name].EscapeName}";
                 }
-                else if(memberExpression.Expression is MemberExpression m && HasParameter(m.Expression))
+                else if (memberExpression.Expression is MemberExpression m && HasParameter(m.Expression))
                 {
                     if (memberExpression.Member.Name != "Value" && memberExpression.Member.ReflectedType.Name != "Nullable`1")
                     {
@@ -246,9 +253,15 @@ namespace Dapper.Easies
                             return dateTimeMethod;
                         }
                     }
-                    
+
                     return GetExpression(m, builder, sqlSyntax, context, parameters);
                 }
+            }
+
+            if (HasParameter(expression))
+            {
+                var parser = new PredicateExpressionParser(sqlSyntax, builder, parameters);
+                return parser.ToSql(expression, context);
             }
 
             return builder.AddParameter(GetValue(expression));

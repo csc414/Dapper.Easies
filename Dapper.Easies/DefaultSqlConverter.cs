@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -141,7 +142,7 @@ namespace Dapper.Easies
                 if (binding is MemberAssignment assignment)
                 {
                     var table = DbObject.Get(binding.Member.ReflectedType);
-                    var value = ExpressionParser.GetExpression(assignment.Expression, parameterBuilder, sqlSyntax, context, lambda.Parameters);
+                    var value = ExpressionParser.GetExpression(assignment.Expression, parameterBuilder, sqlSyntax, context, lambda?.Parameters);
                     fields.Add($"{alias.Alias}.{table[binding.Member.Name].EscapeName} = {value}");
                 }
                 else
@@ -192,7 +193,7 @@ namespace Dapper.Easies
             if (aggregateInfo != null)
             {
                 var lambda = (LambdaExpression)aggregateInfo.Expression;
-                var expr = ExpressionParser.GetExpression(lambda, builder, sqlSyntax, context, lambda.Parameters);
+                var expr = ExpressionParser.GetExpression(lambda, builder, sqlSyntax, context, lambda?.Parameters);
                 switch (aggregateInfo.Type)
                 {
                     case AggregateType.Count:
@@ -223,7 +224,7 @@ namespace Dapper.Easies
                     {
                         if (binding is MemberAssignment assignment)
                         {
-                            fields.Add($"{sqlSyntax.PropertyNameAlias(new DbAlias(ExpressionParser.GetExpression(assignment.Expression, builder, sqlSyntax, context, lambda.Parameters), assignment.Member.Name, true))}");
+                            fields.Add($"{sqlSyntax.PropertyNameAlias(new DbAlias(ExpressionParser.GetExpression(assignment.Expression, builder, sqlSyntax, context, lambda?.Parameters), assignment.Member.Name, true))}");
                         }
                         else
                             throw new NotImplementedException($"BindingType：{binding.BindingType}");
@@ -237,12 +238,12 @@ namespace Dapper.Easies
                     {
                         var member = newExp.Members[i];
                         var arg = newExp.Arguments[i];
-                        fields.Add($"{sqlSyntax.PropertyNameAlias(new DbAlias(ExpressionParser.GetExpression(arg, builder, sqlSyntax, context, lambda.Parameters), member.Name, true))}");
+                        fields.Add($"{sqlSyntax.PropertyNameAlias(new DbAlias(ExpressionParser.GetExpression(arg, builder, sqlSyntax, context, lambda?.Parameters), member.Name, true))}");
                     }
                     return fields;
                 }
                 else if (lambda.Body.NodeType == ExpressionType.MemberAccess || lambda.Body.NodeType == ExpressionType.Call)
-                    return new[] { ExpressionParser.GetExpression(lambda.Body, builder, sqlSyntax, context, lambda.Parameters) };
+                    return new[] { ExpressionParser.GetExpression(lambda.Body, builder, sqlSyntax, context, lambda?.Parameters) };
                 else if (lambda.Body is ParameterExpression parameter)
                 {
                     aliasIndex = lambda.Parameters.IndexOf(parameter);
@@ -283,7 +284,7 @@ namespace Dapper.Easies
                 for (int i = 0; i < newExp.Members.Count; i++)
                 {
                     var arg = newExp.Arguments[i];
-                    fields.Add(ExpressionParser.GetExpression(arg, builder, sqlSyntax, context, lambda.Parameters));
+                    fields.Add(ExpressionParser.GetExpression(arg, builder, sqlSyntax, context, lambda?.Parameters));
                 }
 
                 return sqlSyntax.GroupBy(fields);
@@ -297,7 +298,7 @@ namespace Dapper.Easies
             foreach (var exp in orderByMetedata.Expressions)
             {
                 var lambda = (LambdaExpression)exp;
-                yield return ExpressionParser.GetExpression(exp, builder, sqlSyntax, context, lambda.Parameters);
+                yield return ExpressionParser.GetExpression(lambda, builder, sqlSyntax, context, lambda?.Parameters);
             }
         }
 

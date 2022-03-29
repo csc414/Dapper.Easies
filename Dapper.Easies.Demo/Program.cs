@@ -29,12 +29,14 @@ namespace Dapper.Easies.Demo
 
             var easiesProvider = serviceProvider.GetRequiredService<IEasiesProvider>();
 
-            await easiesProvider.Query<Class>()
-                .Join<Class>((a, b) => a.CreateTime == b.CreateTime)
-                .QueryAsync();
+            var pager = await easiesProvider.Query<Student>()
+                .Join<Class>((a, b) => a.ClassId == b.Id)
+                .Select((a, b) => a.Age)
+                .GetPagerAsync(1, 10);
 
-            //await easiesProvider.Query<Student>()
-            //    .UpdateAsync(o => new Student { Age = o.Age + 1 });
+
+            await easiesProvider.Query<Student>()
+                .UpdateAsync(o => new Student { Age = o.Age + 1 });
 
             await easiesProvider.Query<Student>()
                 .Join<Class>((a, b) => a.ClassId == b.Id)

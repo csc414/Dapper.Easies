@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Dapper.Easies
 {
@@ -33,6 +35,18 @@ namespace Dapper.Easies
         {
             query.Context.Distinct = true;
             return query;
+        }
+
+        public static async Task<(IEnumerable<T> data, long total, int max_page)> GetPagerAsync<T>(this ISelectedDbQuery<T> query, int page, int size)
+        {
+            var baseQuery = (IDbQuery<T>)query;
+            var total = await baseQuery.CountAsync();
+            var max_page = Convert.ToInt32(Math.Ceiling(total * 1f / size));
+            if (page > max_page)
+                return (Enumerable.Empty<T>(), total, max_page);
+
+            var data = await baseQuery.QueryAsync();
+            return (data, total, max_page);
         }
     }
 }
