@@ -31,7 +31,7 @@ namespace Dapper.Easies
         /// 当前生命周期为 Scoped 时，在整个请求生命周期中注入 IEasiesProvider 将共享同一个 DbConnection.
         /// 当生命周期为 Singleton 时，每次数据库的读写都会创建一个新的 DbConnection 实例.
         /// </summary>
-        public ServiceLifetime Lifetime { get; set; } = ServiceLifetime.Scoped;
+        public ServiceLifetime Lifetime { get; set; } = ServiceLifetime.Singleton;
 
         public EasiesOptions Options => _options ?? (_options = new EasiesOptions());
 

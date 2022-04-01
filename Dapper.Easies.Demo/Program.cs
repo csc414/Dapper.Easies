@@ -84,7 +84,7 @@ namespace Dapper.Easies.Demo
 
             //var ii = await easiesProvider.DeleteAsync(new[] { cls2, cls22 });
 
-            var a = await easiesProvider.Query<Student>()
+            var a = easiesProvider.Query<Student>()
                 .Where(o => o.Age == 18 || !o.IsOk)
                 .GroupBy(o => new { o.Id })
                 .Having(o => DbFunc.Count(o.Id) > 0)
@@ -93,12 +93,14 @@ namespace Dapper.Easies.Demo
                 .ThenByDescending(o => o.Id)
                 .GetPagerAsync(1, 10);
 
-            var bb = await easiesProvider.Query<Student>()
+            var bb = easiesProvider.Query<Student>()
                 .Join<Class>((a, b) => a.ClassId == b.Id)
                 .GroupBy((a, b) => b.Name)
                 .Having((a, b) => DbFunc.Avg(a.Age) > 12)
                 .Select((a, b) => new { ClassName = b.Name, AvgAge = DbFunc.Avg<decimal>(a.Age) })
                 .QueryAsync();
+
+            await Task.WhenAll(a, bb);
 
             //var stu = new Student(); 
             //stu.ClassId = cls.Id;
