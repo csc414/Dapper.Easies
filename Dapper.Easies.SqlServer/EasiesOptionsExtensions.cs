@@ -1,6 +1,5 @@
 ﻿using Dapper.Easies;
 using Dapper.Easies.SqlServer;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
 
 namespace Microsoft.Extensions.DependencyInjection

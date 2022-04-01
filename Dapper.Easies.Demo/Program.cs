@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -17,6 +18,7 @@ namespace Dapper.Easies.Demo
             {
                 builder.Lifetime = ServiceLifetime.Singleton;
                 builder.DevelopmentMode();
+                //builder.UseSqlite("Data Source=D:\\school.db");
                 builder.UseMySql("Host=localhost;UserName=root;Password=123456;Database=School;Port=3306;CharSet=utf8mb4;Connection Timeout=1200;Allow User Variables=true;");
 
                 builder.UseSqlServer("MSSQL", "Data Source=localhost;User Id=sa;Password=123456@Cxc;Initial Catalog=School;");
@@ -45,12 +47,12 @@ namespace Dapper.Easies.Demo
 
             var cls = new Class();
             cls.Id = Guid.NewGuid();
-            cls.Name = "六年二班";
+            cls.Name = "六年二班1111";
             cls.CreateTime = DateTime.Now;
 
             var cls1 = new Class();
             cls1.Id = Guid.NewGuid();
-            cls1.Name = "六年一班";
+            cls1.Name = "六年一班2222";
             cls1.CreateTime = DateTime.Now;
 
             //using (new DynamicDbMappingScope(map => map.SetTableName<Class>("bnt_class1")))
@@ -102,20 +104,20 @@ namespace Dapper.Easies.Demo
 
             await Task.WhenAll(a, bb);
 
-            //var stu = new Student(); 
-            //stu.ClassId = cls.Id;
-            //stu.StudentName = "李坤1";
-            //stu.Age = 18;
-            //stu.CreateTime = DateTime.Now;
-            //await easiesProvider.InsertAsync(stu);
+            var stu = new Student();
+            stu.ClassId = cls.Id;
+            stu.StudentName = "李坤1";
+            stu.Age = 18;
+            stu.CreateTime = DateTime.Now;
+            await easiesProvider.InsertAsync(stu);
             var ary = new[] { 1, 2, 3 };
             var ls = new List<string> { "123", "456" };
             var dict = new Dictionary<string, string> { { "aa", "bb" } };
-            var student = await easiesProvider.GetAsync<Student>(37);
+            var student = await easiesProvider.GetAsync<Student>(10);
             var count = await easiesProvider.Query<Student>()
                 .Join<Class>((student, cls) => $"{student.ClassId} != {Guid.Empty}")
                 .Where((a, b) => $"{a.StudentName} != {dict["aa"]}")
-                //.Where((a, b) => !a.IsOk && !(a.Age != 18) && (a.Age == (a.Age + 2) * 3) && DbFunc.In(a.StudentName, ls) && DbFunc.Expr<bool>($"{a.StudentName} LIKE {$"%{cls.Name}%"}"))
+                .Where((a, b) => !a.IsOk && !(a.Age != 18) && (a.Age == (a.Age + 2) * 3) && DbFunc.In(a.StudentName, ls) && DbFunc.Expr<bool>($"{a.StudentName} LIKE {$"%{cls.Name}%"}"))
                 .OrderBy((a, b) => a.Age)
                 .ThenBy((a, b) => b.CreateTime)
                 .MinAsync((a, b) => a.Age);
