@@ -81,7 +81,13 @@ namespace Dapper.Easies
             throw new InvalidOperationException("Do not directly call this method.");
         }
 
-        public static T SubQuery<T>(object field)
+        //TODO：实现SubQuery
+        public static T SubQuery<T>(ISelectedDbQuery<T> query) where T : struct
+        {
+            throw new InvalidOperationException("Do not directly call this method.");
+        }
+
+        public static string SubQuery(ISelectedDbQuery<string> query)
         {
             throw new InvalidOperationException("Do not directly call this method.");
         }

@@ -90,7 +90,16 @@ namespace Dapper.Easies.Demo
                 .Where(o => o.Age == 18 || !o.IsOk)
                 .GroupBy(o => new { o.Id })
                 .Having(o => DbFunc.Count(o.Id) > 0)
-                .Select(o => new { o.Id, Count = DbFunc.SubQuery<long>(easiesProvider.From<Class>().Where(a => a.Id == o.ClassId).CountAsync(a => a.CreateTime)) })
+                .Select(o => new
+                {
+                    o.Id,
+                    Count = DbFunc.SubQuery(
+                        easiesProvider.From<Class>()
+                            .Where(a => a.Id == o.ClassId)
+                            .GroupBy(a => a.Name)
+                            .Select(o => DbFunc.Count(o.Name))
+                    )
+                })
                 .OrderBy(o => o.Count)
                 .ThenByDescending(o => o.Id)
                 .GetPagerAsync(1, 10);
