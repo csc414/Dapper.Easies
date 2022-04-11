@@ -31,15 +31,15 @@ namespace Dapper.Easies.Demo
 
             var easiesProvider = serviceProvider.GetRequiredService<IEasiesProvider>();
 
-            var pager = await easiesProvider.Query<Student>()
+            var pager = await easiesProvider.From<Student>()
                 .Join<Class>((a, b) => a.ClassId == b.Id)
                 .Select((a, b) => a.Age)
                 .GetPagerAsync(1, 10);
 
-            await easiesProvider.Query<Student>()
+            await easiesProvider.From<Student>()
                 .UpdateAsync(o => new Student { Age = o.Age + 1 });
 
-            await easiesProvider.Query<Student>()
+            await easiesProvider.From<Student>()
                 .Join<Class>((a, b) => a.ClassId == b.Id)
                 .OrderBy((a, b) => b.CreateTime)
                 .Select((a, b) => b)
@@ -86,16 +86,16 @@ namespace Dapper.Easies.Demo
 
             //var ii = await easiesProvider.DeleteAsync(new[] { cls2, cls22 });
 
-            var a = easiesProvider.Query<Student>()
+            var a = easiesProvider.From<Student>()
                 .Where(o => o.Age == 18 || !o.IsOk)
                 .GroupBy(o => new { o.Id })
                 .Having(o => DbFunc.Count(o.Id) > 0)
-                .Select(o => new { o.Id, Count = DbFunc.Sum<decimal>(o.Age) })
+                .Select(o => new { o.Id, Count = DbFunc.SubQuery<long>(easiesProvider.From<Class>().Where(a => a.Id == o.ClassId).CountAsync(a => a.CreateTime)) })
                 .OrderBy(o => o.Count)
                 .ThenByDescending(o => o.Id)
                 .GetPagerAsync(1, 10);
 
-            var bb = easiesProvider.Query<Student>()
+            var bb = easiesProvider.From<Student>()
                 .Join<Class>((a, b) => a.ClassId == b.Id)
                 .GroupBy((a, b) => b.Name)
                 .Having((a, b) => DbFunc.Avg(a.Age) > 12)
@@ -114,7 +114,7 @@ namespace Dapper.Easies.Demo
             var ls = new List<string> { "123", "456" };
             var dict = new Dictionary<string, string> { { "aa", "bb" } };
             var student = await easiesProvider.GetAsync<Student>(10);
-            var count = await easiesProvider.Query<Student>()
+            var count = await easiesProvider.From<Student>()
                 .Join<Class>((student, cls) => $"{student.ClassId} != {Guid.Empty}")
                 .Where((a, b) => $"{a.StudentName} != {dict["aa"]}")
                 .Where((a, b) => !a.IsOk && !(a.Age != 18) && (a.Age == (a.Age + 2) * 3) && DbFunc.In(a.StudentName, ls) && DbFunc.Expr<bool>($"{a.StudentName} LIKE {$"%{cls.Name}%"}"))
@@ -122,7 +122,7 @@ namespace Dapper.Easies.Demo
                 .ThenBy((a, b) => b.CreateTime)
                 .MinAsync((a, b) => a.Age);
 
-            var temps = await easiesProvider.Query<Student>()
+            var temps = await easiesProvider.From<Student>()
                 .Join<Class>((student, cls) => student.ClassId == cls.Id)
                 .OrderBy((a, b) => a.Age)
                 .ThenBy((a, b) => b.CreateTime)
@@ -135,23 +135,23 @@ namespace Dapper.Easies.Demo
                 Console.WriteLine("{0} {1}", item.Name, item.ClassName);
             }
 
-            var query = easiesProvider.Query<Student>()
+            var query = easiesProvider.From<Student>()
                 .Join<Class>((student, cls) => student.ClassId == cls.Id)
                 .Where((stu, cls) => stu.Age == 18);
 
             await easiesProvider.UpdateAsync(student);
 
-            await easiesProvider.Query<Student>()
+            await easiesProvider.From<Student>()
                 .Where(o => o.Id == 2 && o.StudentName == DbFunc.Expr<string>($"{o.StudentName}"))
                 .UpdateAsync(o => new Student { Age = DbFunc.Expr<int?>($"{student.Age}") });
 
-            await easiesProvider.Query<Student>()
+            await easiesProvider.From<Student>()
                 .Where(o => o.Id == 2)
                 .UpdateAsync(() => new Student { Age = 18 });
 
             //await easiesProvider.Query<Student>().DeleteAsync();
 
-            await easiesProvider.Query<Student>().Where(o => o.Age == 20).DeleteAsync();
+            await easiesProvider.From<Student>().Where(o => o.Age == 20).DeleteAsync();
         }
 
         public class StudentResponse

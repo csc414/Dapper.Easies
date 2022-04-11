@@ -34,7 +34,7 @@ namespace Dapper.Easies
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        IDbQuery<T> Query<T>() where T : IDbObject;
+        IDbQuery<T> From<T>() where T : IDbObject;
 
         /// <summary>
         /// 根据主键获取实体对象

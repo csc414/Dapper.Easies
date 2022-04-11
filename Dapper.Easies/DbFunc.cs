@@ -80,5 +80,10 @@ namespace Dapper.Easies
         {
             throw new InvalidOperationException("Do not directly call this method.");
         }
+
+        public static T SubQuery<T>(object field)
+        {
+            throw new InvalidOperationException("Do not directly call this method.");
+        }
     }
 }

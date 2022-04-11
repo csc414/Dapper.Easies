@@ -59,6 +59,11 @@ namespace Dapper.Easies
             _context.ThenByMetedata = new OrderByMetedata(orderFields, sortType);
         }
 
+        public Task<long> CountAsync()
+        {
+            return _context.Connection.ExecuteScalarAsync<long>(_context.Converter.ToQuerySql(_context, out var parameters, aggregateInfo: new AggregateInfo(AggregateType.Count, null)), parameters);
+        }
+
         protected Task<long> CountAsync(Expression field)
         {
             return _context.Connection.ExecuteScalarAsync<long>(_context.Converter.ToQuerySql(_context, out var parameters, aggregateInfo: new AggregateInfo(AggregateType.Count, field)), parameters);
@@ -177,8 +182,7 @@ namespace Dapper.Easies
 
         public Task<int> DeleteAsync()
         {
-            var sql = _context.Converter.ToDeleteSql(_context, out var parameters);
-            return _context.Connection.ExecuteAsync(sql, parameters);
+            return _context.Connection.ExecuteAsync(_context.Converter.ToDeleteSql(_context, out var parameters), parameters);
         }
 
         public Task<int> UpdateAsync(Expression<Func<T>> updateFields) => InternalUpdateAsync(updateFields);

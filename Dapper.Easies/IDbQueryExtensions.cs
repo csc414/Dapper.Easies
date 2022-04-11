@@ -48,5 +48,13 @@ namespace Dapper.Easies
             var data = await baseQuery.Skip((page - 1) * size).Take(size).QueryAsync();
             return (data, total, max_page);
         }
+
+        public static async Task<(IEnumerable<T> data, long total)> GetLimitAsync<T>(this ISelectedDbQuery<T> query, int skip, int take)
+        {
+            var baseQuery = (IDbQuery<T>)query;
+            var total = await baseQuery.CountAsync();
+            var data = await baseQuery.Skip(skip).Take(take).QueryAsync();
+            return (data, total);
+        }
     }
 }
