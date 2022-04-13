@@ -31,6 +31,21 @@ namespace Dapper.Easies.Demo
 
             var easiesProvider = serviceProvider.GetRequiredService<IEasiesProvider>();
 
+            var subQuery = easiesProvider.From<Student>().Where(c => c.ClassId == Guid.NewGuid()).Select(c => c.ClassId);
+
+            var result = await easiesProvider.From<Class>()
+                .Where(o => DbFunc.In(o.Id, DbFunc.SubQuery(subQuery)))
+                .Select(o => new
+                {
+                    o.Name,
+                    Count = DbFunc.SubQuery(
+                        easiesProvider.From<Student>()
+                            .Where(c => c.ClassId == o.Id)
+                            .Select(c => DbFunc.Count())
+                    )
+                })
+                .QueryAsync();
+
             var pager = await easiesProvider.From<Student>()
                 .Join<Class>((a, b) => a.ClassId == b.Id)
                 .Select((a, b) => a.Age)

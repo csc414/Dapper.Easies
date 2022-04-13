@@ -13,6 +13,11 @@ namespace Dapper.Easies
     {
         internal static MethodInfo _expressionMethodInfo = typeof(DbFunc).GetTypeInfo().DeclaredMethods.First(o => o.Name == "Expr").MakeGenericMethod(typeof(string));
 
+        internal static Expression CreateExpressionLambda(LambdaExpression expression)
+        {
+            return Expression.Lambda(Expression.Call(_expressionMethodInfo, expression.Body), expression.Parameters);
+        }
+
         internal readonly QueryContext _context;
 
         internal DbQuery(QueryContext context)
@@ -30,11 +35,6 @@ namespace Dapper.Easies
         protected void AddHavingExpression(Expression havingExpression)
         {
             _context.AddHaving(havingExpression);
-        }
-
-        protected Expression CreateExpressionLambda(LambdaExpression expression)
-        {
-            return Expression.Lambda(Expression.Call(_expressionMethodInfo, expression.Body), expression.Parameters);
         }
 
         protected void AddJoinMetedata<TJoin>(Expression joinExpression, JoinType type)

@@ -188,18 +188,7 @@ namespace Dapper.Easies
                     }
                 }
                 else if (_dbFuncType.IsAssignableFrom(m.Method.ReflectedType))
-                {
-                    if (m.Method.Name.Equals("Expr", StringComparison.Ordinal))
-                        return CreateSql(GetExpression(m, _parameters, _sqlSyntax, _context, Parameters));
-                    else
-                    {
-                        var result = _sqlSyntax.Method(m.Method, m.Arguments.ToArray(), _parameters, exp => exp == null ? null : GetExpression(exp, _parameters, _sqlSyntax, _context, Parameters), exp => exp == null ? null : GetValue(exp));
-                        if (result == null)
-                            throw new NotImplementedException($"MethodName：{m.Method.Name}");
-
-                        return CreateSql(result);
-                    }
-                }
+                    return CreateSql(GetExpression(m, _parameters, _sqlSyntax, _context, Parameters));
             }
 
             return CreateConstant(GetValue(m), m);

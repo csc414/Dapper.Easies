@@ -23,15 +23,15 @@ namespace Dapper.Easies
             Alias = new List<DbAlias>(alias);
         }
 
-        private ICollection<JoinMetedata> _joinMetedatas;
+        private List<JoinMetedata> _joinMetedatas;
 
-        private ICollection<Expression> _whereExpressions;
+        private List<Expression> _whereExpressions;
 
-        private ICollection<Expression> _havingExpressions;
+        private List<Expression> _havingExpressions;
 
         public DbObject DbObject { get; }
 
-        public IList<DbAlias> Alias { get; }
+        public List<DbAlias> Alias { get; }
 
         public ISqlConverter Converter { get; }
 
@@ -78,6 +78,14 @@ namespace Dapper.Easies
                 _whereExpressions = new List<Expression>();
 
             _whereExpressions.Add(whereExpression);
+        }
+
+        public void SetWhere(Index i, LambdaExpression whereExpression)
+        {
+            if (whereExpression.ReturnType == typeof(string))
+                _whereExpressions[i] = DbQuery.CreateExpressionLambda(whereExpression);
+            else
+                _whereExpressions[i] = whereExpression;
         }
 
         public void AddHaving(Expression havingExpression)

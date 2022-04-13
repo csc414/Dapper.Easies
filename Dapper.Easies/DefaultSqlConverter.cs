@@ -22,6 +22,24 @@ namespace Dapper.Easies
             DbObject.Initialize(options);
         }
 
+        public string ToQuerySql(QueryContext context, ParameterBuilder parameterBuilder)
+        {
+            var sqlSyntax = context.DbObject.SqlSyntax;
+            var parser = new PredicateExpressionParser(sqlSyntax, parameterBuilder);
+            var sql = sqlSyntax.SelectFormat(
+                sqlSyntax.TableNameAlias(context.Alias[0]),
+                GetFields(sqlSyntax, context, null, parameterBuilder),
+                GetJoins(sqlSyntax, context, parser),
+                GetPredicate(sqlSyntax, context.WhereExpressions, context, parser),
+                GetGroupBy(sqlSyntax, context, parameterBuilder),
+                GetPredicate(sqlSyntax, context.HavingExpressions, context, parser),
+                GetOrderBy(sqlSyntax, context, parameterBuilder),
+                context.Skip,
+                context.Take,
+                context.Distinct);
+            return sql;
+        }
+
         public string ToQuerySql(QueryContext context, out DynamicParameters parameters, int? take = null, AggregateInfo aggregateInfo = null)
         {
             var sqlSyntax = context.DbObject.SqlSyntax;

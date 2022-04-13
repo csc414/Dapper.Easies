@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Linq.Expressions;
@@ -210,6 +211,36 @@ namespace Dapper.Easies
                             }
                             else
                                 return GetValue(arg).ToString();
+                        }
+                        else if (m.Method.Name.Equals("SubQuery", StringComparison.Ordinal))
+                        {
+                            var query = GetSubQuery(m.Arguments[0]);
+                            return $"({query.Context.Converter.ToQuerySql(query.Context, builder)})";
+
+                            IDbQuery GetSubQuery(Expression exp)
+                            {
+                                var args = new object[parameters.Count];
+                                var subQuery = (IDbQuery)Expression.Lambda(exp, parameters).Compile().DynamicInvoke(args);
+                                for (int i = 0; i < subQuery.Context.Alias.Count; i++)
+                                {
+                                    var alias = subQuery.Context.Alias[i];
+                                    subQuery.Context.Alias[i] = new DbAlias(alias.Name, "t" + alias.Alias, alias.IsExpr);
+                                }
+                                subQuery.Context.Alias.AddRange(context.Alias);
+                                var j = 1;
+                                while (exp is MethodCallExpression methodExp)
+                                {
+                                    if (methodExp.Method.Name.Equals("Where", StringComparison.Ordinal))
+                                    {
+                                        var lambda = (LambdaExpression)((UnaryExpression)methodExp.Arguments[0]).Operand;
+                                        var ls = new List<ParameterExpression>(lambda.Parameters);
+                                        ls.AddRange(parameters);
+                                        subQuery.Context.SetWhere(^j++, Expression.Lambda(lambda.Body, ls.ToArray()));
+                                    }
+                                    exp = methodExp.Object;
+                                }
+                                return subQuery;
+                            }
                         }
                         else
                         {
