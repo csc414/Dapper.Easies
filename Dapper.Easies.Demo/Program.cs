@@ -31,18 +31,26 @@ namespace Dapper.Easies.Demo
 
             var easiesProvider = serviceProvider.GetRequiredService<IEasiesProvider>();
 
-            var subQuery = easiesProvider.From<Student>().Where(c => c.ClassId == Guid.NewGuid()).Select(c => c.ClassId);
+            var subQuery = easiesProvider.From<Student>().Where(c => c.ClassId == Guid.NewGuid()).Select(o => new { o.ClassId, o.StudentName });
+
+            await easiesProvider.From<Class>()
+                .Join(subQuery, (a, b) => a.Id == b.ClassId)
+                .Where((a, b) => b.StudentName == "测试")
+                .Select((a, b) => a)
+                .QueryAsync();
+
+            await easiesProvider.From<Class>()
+                .Where(o => DbFunc.In(o.Id, easiesProvider.From<Class>().Select(o => o.Id).SubQuery()))
+                .QueryAsync();
 
             var result = await easiesProvider.From<Class>()
-                .Where(o => DbFunc.In(o.Id, DbFunc.SubQuery(subQuery)))
-                .Select(o => new
+                .Select((o) => new
                 {
                     o.Name,
-                    Count = DbFunc.SubQuery(
-                        easiesProvider.From<Student>()
+                    Count = easiesProvider.From<Student>()
                             .Where(c => c.ClassId == o.Id)
                             .Select(c => DbFunc.Count())
-                    )
+                            .SubQueryScalar()
                 })
                 .QueryAsync();
 
@@ -108,12 +116,12 @@ namespace Dapper.Easies.Demo
                 .Select(o => new
                 {
                     o.Id,
-                    Count = DbFunc.SubQuery(
-                        easiesProvider.From<Class>()
+                    Count = easiesProvider.From<Class>()
                             .Where(a => a.Id == o.ClassId)
                             .GroupBy(a => a.Name)
                             .Select(o => DbFunc.Count(o.Name))
-                    )
+                            .SubQueryScalar()
+                    
                 })
                 .OrderBy(o => o.Count)
                 .ThenByDescending(o => o.Id)

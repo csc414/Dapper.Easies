@@ -42,6 +42,11 @@ namespace Dapper.Easies
             _context.AddJoin(typeof(TJoin), joinExpression, type);
         }
 
+        protected void AddJoinMetedata<TJoin>(IDbQuery query, Expression joinExpression, JoinType type)
+        {
+            _context.AddJoin(typeof(TJoin), joinExpression, type, query);
+        }
+
         protected void SetOrderBy<TField>(IEnumerable<Expression> orderFields, SortType sortType)
         {
             if (orderFields == null || !orderFields.Any())
@@ -122,6 +127,18 @@ namespace Dapper.Easies
         {
             _context.SelectorExpression = selector;
             return new DbQuery<TResult>(_context);
+        }
+
+        public IDbQuery<T, TJoin> Join<TJoin>(ISelectedDbQuery<TJoin> query, Expression<Func<T, TJoin, bool>> on = null, JoinType type = JoinType.Inner) where TJoin : class
+        {
+            AddJoinMetedata<TJoin>(query, on, type);
+            return new DbQuery<T, TJoin>(_context);
+        }
+
+        public IDbQuery<T, TJoin> Join<TJoin>(ISelectedDbQuery<TJoin> query, Expression<Func<T, TJoin, string>> on = null, JoinType type = JoinType.Inner) where TJoin : class
+        {
+            AddJoinMetedata<TJoin>(query, CreateExpressionLambda(on), type);
+            return new DbQuery<T, TJoin>(_context);
         }
 
         public IDbQuery<T, TJoin> Join<TJoin>(Expression<Func<T, TJoin, bool>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject
@@ -279,6 +296,18 @@ namespace Dapper.Easies
             return new DbQuery<TResult>(_context);
         }
 
+        public IDbQuery<T1, T2, TJoin> Join<TJoin>(ISelectedDbQuery<TJoin> query, Expression<Func<T1, T2, TJoin, bool>> on = null, JoinType type = JoinType.Inner) where TJoin : class
+        {
+            AddJoinMetedata<TJoin>(query, on, type);
+            return new DbQuery<T1, T2, TJoin>(_context);
+        }
+
+        public IDbQuery<T1, T2, TJoin> Join<TJoin>(ISelectedDbQuery<TJoin> query, Expression<Func<T1, T2, TJoin, string>> on = null, JoinType type = JoinType.Inner) where TJoin : class
+        {
+            AddJoinMetedata<TJoin>(query, CreateExpressionLambda(on), type);
+            return new DbQuery<T1, T2, TJoin>(_context);
+        }
+
         public IDbQuery<T1, T2, TJoin> Join<TJoin>(Expression<Func<T1, T2, TJoin, bool>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject
         {
             AddJoinMetedata<TJoin>(on, type);
@@ -399,6 +428,18 @@ namespace Dapper.Easies
             return new DbQuery<TResult>(_context);
         }
 
+        public IDbQuery<T1, T2, T3, TJoin> Join<TJoin>(ISelectedDbQuery<TJoin> query, Expression<Func<T1, T2, T3, TJoin, bool>> on = null, JoinType type = JoinType.Inner) where TJoin : class
+        {
+            AddJoinMetedata<TJoin>(query, on, type);
+            return new DbQuery<T1, T2, T3, TJoin>(_context);
+        }
+
+        public IDbQuery<T1, T2, T3, TJoin> Join<TJoin>(ISelectedDbQuery<TJoin> query, Expression<Func<T1, T2, T3, TJoin, string>> on = null, JoinType type = JoinType.Inner) where TJoin : class
+        {
+            AddJoinMetedata<TJoin>(query, CreateExpressionLambda(on), type);
+            return new DbQuery<T1, T2, T3, TJoin>(_context);
+        }
+
         public IDbQuery<T1, T2, T3, TJoin> Join<TJoin>(Expression<Func<T1, T2, T3, TJoin, bool>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject
         {
             AddJoinMetedata<TJoin>(on, type);
@@ -517,6 +558,18 @@ namespace Dapper.Easies
         {
             _context.SelectorExpression = selector;
             return new DbQuery<TResult>(_context);
+        }
+
+        public IDbQuery<T1, T2, T3, T4, TJoin> Join<TJoin>(ISelectedDbQuery<TJoin> query, Expression<Func<T1, T2, T3, T4, TJoin, bool>> on = null, JoinType type = JoinType.Inner) where TJoin : class
+        {
+            AddJoinMetedata<TJoin>(query, on, type);
+            return new DbQuery<T1, T2, T3, T4, TJoin>(_context);
+        }
+
+        public IDbQuery<T1, T2, T3, T4, TJoin> Join<TJoin>(ISelectedDbQuery<TJoin> query, Expression<Func<T1, T2, T3, T4, TJoin, string>> on = null, JoinType type = JoinType.Inner) where TJoin : class
+        {
+            AddJoinMetedata<TJoin>(query, CreateExpressionLambda(on), type);
+            return new DbQuery<T1, T2, T3, T4, TJoin>(_context);
         }
 
         public IDbQuery<T1, T2, T3, T4, TJoin> Join<TJoin>(Expression<Func<T1, T2, T3, T4, TJoin, bool>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject

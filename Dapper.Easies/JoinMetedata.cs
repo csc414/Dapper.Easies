@@ -12,5 +12,7 @@ namespace Dapper.Easies
         public JoinType Type { get; set; }
 
         public Expression JoinExpression { get; set; }
+
+        public IDbQuery Query { get; set; }
     }
 }

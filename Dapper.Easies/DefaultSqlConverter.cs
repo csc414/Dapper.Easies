@@ -242,7 +242,7 @@ namespace Dapper.Easies
                     {
                         if (binding is MemberAssignment assignment)
                         {
-                            fields.Add($"{sqlSyntax.PropertyNameAlias(new DbAlias(ExpressionParser.GetExpression(assignment.Expression, builder, sqlSyntax, context, lambda?.Parameters), assignment.Member.Name, true))}");
+                            fields.Add(sqlSyntax.PropertyNameAlias(new DbAlias(ExpressionParser.GetExpression(assignment.Expression, builder, sqlSyntax, context, lambda?.Parameters), assignment.Member.Name, true)));
                         }
                         else
                             throw new NotImplementedException($"BindingType：{binding.BindingType}");
@@ -256,7 +256,7 @@ namespace Dapper.Easies
                     {
                         var member = newExp.Members[i];
                         var arg = newExp.Arguments[i];
-                        fields.Add($"{sqlSyntax.PropertyNameAlias(new DbAlias(ExpressionParser.GetExpression(arg, builder, sqlSyntax, context, lambda?.Parameters), member.Name, true))}");
+                        fields.Add(sqlSyntax.PropertyNameAlias(new DbAlias(ExpressionParser.GetExpression(arg, builder, sqlSyntax, context, lambda?.Parameters), member.Name, true)));
                     }
                     return fields;
                 }
@@ -266,6 +266,11 @@ namespace Dapper.Easies
                 {
                     aliasIndex = lambda.Parameters.IndexOf(parameter);
                     specificDbObject = DbObject.Get(parameter.Type);
+                    if(specificDbObject == null)
+                    {
+                        var tableAlias = context.Alias[aliasIndex];
+                        return parameter.Type.GetProperties().Select(o => $"{tableAlias.Alias}.{sqlSyntax.EscapePropertyName(o.Name)}");
+                    }
                 }
                 else
                     throw new NotImplementedException($"NodeType：{lambda.Body.NodeType}");
@@ -323,7 +328,19 @@ namespace Dapper.Easies
         IEnumerable<string> GetJoins(ISqlSyntax sqlSyntax, QueryContext context, PredicateExpressionParser parser)
         {
             if (context.JoinMetedatas?.Any() == true)
-                return context.JoinMetedatas.Select((o, i) => sqlSyntax.Join(sqlSyntax.TableNameAlias(context.Alias[i + 1]), o.Type, parser.ToSql(o.JoinExpression, context)));
+                return context.JoinMetedatas.Select((o, i) =>
+                {
+                    var alias = context.Alias[i + 1];
+                    string tableName;
+                    if (o.DbObject == null)
+                    {
+                        tableName = sqlSyntax.TableNameAlias(new DbAlias($"({o.Query.Context.Converter.ToQuerySql(o.Query.Context, parser.ParameterBuilder)})", alias.Alias));
+                    }
+                    else
+                        tableName = sqlSyntax.TableNameAlias(alias);
+
+                    return sqlSyntax.Join(tableName, o.Type, parser.ToSql(o.JoinExpression, context));
+                });
             return null;
         }
     }

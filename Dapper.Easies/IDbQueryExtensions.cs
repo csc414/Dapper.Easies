@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Dapper.Easies
 {
-    public static class IDbQueryExtensions
+    public static class DbQueryExtensions
     {
         public static T Skip<T>(this T query, int count) where T : IDbQuery
         {
@@ -52,6 +52,52 @@ namespace Dapper.Easies
             var total = await baseQuery.CountAsync();
             var data = await baseQuery.Skip(skip).Take(take).QueryAsync();
             return (data, total);
+        }
+
+        /// <summary>
+        /// Do not call this method directly.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="_"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public static T SubQueryScalar<T>(this ISelectedDbQuery<T> _) where T : struct
+        {
+            throw new InvalidOperationException("Do not call this method directly.");
+        }
+
+        /// <summary>
+        /// Do not call this method directly.
+        /// </summary>
+        /// <param name="_"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public static string SubQueryScalar(this ISelectedDbQuery<string> _)
+        {
+            throw new InvalidOperationException("Do not call this method directly.");
+        }
+
+        /// <summary>
+        /// Do not call this method directly.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="_"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public static IEnumerable<T> SubQuery<T>(this ISelectedDbQuery<T> _) where T : struct
+        {
+            throw new InvalidOperationException("Do not call this method directly.");
+        }
+
+        /// <summary>
+        /// Do not call this method directly.
+        /// </summary>
+        /// <param name="_"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public static IEnumerable<string> SubQuery(this ISelectedDbQuery<string> _)
+        {
+            throw new InvalidOperationException("Do not call this method directly.");
         }
     }
 }

@@ -57,19 +57,22 @@ namespace Dapper.Easies
 
         public bool Distinct { get; set; }
 
-        public void AddJoin(Type joinType, Expression joinExpression, JoinType type)
+        public void AddJoin(Type joinType, Expression joinExpression, JoinType type, IDbQuery query = null)
         {
             var dbObject = DbObject.Get(joinType);
 
-            if (DbObject.ConnectionStringName != dbObject.ConnectionStringName)
-                throw new ArgumentException($"无法连接来自不同配置的表");
+            if (dbObject != null)
+            {
+                if (DbObject.ConnectionStringName != dbObject.ConnectionStringName)
+                    throw new ArgumentException($"无法连接来自不同配置的表");
+            }
 
             if (_joinMetedatas == null)
                 _joinMetedatas = new List<JoinMetedata>();
 
-            var alias = new DbAlias(dbObject.EscapeName, $"t{Alias.Count}");
+            var alias = new DbAlias(dbObject?.EscapeName, $"t{Alias.Count}");
             Alias.Add(alias);
-            _joinMetedatas.Add(new JoinMetedata { DbObject = dbObject, JoinExpression = joinExpression, Type = type });
+            _joinMetedatas.Add(new JoinMetedata { DbObject = dbObject, JoinExpression = joinExpression, Type = type, Query = query });
         }
 
         public void AddWhere(Expression whereExpression)

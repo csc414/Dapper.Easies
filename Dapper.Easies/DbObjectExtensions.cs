@@ -10,12 +10,12 @@ namespace Dapper.Easies
     {
         public static object Property(this IDbObject _, string name)
         {
-            throw new InvalidOperationException("Do not directly call this method.");
+            throw new InvalidOperationException("Do not call this method directly.");
         }
 
         public static T Property<T>(this IDbObject _, string name)
         {
-            throw new InvalidOperationException("Do not directly call this method.");
+            throw new InvalidOperationException("Do not call this method directly.");
         }
     }
 }

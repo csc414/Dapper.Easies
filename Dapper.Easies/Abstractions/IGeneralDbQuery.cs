@@ -13,6 +13,10 @@ namespace Dapper.Easies
 
         IDbQuery<T> Where(Expression<Func<T, string>> expression);
 
+        IDbQuery<T, TJoin> Join<TJoin>(ISelectedDbQuery<TJoin> query, Expression<Func<T, TJoin, bool>> on = null, JoinType type = JoinType.Inner) where TJoin : class;
+
+        IDbQuery<T, TJoin> Join<TJoin>(ISelectedDbQuery<TJoin> query, Expression<Func<T, TJoin, string>> on = null, JoinType type = JoinType.Inner) where TJoin : class;
+
         IDbQuery<T, TJoin> Join<TJoin>(Expression<Func<T, TJoin, bool>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject;
 
         IDbQuery<T, TJoin> Join<TJoin>(Expression<Func<T, TJoin, string>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject;
@@ -31,6 +35,10 @@ namespace Dapper.Easies
         IDbQuery<T1, T2> Where(Expression<Func<T1, T2, bool>> predicate);
 
         IDbQuery<T1, T2> Where(Expression<Func<T1, T2, string>> expression);
+
+        IDbQuery<T1, T2, TJoin> Join<TJoin>(ISelectedDbQuery<TJoin> query, Expression<Func<T1, T2, TJoin, bool>> on = null, JoinType type = JoinType.Inner) where TJoin : class;
+
+        IDbQuery<T1, T2, TJoin> Join<TJoin>(ISelectedDbQuery<TJoin> query, Expression<Func<T1, T2, TJoin, string>> on = null, JoinType type = JoinType.Inner) where TJoin : class;
 
         IDbQuery<T1, T2, TJoin> Join<TJoin>(Expression<Func<T1, T2, TJoin, bool>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject;
 
@@ -51,6 +59,10 @@ namespace Dapper.Easies
 
         IDbQuery<T1, T2, T3> Where(Expression<Func<T1, T2, T3, string>> expression);
 
+        IDbQuery<T1, T2, T3, TJoin> Join<TJoin>(ISelectedDbQuery<TJoin> query, Expression<Func<T1, T2, T3, TJoin, bool>> on = null, JoinType type = JoinType.Inner) where TJoin : class;
+
+        IDbQuery<T1, T2, T3, TJoin> Join<TJoin>(ISelectedDbQuery<TJoin> query, Expression<Func<T1, T2, T3, TJoin, string>> on = null, JoinType type = JoinType.Inner) where TJoin : class;
+
         IDbQuery<T1, T2, T3, TJoin> Join<TJoin>(Expression<Func<T1, T2, T3, TJoin, bool>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject;
 
         IDbQuery<T1, T2, T3, TJoin> Join<TJoin>(Expression<Func<T1, T2, T3, TJoin, string>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject;
@@ -69,6 +81,10 @@ namespace Dapper.Easies
         IDbQuery<T1, T2, T3, T4> Where(Expression<Func<T1, T2, T3, T4, bool>> predicate);
 
         IDbQuery<T1, T2, T3, T4> Where(Expression<Func<T1, T2, T3, T4, string>> expression);
+
+        IDbQuery<T1, T2, T3, T4, TJoin> Join<TJoin>(ISelectedDbQuery<TJoin> query, Expression<Func<T1, T2, T3, T4, TJoin, bool>> on = null, JoinType type = JoinType.Inner) where TJoin : class;
+
+        IDbQuery<T1, T2, T3, T4, TJoin> Join<TJoin>(ISelectedDbQuery<TJoin> query, Expression<Func<T1, T2, T3, T4, TJoin, string>> on = null, JoinType type = JoinType.Inner) where TJoin : class;
 
         IDbQuery<T1, T2, T3, T4, TJoin> Join<TJoin>(Expression<Func<T1, T2, T3, T4, TJoin, bool>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject;
 

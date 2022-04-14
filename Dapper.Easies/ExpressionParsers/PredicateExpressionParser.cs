@@ -19,6 +19,8 @@ namespace Dapper.Easies
 
         private int _binaryDeep = 0;
 
+        internal ParameterBuilder ParameterBuilder => _parameters;
+
         internal PredicateExpressionParser(ISqlSyntax sqlSyntax, ParameterBuilder parameterBuilder)
         {
             _sqlSyntax = sqlSyntax;
@@ -103,11 +105,11 @@ namespace Dapper.Easies
                 parameterExpression = ((UnaryExpression)m.Expression).Operand;
 
             if (parameterExpression is ParameterExpression parameter)
-                return CreateParserData(ParserDataType.Property, DbObject.Get(parameter.Type)[m.Member.Name], parameter);
+                return CreateProperty(m, parameter);
             else if (parameterExpression is MemberExpression memberExpression && HasParameter(memberExpression.Expression))
             {
                 var parserData = VisitMemberAccess(memberExpression);
-                if(parserData.Type == ParserDataType.Property && parserData.Value is DbObject.DbProperty dbProperty)
+                if (parserData.Type == ParserDataType.Property && parserData.Value is DbObject.DbProperty dbProperty)
                 {
                     if (dbProperty.PropertyInfo.PropertyType.Name == "Nullable`1" && m.Member.Name == "Value")
                         return parserData;
@@ -200,10 +202,19 @@ namespace Dapper.Easies
             {
                 case ParserDataType.Property:
                     {
-                        var property = (DbObject.DbProperty)data.Value;
                         var aliasIndex = Parameters.IndexOf((ParameterExpression)data.Expression);
-                        _sql.Append(DbObject.GetTablePropertyAlias(_context, property, aliasIndex));
-                        if (andAlso && property.PropertyInfo.PropertyType == typeof(bool))
+                        PropertyInfo propertyInfo = null;
+                        if (data.Value is DbObject.DbProperty property)
+                        {
+                            _sql.Append(DbObject.GetTablePropertyAlias(_context, property, aliasIndex));
+                            propertyInfo = property.PropertyInfo;
+                        }
+                        else if (data.Value is MemberExpression memberExpression)
+                        {
+                            _sql.Append(string.Format("{0}.{1}", _context.Alias[aliasIndex].Alias, _sqlSyntax.EscapePropertyName(memberExpression.Member.Name)));
+                            propertyInfo = (PropertyInfo)memberExpression.Member;
+                        }
+                        if (andAlso && propertyInfo?.PropertyType == typeof(bool))
                             _sql.AppendFormat("{0}{1}", _sqlSyntax.Operator(OperatorType.Equal), _parameters.AddParameter(true));
                     }
                     break;
