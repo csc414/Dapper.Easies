@@ -276,11 +276,11 @@ namespace Dapper.Easies
                 if (memberExpression.Expression is ParameterExpression parameter)
                 {
                     var i = parameters.IndexOf(parameter);
+                    var table = DbObject.Get(parameter.Type);
                     string alias = null;
-                    if (context != null && i != -1)
+                    if (context != null && (i > 0 || table != null))
                         alias = $"{context.Alias[i].Alias}.";
 
-                    var table = DbObject.Get(parameter.Type);
                     if (table == null)
                         return alias + sqlSyntax.EscapePropertyName(memberExpression.Member.Name);
 

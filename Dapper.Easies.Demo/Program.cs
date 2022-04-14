@@ -36,6 +36,7 @@ namespace Dapper.Easies.Demo
             await easiesProvider.From<Class>()
                 .Join(subQuery, (a, b) => a.Id == b.ClassId)
                 .Where((a, b) => b.StudentName == "测试")
+                .OrderBy((a, b) => b.ClassId)
                 .Select((a, b) => a)
                 .QueryAsync();
 
@@ -64,7 +65,7 @@ namespace Dapper.Easies.Demo
 
             await easiesProvider.From<Student>()
                 .Join<Class>((a, b) => a.ClassId == b.Id)
-                .OrderBy((a, b) => b.CreateTime)
+                .OrderBy((a, b) => a.CreateTime)
                 .Select((a, b) => b)
                 .QueryAsync();
 
@@ -145,7 +146,7 @@ namespace Dapper.Easies.Demo
             var ary = new[] { 1, 2, 3 };
             var ls = new List<string> { "123", "456" };
             var dict = new Dictionary<string, string> { { "aa", "bb" } };
-            var student = await easiesProvider.GetAsync<Student>(10);
+            var student = await easiesProvider.GetAsync<Student>(37);
             var count = await easiesProvider.From<Student>()
                 .Join<Class>((student, cls) => $"{student.ClassId} != {Guid.Empty}")
                 .Where((a, b) => $"{a.StudentName} != {dict["aa"]}")
