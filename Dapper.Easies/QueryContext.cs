@@ -67,6 +67,12 @@ namespace Dapper.Easies
                     throw new ArgumentException($"无法连接来自不同配置的表");
             }
 
+            if(query != null)
+            {
+                if(DbObject.ConnectionStringName != query.Context.DbObject.ConnectionStringName)
+                    throw new ArgumentException($"无法连接来自不同配置的表");
+            }
+
             if (_joinMetedatas == null)
                 _joinMetedatas = new List<JoinMetedata>();
 
