@@ -4,7 +4,7 @@ using Dapper.Easies.MySql;
 using Dapper.Easies.Sqlite;
 using System;
 
-namespace Microsoft.Extensions.DependencyInjection
+namespace Dapper.Easies
 {
     public static class EasiesOptionsExtensions
     {

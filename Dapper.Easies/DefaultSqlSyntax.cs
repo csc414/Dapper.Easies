@@ -60,8 +60,11 @@ namespace Dapper.Easies
 
         public virtual string UpdateFormat(string tableName, string tableAlias, IEnumerable<string> updateFields, string where)
         {
-            var sql = new StringBuilder($"UPDATE {tableName} {tableAlias} SET {string.Join(", ", updateFields)}");
+            var sql = new StringBuilder($"UPDATE {tableName}");
+            if (tableAlias != null)
+                sql.Append($" {tableAlias}");
 
+            sql.Append($" SET {string.Join(", ", updateFields)}");
             if (where != null)
                 sql.AppendFormat(" WHERE {0}", where);
 
