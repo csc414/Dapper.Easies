@@ -53,7 +53,6 @@ namespace Dapper.Easies.Tests
         [Fact]
         public void Delete()
         {
-            DynamicParameters parameters = null;
             string sql;
 
             sql = SqlConverter.ToDeleteSql<Student>();
@@ -66,7 +65,7 @@ namespace Dapper.Easies.Tests
 
             query.Where(o => o.Name == "张三" && o.Age == 18);
 
-            sql = SqlConverter.ToDeleteSql(query.Context, out parameters);
+            sql = SqlConverter.ToDeleteSql(query.Context, out var parameters);
             DeleteWhereTest(sql, parameters);
         }
 
@@ -79,7 +78,7 @@ namespace Dapper.Easies.Tests
         [Fact]
         public void Get()
         {
-            DynamicParameters parameters = null;
+            DynamicParameters parameters;
             string sql;
 
             sql = SqlConverter.ToGetSql<Student>(new object[] { 1 }, out parameters);

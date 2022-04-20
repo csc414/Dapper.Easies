@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Dapper.Easies.Tests
 {
-    [DbObject("bnt_classes")]
+    [DbObject("tb_classes")]
     public class Class : IDbTable
     {
         [DbProperty(PrimaryKey = true)]

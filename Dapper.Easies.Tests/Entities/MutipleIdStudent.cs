@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Dapper.Easies.Tests
 {
-    [DbObject("bnt_mutiple_id_students")]
+    [DbObject("tb_mutiple_id_students")]
     public class MutipleIdStudent : IDbTable
     {
         [DbProperty(PrimaryKey = true, Identity = true)]
