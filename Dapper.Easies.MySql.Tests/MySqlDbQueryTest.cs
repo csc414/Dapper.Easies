@@ -169,7 +169,7 @@ namespace Dapper.Easies.MySql.Tests
             Assert.Equal("SELECT t.`Id` AS `Id`, t.`ClassId` AS `ClassId`, t.`StudentName` AS `Name`, t.`Age` AS `Age`, t.`CreateTime` AS `CreateTime` FROM `tb_students` t WHERE t.`Age` = (t.`Age` * @p0 * @p1) + t.`Age` / @p2", sql);
             Assert.Equal(2, parameters["p0"]);
             Assert.Equal(0.25, parameters["p1"]);
-            Assert.Equal(2, parameters["p0"]);
+            Assert.Equal(2, parameters["p2"]);
         }
     }
 }
