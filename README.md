@@ -14,7 +14,7 @@ services.AddEasiesProvider(builder =>
     //生命周期默认是 Singleton。
     //Singleton 为每个查询创建一个新的连接，支持异步查询，并Task.When等待。
     //Transient，Scoped 在 IEasiesProvider 生命周期中将共用一个 DbConnection ，可根据自身需求配置
-    builder.Lifetime = ServiceLifetime.Scoped;
+    builder.Lifetime = ServiceLifetime.Singleton;
 
     //开启开发模式会向 Logger 输出生成的Sql。
     builder.DevelopmentMode();
