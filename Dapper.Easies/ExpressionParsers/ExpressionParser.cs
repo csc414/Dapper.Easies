@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -11,6 +13,19 @@ namespace Dapper.Easies
 
         protected static Type _dbObjectExtensions = typeof(DbObjectExtensions);
 
+        protected static Type _dbQueryExtensions = typeof(DbQueryExtensions);
+
+        private ReadOnlyCollection<ParameterExpression> _parameters;
+
+        protected void SetParameters(ReadOnlyCollection<ParameterExpression> parameters)
+        {
+            _parameters = parameters;
+        }
+
+        protected ReadOnlyCollection<ParameterExpression> Parameters => _parameters ?? _lambda?.Parameters;
+
+        private LambdaExpression _lambda;
+
         private int _deep = 0;
 
         internal ParserData Visit(Expression exp)
@@ -20,7 +35,7 @@ namespace Dapper.Easies
             switch (exp.NodeType)
             {
                 case ExpressionType.Lambda:
-                    data = VisitLambda((LambdaExpression)exp);
+                    data = VisitLambda(_lambda = (LambdaExpression)exp);
                     break;
                 case ExpressionType.Add:
                 case ExpressionType.AddChecked:
@@ -127,18 +142,30 @@ namespace Dapper.Easies
             return new ParserData(type, value, expression) { Deep = _deep };
         }
 
+        protected ParserData CreateProperty(MemberExpression memberExpression, ParameterExpression parameterExpression)
+        {
+            object obj;
+            var dbObject = DbObject.Get(parameterExpression.Type);
+            if (dbObject == null)
+                obj = memberExpression;
+            else
+                obj = dbObject[memberExpression.Member.Name];
+
+            return new ParserData(ParserDataType.Property, obj, parameterExpression) { Deep = _deep };
+        }
+
         protected int GetDeep() => _deep;
 
-        internal static string GetExpression(Expression expression, ParameterBuilder builder, ISqlSyntax sqlSyntax, QueryContext context = null)
+        internal static string GetExpression(Expression expression, ParameterBuilder builder, ISqlSyntax sqlSyntax, QueryContext context, ReadOnlyCollection<ParameterExpression> parameters)
         {
             if (expression == null)
                 return null;
 
             if (expression.NodeType == ExpressionType.Lambda)
-                return GetExpression(((LambdaExpression)expression).Body, builder, sqlSyntax, context);
+                return GetExpression(((LambdaExpression)expression).Body, builder, sqlSyntax, context, parameters);
 
             if (expression.NodeType == ExpressionType.Convert)
-                return GetExpression(((UnaryExpression)expression).Operand, builder, sqlSyntax, context);
+                return GetExpression(((UnaryExpression)expression).Operand, builder, sqlSyntax, context, parameters);
 
             if (expression.NodeType == ExpressionType.Call)
             {
@@ -163,10 +190,43 @@ namespace Dapper.Easies
 
                                 string alias = null;
                                 if (context != null)
-                                    alias = $"{context.Alias[table.Type].Alias}.";
+                                    alias = $"{context.Alias[parameters.IndexOf(parameter)].Alias}.";
 
                                 return $"{alias}{table[name].EscapeName}";
                             }
+                        }
+                    }
+                    if (_dbQueryExtensions == m.Method.ReflectedType)
+                    {
+                        if (m.Method.Name.StartsWith("SubQuery", StringComparison.Ordinal))
+                        {
+                            var query = GetSubQuery(m.Arguments[0]);
+                            return $"({query.Context.Converter.ToQuerySql(query.Context, builder)})";
+                        }
+
+                        IDbQuery GetSubQuery(Expression exp)
+                        {
+                            var args = new object[parameters.Count];
+                            var subQuery = (IDbQuery)Expression.Lambda(exp, parameters).Compile().DynamicInvoke(args);
+                            for (int i = 0; i < subQuery.Context.Alias.Count; i++)
+                            {
+                                var alias = subQuery.Context.Alias[i];
+                                subQuery.Context.Alias[i] = new DbAlias(alias.Name, "t" + alias.Alias, alias.IsExpr);
+                            }
+                            subQuery.Context.Alias.AddRange(context.Alias);
+                            var j = 1;
+                            while (exp is MethodCallExpression methodExp)
+                            {
+                                if (methodExp.Method.Name.Equals("Where", StringComparison.Ordinal))
+                                {
+                                    var lambda = (LambdaExpression)((UnaryExpression)methodExp.Arguments[0]).Operand;
+                                    var ls = new List<ParameterExpression>(lambda.Parameters);
+                                    ls.AddRange(parameters);
+                                    subQuery.Context.SetWhere(^j++, Expression.Lambda(lambda.Body, ls.ToArray()));
+                                }
+                                exp = methodExp.Object;
+                            }
+                            return subQuery;
                         }
                     }
                     else if (_dbFuncType.IsAssignableFrom(m.Method.ReflectedType))
@@ -184,14 +244,14 @@ namespace Dapper.Easies
                                     if (o.NodeType == ExpressionType.NewArrayInit)
                                     {
                                         var newArrayExpression = (NewArrayExpression)o;
-                                        var args = newArrayExpression.Expressions.Select(e => GetExpression(e, builder, sqlSyntax, context)).ToArray();
+                                        var args = newArrayExpression.Expressions.Select(e => GetExpression(e, builder, sqlSyntax, context, parameters)).ToArray();
                                         var ary = (object[])Activator.CreateInstance(newArrayExpression.Type, args.Length);
                                         for (int i = 0; i < ary.Length; ++i)
                                             ary[i] = args[i];
                                         return ary;
                                     }
 
-                                    return GetExpression(o, builder, sqlSyntax, context);
+                                    return GetExpression(o, builder, sqlSyntax, context, parameters);
                                 }).ToArray();
 
                                 return mm.Method.Invoke(null, args).ToString();
@@ -201,7 +261,7 @@ namespace Dapper.Easies
                         }
                         else
                         {
-                            var result = sqlSyntax.Method(m.Method, m.Arguments.ToArray(), builder, exp => exp == null ? null : GetExpression(exp, builder, sqlSyntax, context), exp => exp == null ? null : GetValue(exp));
+                            var result = sqlSyntax.Method(m.Method, m.Arguments.ToArray(), builder, exp => exp == null ? null : GetExpression(exp, builder, sqlSyntax, context, parameters), exp => exp == null ? null : GetValue(exp));
                             if (result == null)
                                 throw new NotImplementedException($"MethodName：{m.Method.Name}");
 
@@ -213,19 +273,20 @@ namespace Dapper.Easies
 
             if (expression is MemberExpression memberExpression)
             {
-                if (memberExpression.Expression?.NodeType == ExpressionType.Parameter)
+                if (memberExpression.Expression is ParameterExpression parameter)
                 {
-                    var table = DbObject.Get(memberExpression.Expression.Type);
-                    if (table == null)
-                        return memberExpression.Member.Name;
-
+                    var i = parameters.IndexOf(parameter);
+                    var table = DbObject.Get(parameter.Type);
                     string alias = null;
-                    if (context != null)
-                        alias = $"{context.Alias[table.Type].Alias}.";
+                    if (context != null && (i > 0 || table != null))
+                        alias = $"{context.Alias[i].Alias}.";
 
-                    return $"{alias}{table[memberExpression.Member.Name].EscapeName}";
+                    if (table == null)
+                        return alias + sqlSyntax.EscapePropertyName(memberExpression.Member.Name);
+
+                    return alias + table[memberExpression.Member.Name].EscapeName;
                 }
-                else if(memberExpression.Expression is MemberExpression m && HasParameter(m.Expression))
+                else if (memberExpression.Expression is MemberExpression m && HasParameter(m.Expression))
                 {
                     if (memberExpression.Member.Name != "Value" && memberExpression.Member.ReflectedType.Name != "Nullable`1")
                     {
@@ -234,16 +295,22 @@ namespace Dapper.Easies
 
                         if (m.Type == typeof(DateTime) || m.Type == typeof(DateTime?))
                         {
-                            var dateTimeMethod = sqlSyntax.DateTimeMethod(memberExpression.Member.Name, () => GetExpression(m, builder, sqlSyntax, context));
+                            var dateTimeMethod = sqlSyntax.DateTimeMethod(memberExpression.Member.Name, () => GetExpression(m, builder, sqlSyntax, context, parameters));
                             if (dateTimeMethod == null)
                                 throw new NotImplementedException($"DateTime Method：{memberExpression.Member.Name}");
 
                             return dateTimeMethod;
                         }
                     }
-                    
-                    return GetExpression(m, builder, sqlSyntax, context);
+
+                    return GetExpression(m, builder, sqlSyntax, context, parameters);
                 }
+            }
+
+            if (HasParameter(expression))
+            {
+                var parser = new PredicateExpressionParser(sqlSyntax, builder, parameters);
+                return parser.ToSql(expression, context);
             }
 
             return builder.AddParameter(GetValue(expression));

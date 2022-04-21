@@ -1,10 +1,6 @@
 ﻿using Dapper.Easies;
 using Dapper.Easies.MySql;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -21,7 +17,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new ArgumentNullException(nameof(name));
 
             options.Options.ConnectionFactory[name] = new MySqlDbConnectionFactory(connectionString);
-            options.Options.SqlSyntax[name] = new MySqlSqlSyntax();
+            options.Options.SqlSyntax[name] = MySqlSqlSyntax.Instance;
             return options;
         }
     }

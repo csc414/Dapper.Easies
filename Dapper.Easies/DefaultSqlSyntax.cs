@@ -168,11 +168,11 @@ namespace Dapper.Easies
             switch (method.Name)
             {
                 case "Like":
-                    return $"{getExpr(args[0])} LIKE {parameter.AddParameter(getValue(args[1]))}";
+                    return $"{getExpr(args[0])} LIKE {getExpr(args[1])}";
                 case "In":
-                    return $"{getExpr(args[0])} IN {parameter.AddParameter(getValue(args[1]))}";
+                    return $"{getExpr(args[0])} IN {getExpr(args[1])}";
                 case "NotIn":
-                    return $"{getExpr(args[0])} NOT IN {parameter.AddParameter(getValue(args[1]))}";
+                    return $"{getExpr(args[0])} NOT IN {getExpr(args[1])}";
                 case "Count":
                     return $"COUNT({getExpr(args.FirstOrDefault()) ?? "*"})";
                 case "Min":

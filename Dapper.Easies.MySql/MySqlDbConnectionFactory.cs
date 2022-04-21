@@ -1,9 +1,5 @@
-﻿using Microsoft.Extensions.Options;
-using MySqlConnector;
-using System;
-using System.Collections.Generic;
+﻿using MySqlConnector;
 using System.Data;
-using System.Text;
 
 namespace Dapper.Easies.MySql
 {

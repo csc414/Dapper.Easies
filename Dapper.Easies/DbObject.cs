@@ -16,16 +16,51 @@ namespace Dapper.Easies
 
         public DbObject(string dbName, Type type)
         {
-            DbName = dbName;
+            _dbName = dbName;
             Type = type;
         }
+
+        public IDbConnectionFactory ConnectionFactory { get; internal set; }
+
         public ISqlSyntax SqlSyntax { get; internal set; }
 
         public string ConnectionStringName { get; internal set; }
 
-        public string DbName { get; }
+        private string _dbName;
 
-        public string EscapeName { get; internal set; }
+        public string DbName { 
+            get 
+            {
+                var holder = DynamicDbMappingScope._locals.Value;
+                if(holder != null)
+                {
+                    if (holder.TableNameMap.TryGetValue(this, out var map))
+                        return map.name;
+                }
+
+                return _dbName;
+            } 
+        }
+
+        private string _escapeName;
+
+        public string EscapeName { 
+            get
+            {
+                var holder = DynamicDbMappingScope._locals.Value;
+                if (holder != null)
+                {
+                    if (holder.TableNameMap.TryGetValue(this, out var map))
+                        return map.escapeName;
+                }
+
+                return _escapeName;
+            }
+            internal set
+            {
+                _escapeName = value;
+            }
+        }
 
         public Type Type { get; }
 
@@ -36,6 +71,8 @@ namespace Dapper.Easies
         public DbProperty this[string name] => _properties[name];
 
         internal bool Add(string name, DbProperty property) => _properties.TryAdd(name, property);
+
+        public static DbObject Get<T>() => Get(typeof(T));
 
         public static DbObject Get(Type type)
         {
@@ -71,9 +108,9 @@ namespace Dapper.Easies
             public PropertyInfo PropertyInfo { get; }
         }
 
-        internal static string GetTablePropertyAlias(QueryContext context, DbProperty property)
+        internal static string GetTablePropertyAlias(QueryContext context, DbProperty property, int aliasIndex)
         {
-            return string.Format("{0}.{1}", context.Alias[property.PropertyInfo.ReflectedType].Alias, property.EscapeName);
+            return string.Format("{0}.{1}", context.Alias[aliasIndex].Alias, property.EscapeName);
         }
 
         internal static void Initialize(EasiesOptions options)
@@ -86,6 +123,7 @@ namespace Dapper.Easies
                 var objAttr = t.GetCustomAttribute<DbObjectAttribute>();
                 var obj = new DbObject(objAttr?.TableName ?? t.Name, t);
                 obj.ConnectionStringName = objAttr?.ConnectionStringName;
+                obj.ConnectionFactory = options.GetConnectionFactory(obj.ConnectionStringName);
                 obj.SqlSyntax = options.GetSqlSyntax(obj.ConnectionStringName);
                 obj.EscapeName = obj.SqlSyntax.EscapeTableName(obj.DbName);
                 foreach (var p in t.GetTypeInfo().GetProperties(BindingFlags.Instance | BindingFlags.Public))

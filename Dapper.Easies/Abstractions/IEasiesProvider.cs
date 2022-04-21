@@ -8,8 +8,20 @@ using System.Transactions;
 
 namespace Dapper.Easies
 {
-    public interface IEasiesProvider : IConnection
+    public interface IEasiesProvider
     {
+        /// <summary>
+        /// Default 配置的 DbConnection，
+        /// </summary>
+        IDbConnection Connection { get; }
+
+        /// <summary>
+        /// 根据配置名取 DbConnection
+        /// </summary>
+        /// <param name="connectionStringName"></param>
+        /// <returns></returns>
+        IDbConnection GetConnection(string connectionStringName);
+
         /// <summary>
         /// 强类型实体
         /// </summary>
@@ -22,7 +34,7 @@ namespace Dapper.Easies
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        IDbQuery<T> Query<T>() where T : IDbObject;
+        IDbQuery<T> From<T>() where T : IDbObject;
 
         /// <summary>
         /// 根据主键获取实体对象
@@ -63,39 +75,6 @@ namespace Dapper.Easies
         /// <param name="entities"></param>
         /// <returns></returns>
         Task<int> DeleteAsync<T>(IEnumerable<T> entities) where T : IDbTable;
-
-        /// <summary>
-        /// 根据查询条件删除实体对象
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="predicate"></param>
-        /// <returns></returns>
-        Task<int> DeleteAsync<T>(Expression<Predicate<T>> predicate = null) where T : IDbTable;
-
-        /// <summary>
-        /// 根据高级查询条件删除实体对象
-        /// </summary>
-        /// <param name="query"></param>
-        /// <returns></returns>
-        Task<int> DeleteAsync(IDbQuery query);
-
-        /// <summary>
-        /// 根据查询条件更新部分字段
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="updateFields"></param>
-        /// <param name="predicate"></param>
-        /// <returns></returns>
-        Task<int> UpdateAsync<T>(Expression<Func<T>> updateFields, Expression<Predicate<T>> predicate = null) where T : IDbTable;
-
-        /// <summary>
-        /// 根据查询条件更新部分字段
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="updateFields"></param>
-        /// <param name="predicate"></param>
-        /// <returns></returns>
-        Task<int> UpdateAsync<T>(Expression<Func<T, T>> updateFields, Expression<Predicate<T>> predicate = null) where T : IDbTable;
 
         /// <summary>
         /// 更新实体对象除主键外的所有字段

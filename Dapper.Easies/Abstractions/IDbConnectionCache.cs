@@ -1,16 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Text;
+﻿using System.Data;
 
 namespace Dapper.Easies
 {
-    public interface IConnection
+    public interface IDbConnectionCache
     {
         /// <summary>
         /// Default 配置的 DbConnection，
         /// </summary>
         IDbConnection Connection { get; }
+
+        /// <summary>
+        /// 根据 IDbConnectionFactory 取 DbConnection
+        /// </summary>
+        /// <param name="factory"></param>
+        /// <returns></returns>
+        IDbConnection GetConnection(IDbConnectionFactory factory);
 
         /// <summary>
         /// 根据配置名取 DbConnection

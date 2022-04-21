@@ -9,25 +9,21 @@ using System.Linq.Expressions;
 
 namespace Dapper.Easies
 {
-    public class DefaultEasiesProvider : IEasiesProvider, IDisposable
+    public class DefaultEasiesProvider : IEasiesProvider
     {
-        private readonly EasiesOptions _options;
+        private readonly IDbConnectionCache _connection;
 
         private readonly ISqlConverter _sqlConverter;
 
-        private IDbConnection _connection;
-
-        private Dictionary<string, IDbConnection> _connections = new Dictionary<string, IDbConnection>(StringComparer.Ordinal);
-
-        public DefaultEasiesProvider(EasiesOptions options, ISqlConverter sqlConverter)
+        public DefaultEasiesProvider(IDbConnectionCache connection, ISqlConverter sqlConverter)
         {
-            _options = options;
+            _connection = connection;
             _sqlConverter = sqlConverter;
         }
 
         public DbEntity<T> Entity<T>() where T : IDbTable => new DbEntity<T>(this);
 
-        public IDbQuery<T> Query<T>() where T : IDbObject => new DbQuery<T>(new QueryContext(this, _sqlConverter, DbObject.Get(typeof(T))));
+        public IDbQuery<T> From<T>() where T : IDbObject => new DbQuery<T>(new QueryContext(_connection, _sqlConverter, DbObject.Get(typeof(T))));
 
         public Task<T> GetAsync<T>(params object[] ids) where T : IDbObject
         {
@@ -84,46 +80,6 @@ namespace Dapper.Easies
             return GetConnection<T>().ExecuteAsync(sql, entities);
         }
 
-        public Task<int> DeleteAsync<T>(Expression<Predicate<T>> predicate = null) where T : IDbTable
-        {
-            var context = new QueryContext(this, _sqlConverter, DbObject.Get(typeof(T)));
-            if (predicate != null)
-                context.AddWhere(predicate);
-
-            return DeleteAsync(context);
-        }
-
-        public Task<int> DeleteAsync(IDbQuery query)
-        {
-            return DeleteAsync(query.Context);
-        }
-
-        Task<int> DeleteAsync(QueryContext context)
-        {
-            var sql = _sqlConverter.ToDeleteSql(context, out var parameters);
-            return GetConnection(context.DbObject.ConnectionStringName).ExecuteAsync(sql, parameters);
-        }
-
-        public Task<int> UpdateAsync<T>(Expression<Func<T>> updateFields, Expression<Predicate<T>> predicate = null) where T : IDbTable
-        {
-            return InternalUpdateAsync(updateFields, predicate);
-        }
-
-        public Task<int> UpdateAsync<T>(Expression<Func<T, T>> updateFields, Expression<Predicate<T>> predicate = null) where T : IDbTable
-        {
-            return InternalUpdateAsync(updateFields, predicate);
-        }
-
-        Task<int> InternalUpdateAsync<T>(Expression updateFields, Expression<Predicate<T>> predicate = null) where T : IDbTable
-        {
-            var context = new QueryContext(this, _sqlConverter, DbObject.Get(typeof(T)));
-            if (predicate != null)
-                context.AddWhere(predicate);
-
-            var sql = _sqlConverter.ToUpdateFieldsSql(updateFields, context, out var parameters);
-            return GetConnection<T>().ExecuteAsync(sql, parameters);
-        }
-
         public Task<int> UpdateAsync<T>(T entity) where T : IDbTable
         {
             if (entity == null)
@@ -142,34 +98,10 @@ namespace Dapper.Easies
             return GetConnection<T>().ExecuteAsync(sql, entities);
         }
 
-        public IDbConnection Connection => _connection ?? (_connection = GetConnection(EasiesOptions.DefaultName));
+        IDbConnection GetConnection<T>() => _connection.GetConnection(DbObject.Get<T>()?.ConnectionFactory);
 
-        public void Dispose()
-        {
-            _connection = null;
+        public IDbConnection Connection => _connection.Connection;
 
-            if (_connections.Count > 0)
-            {
-                foreach(var connection in _connections)
-                    connection.Value.Dispose();
-
-                _connections.Clear();
-            }
-        }
-
-        IDbConnection GetConnection<T>() => GetConnection(DbObject.Get(typeof(T))?.ConnectionStringName);
-
-        public IDbConnection GetConnection(string connectionStringName)
-        {
-            if (connectionStringName == null)
-                connectionStringName = EasiesOptions.DefaultName;
-
-            if (_connections.TryGetValue(connectionStringName, out var connection))
-                return connection;
-
-            connection = _options.GetConnectionFactory(connectionStringName).Create();
-            _connections.Add(connectionStringName, connection);
-            return connection;
-        }
+        public IDbConnection GetConnection(string connectionStringName) => _connection.GetConnection(connectionStringName);
     }
 }

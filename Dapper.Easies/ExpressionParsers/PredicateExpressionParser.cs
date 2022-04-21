@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -18,10 +19,17 @@ namespace Dapper.Easies
 
         private int _binaryDeep = 0;
 
+        internal ParameterBuilder ParameterBuilder => _parameters;
+
         internal PredicateExpressionParser(ISqlSyntax sqlSyntax, ParameterBuilder parameterBuilder)
         {
             _sqlSyntax = sqlSyntax;
             _parameters = parameterBuilder;
+        }
+
+        internal PredicateExpressionParser(ISqlSyntax sqlSyntax, ParameterBuilder parameterBuilder, ReadOnlyCollection<ParameterExpression> parameters) : this(sqlSyntax, parameterBuilder)
+        {
+            SetParameters(parameters);
         }
 
         internal string ToSql(Expression exp, QueryContext context)
@@ -97,17 +105,21 @@ namespace Dapper.Easies
                 parameterExpression = ((UnaryExpression)m.Expression).Operand;
 
             if (parameterExpression is ParameterExpression parameter)
-                return CreateParserData(ParserDataType.Property, DbObject.Get(parameter.Type)[m.Member.Name], m);
+                return CreateProperty(m, parameter);
             else if (parameterExpression is MemberExpression memberExpression && HasParameter(memberExpression.Expression))
             {
                 var parserData = VisitMemberAccess(memberExpression);
-                if(parserData.Type == ParserDataType.Property && parserData.Value is DbObject.DbProperty dbProperty)
+                if (parserData.Type == ParserDataType.Property && parserData.Value is DbObject.DbProperty dbProperty)
                 {
                     if (dbProperty.PropertyInfo.PropertyType.Name == "Nullable`1" && m.Member.Name == "Value")
                         return parserData;
                     else if (dbProperty.PropertyInfo.PropertyType == typeof(DateTime) || dbProperty.PropertyInfo.PropertyType == typeof(DateTime?))
                     {
-                        var dateTimeMethod = _sqlSyntax.DateTimeMethod(m.Member.Name, () => DbObject.GetTablePropertyAlias(_context, dbProperty));
+                        var dateTimeMethod = _sqlSyntax.DateTimeMethod(m.Member.Name, () =>
+                        {
+                            var aliasIndex = Parameters.IndexOf((ParameterExpression)parserData.Expression);
+                            return DbObject.GetTablePropertyAlias(_context, dbProperty, aliasIndex);
+                        });
                         if (dateTimeMethod == null)
                             throw new NotImplementedException($"DateTime Method：{m.Member.Name}");
 
@@ -178,18 +190,7 @@ namespace Dapper.Easies
                     }
                 }
                 else if (_dbFuncType.IsAssignableFrom(m.Method.ReflectedType))
-                {
-                    if (m.Method.Name.Equals("Expr", StringComparison.Ordinal))
-                        return CreateSql(GetExpression(m, _parameters, _sqlSyntax, _context));
-                    else
-                    {
-                        var result = _sqlSyntax.Method(m.Method, m.Arguments.ToArray(), _parameters, exp => exp == null ? null : GetExpression(exp, _parameters, _sqlSyntax, _context), exp => exp == null ? null : GetValue(exp));
-                        if (result == null)
-                            throw new NotImplementedException($"MethodName：{m.Method.Name}");
-
-                        return CreateSql(result);
-                    }
-                }
+                    return CreateSql(GetExpression(m, _parameters, _sqlSyntax, _context, Parameters));
             }
 
             return CreateConstant(GetValue(m), m);
@@ -201,9 +202,19 @@ namespace Dapper.Easies
             {
                 case ParserDataType.Property:
                     {
-                        var property = (DbObject.DbProperty)data.Value;
-                        _sql.Append(DbObject.GetTablePropertyAlias(_context, property));
-                        if (andAlso && property.PropertyInfo.PropertyType == typeof(bool))
+                        var aliasIndex = Parameters.IndexOf((ParameterExpression)data.Expression);
+                        PropertyInfo propertyInfo = null;
+                        if (data.Value is DbObject.DbProperty property)
+                        {
+                            _sql.Append(DbObject.GetTablePropertyAlias(_context, property, aliasIndex));
+                            propertyInfo = property.PropertyInfo;
+                        }
+                        else if (data.Value is MemberExpression memberExpression)
+                        {
+                            _sql.Append(string.Format("{0}.{1}", _context.Alias[aliasIndex].Alias, _sqlSyntax.EscapePropertyName(memberExpression.Member.Name)));
+                            propertyInfo = (PropertyInfo)memberExpression.Member;
+                        }
+                        if (andAlso && propertyInfo?.PropertyType == typeof(bool))
                             _sql.AppendFormat("{0}{1}", _sqlSyntax.Operator(OperatorType.Equal), _parameters.AddParameter(true));
                     }
                     break;

@@ -9,33 +9,33 @@ namespace Dapper.Easies
 {
     public class QueryContext : ICloneable
     {
-        private readonly IConnection _connection;
+        private readonly IDbConnectionCache _connection;
 
-        public QueryContext(IConnection connection, ISqlConverter sqlConverter, DbObject dbObject) : this(connection, sqlConverter, dbObject, new[] { new KeyValuePair<Type, DbAlias>(dbObject.Type, new DbAlias(dbObject.EscapeName, "t")) })
+        public QueryContext(IDbConnectionCache connection, ISqlConverter sqlConverter, DbObject dbObject) : this(connection, sqlConverter, dbObject, new[] { new DbAlias(dbObject.EscapeName, "t") })
         {
         }
 
-        public QueryContext(IConnection connection, ISqlConverter sqlConverter, DbObject dbObject, IEnumerable<KeyValuePair<Type, DbAlias>> alias)
+        public QueryContext(IDbConnectionCache connection, ISqlConverter sqlConverter, DbObject dbObject, IEnumerable<DbAlias> alias)
         {
             _connection = connection;
             Converter = sqlConverter;
             DbObject = dbObject;
-            Alias = new Dictionary<Type, DbAlias>(alias);
+            Alias = new List<DbAlias>(alias);
         }
 
-        private ICollection<JoinMetedata> _joinMetedatas;
+        private List<JoinMetedata> _joinMetedatas;
 
-        private ICollection<Expression> _whereExpressions;
+        private List<Expression> _whereExpressions;
 
-        private ICollection<Expression> _havingExpressions;
+        private List<Expression> _havingExpressions;
 
         public DbObject DbObject { get; }
 
-        public IDictionary<Type, DbAlias> Alias { get; }
+        public List<DbAlias> Alias { get; }
 
         public ISqlConverter Converter { get; }
 
-        public IDbConnection Connection => _connection.GetConnection(DbObject.ConnectionStringName);
+        public IDbConnection Connection => _connection.GetConnection(DbObject.ConnectionFactory);
 
         public IEnumerable<JoinMetedata> JoinMetedatas => _joinMetedatas;
 
@@ -57,19 +57,22 @@ namespace Dapper.Easies
 
         public bool Distinct { get; set; }
 
-        public void AddJoin(Type joinType, Expression joinExpression, JoinType type)
+        public void AddJoin(Type joinType, Expression joinExpression, JoinType type, IDbQuery query = null)
         {
             var dbObject = DbObject.Get(joinType);
-            if (!Alias.TryAdd(dbObject.Type, new DbAlias(dbObject.EscapeName, $"t{Alias.Count}")))
-                throw new ArgumentException($"请勿重复连接表 {dbObject.Type.Name}.");
 
-            if (DbObject.ConnectionStringName != dbObject.ConnectionStringName)
-                throw new ArgumentException($"无法连接来自不同配置的表");
+            if (dbObject != null)
+            {
+                if (DbObject.ConnectionStringName != dbObject.ConnectionStringName)
+                    throw new ArgumentException($"无法连接来自不同配置的表");
+            }
 
             if (_joinMetedatas == null)
                 _joinMetedatas = new List<JoinMetedata>();
 
-            _joinMetedatas.Add(new JoinMetedata { DbObject = dbObject, JoinExpression = joinExpression, Type = type });
+            var alias = new DbAlias(dbObject?.EscapeName, $"t{Alias.Count}");
+            Alias.Add(alias);
+            _joinMetedatas.Add(new JoinMetedata { DbObject = dbObject, JoinExpression = joinExpression, Type = type, Query = query });
         }
 
         public void AddWhere(Expression whereExpression)
@@ -78,6 +81,14 @@ namespace Dapper.Easies
                 _whereExpressions = new List<Expression>();
 
             _whereExpressions.Add(whereExpression);
+        }
+
+        public void SetWhere(Index i, LambdaExpression whereExpression)
+        {
+            if (whereExpression.ReturnType == typeof(string))
+                _whereExpressions[i] = DbQuery.CreateExpressionLambda(whereExpression);
+            else
+                _whereExpressions[i] = whereExpression;
         }
 
         public void AddHaving(Expression havingExpression)
