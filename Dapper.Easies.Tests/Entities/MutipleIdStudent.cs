@@ -4,11 +4,14 @@ using System.Text;
 
 namespace Dapper.Easies.Tests
 {
-    [DbObject("tb_students")]
-    public class Student : IDbTable
+    [DbObject("tb_mutiple_id_students")]
+    public class MutipleIdStudent : IDbTable
     {
         [DbProperty(PrimaryKey = true, Identity = true)]
         public int Id { get; set; }
+
+        [DbProperty(PrimaryKey = true)]
+        public int IdCard { get; set; }
 
         public Guid ClassId { get; set; }
 
@@ -18,8 +21,5 @@ namespace Dapper.Easies.Tests
         public int? Age { get; set; }
 
         public DateTime CreateTime { get; set; }
-
-        [DbProperty(Ignore = true)]
-        public bool IsAdult => Age >= 18;
     }
 }
