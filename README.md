@@ -11,7 +11,9 @@
 var services = new ServiceCollection();
 services.AddEasiesProvider(builder =>
 {
-    //生命周期默认是 Scoped，在 IEasiesProvider 生命周期中将共用一个 DbConnection ，可根据自身需求配置
+    //生命周期默认是 Singleton。
+    //Singleton 为每个查询创建一个新的连接，支持异步查询，并Task.When等待。
+    //Transient，Scoped 在 IEasiesProvider 生命周期中将共用一个 DbConnection ，可根据自身需求配置
     builder.Lifetime = ServiceLifetime.Scoped;
 
     //开启开发模式会向 Logger 输出生成的Sql。
@@ -159,7 +161,7 @@ await easiesProvider.UpdateAsync(stu);
 await easiesProvider.UpdateAsync(new[] { stu });
 
 //此更新操作会按条件更新部分字段
-await easiesProvider.UpdateAsync<Student>(o => new Student { Age = 12 }, o => o.Id == stu.Id);
+await easiesProvider.From<Student>().Where(o => o.Id == stu.Id).UpdateAsync(o => new Student { Age = o.Age + 1 });
 ```
 删除
 ------------------------------------------------------------
@@ -173,94 +175,139 @@ await easiesProvider.DeleteAsync(stu);
 await easiesProvider.DeleteAsync(new[] { stu });
 
 //全表删除，慎用
-await easiesProvider.DeleteAsync<Student>();
+await easiesProvider.From<Student>().DeleteAsync();
 
 //按条件删除
-await easiesProvider.DeleteAsync<Student>(o => o.Age == 12);
-
-//查询年龄大于10岁并且是六年一班
-var query = easiesProvider.Query<Student>()
-              .Join<Class>((a, b) => a.ClassId == b.Id)
-              .Where((a, b) => a.Age > 10 && b.Name == "六年一班");
-
-//把查询条件作为删除条件，根据条件删除主操作表 Student
-await easiesProvider.DeleteAsync(query);
+await easiesProvider.From<Student>().Where(o => o.Age == 12).DeleteAsync();
 ```
-查询
+
+多表关联查询
 ------------------------------------------------------------
 ```csharp
-//查询年龄大于10岁，按年龄倒序后按名称排序的第一个学生
-await easiesProvider.Query<Student>()
-  .Where(o => o.Age > 10)
-  .OrderByDescending(o => o.Age)
-  .ThenBy(o => o.Name)
-  .FirstOrDefaultAsync();
-
-//查询年龄大于10岁并且是六年一班, 这里使用了匿名类并取了10条数据（也可以建DTO）
-await easiesProvider.Query<Student>()
+await easiesProvider.From<Student>()
     .Join<Class>((a, b) => a.ClassId == b.Id)
-    .Where((a, b) => a.Age > 10 && b.Name == "六年一班")
-    .Select((a, b) => new { StudentName = a.Name, ClassName = b.Name })
-    .Take(10)
-    .QueryAsync();
-    
-//分页例子
-var page = 1;
-var size = 10;
-var query = easiesProvider.Query<Student>()
-              .Join<Class>((a, b) => a.ClassId == b.Id)
-              .Where((a, b) => a.Age > 10 && b.Name == "六年一班");
-var count = await query.CountAsync();
-var maxPage = Convert.ToInt32(Math.Ceiling(count * 1f / size));
-if (page > maxPage)
-    page = maxPage;
-await query.Skip((page - 1) * size).Take(size).QueryAsync();
+    .QueryAsync();   //多表关联未调用Select的情况下，默认返回主表 Student
 
-//分组例子
-var query = await easiesProvider.Query<Student>()
-                .Join<Class>((a, b) => a.ClassId == b.Id)
-                .GroupBy((a, b) => b.Name)
-                .Having((a, b) => DbFunc.Avg(a.Age) > 12)
-                .Select((a, b) => new { ClassName = b.Name, AvgAge = DbFunc.Avg(a.Age), Count = DbFunc.Count() })
-                .QueryAsync();
+//Join 子查询
+var query = await easiesProvider.From<Class>()
+    .Select(o => new { o.Id, o.Name })
+
+await easiesProvider.From<Student>()
+    .Join<Class>(query, (a, b) => a.ClassId == b.Id)
+    .Select((a, b) => b)
+    //.Select((a, b) => new { a.Name, ClassName = b.Name })
+    .QueryAsync();  //Select b 匿名类，查询将返回匿名类
 ```
+分组查询
+------------------------------------------------------------
+```csharp
+await easiesProvider.From<Student>()
+    .GroupBy(o => o.ClassId)
+    .Having(o => DbFunc.Avg(o.Age) > 10)
+    .Select(o => new { o.ClassId, AvgAge = DbFunc.Avg(o.Age), Count = DbFunc.Count() })
+    .QueryAsync();
+```
+子查询
+------------------------------------------------------------
+```csharp
+//DbFunc.In 或 NotIn 使用子查询
+await easiesProvider.From<Student>()
+    .Where(s => DbFunc.In(
+        s.ClassId,
+        EasiesProvider.From<Class>()
+        .Select(c => c.Id)
+        .SubQuery()
+    ));
 
+//Select 中使用子查询
+await easiesProvider.From<Class>()
+    .Select(c => new 
+    {
+        ClassName = c.Name,
+        StudentCount = easiesProvider.From<Student>()
+                        .Where(s => s.ClassId == c.Id)
+                        .Select(s => DbFunc.Count())
+                        .SubQueryScalar()
+    })
+
+//需要注意的是，为了性能的考虑，子查询中只支持Where中解析父表达式的参数，只能用于跟父表的关联。
+```
+分页扩展方法
+------------------------------------------------------------
+```csharp
+(IEnumerable<T> data, long total, int max_page) result = await easiesProvider.From<Student>().GetPagerAsync(int page, int size);
+
+(IEnumerable<T> data, long total) result = await easiesProvider.From<Student>().GetLimitAsync(int skip, int take)
+```
 DbFunc
 ------------------------------------------------------------
 ```csharp
 //使用Like
 var name = "张%";
-var query = easiesProvider.Query<Student>()
+var query = easiesProvider.From<Student>()
               .Join<Class>((a, b) => a.ClassId == b.Id)
               .Where((a, b) => DbFunc.Like(a.Name, name));
 
 //使用In或NotIn
 var names = new [] { "张三", "李四" };
-var query = easiesProvider.Query<Student>()
+var query = easiesProvider.From<Student>()
               .Join<Class>((a, b) => a.ClassId == b.Id)
               .Where((a, b) => DbFunc.In(a.Name, names) || DbFunc.NotIn(a.Name, names));
               
 //使用Expr实现Like和In，Expr非常强大，可在无法用Lambda实现的情况下使用自定义表达式，并且可以和Lambda表达式混用
-var query = easiesProvider.Query<Student>()
+var query = easiesProvider.From<Student>()
               .Join<Class>((a, b) => a.ClassId == b.Id)
               .Where((a, b) => a.Age > 10 && DbFunc.Expr<bool>($"{a.Name} LIKE {name} OR {a.Name} IN {names}"));
 
 //也可以直接在Join 或 Where 中使用Expr
-var query = easiesProvider.Query<Student>()
+var query = easiesProvider.From<Student>()
               .Join<Class>((a, b) => $"{a.ClassId} = {b.Id}")
               .Where((a, b) => $"{a.Name} LIKE {name} OR {a.Name} IN {names}");
               
 //Expr还可以使用在Selector
-var query = easiesProvider.Query<Student>()
+var query = easiesProvider.From<Student>()
               .Join<Class>((a, b) => a.ClassId == b.Id)
               .Select((a, b) => new { StudentName = a.Name, ClassName = b.Name, IsYoung = DbFunc.Expr<bool>($"IF({a.Age} < {10}, 1, 0)") });
               
 //更新使用 Expr
-await easiesProvider.UpdateAsync<Student>(
-    o => new Student { Age = DbFunc.Expr<int>($"IF({o.Name} in {names}, 18, {a.Age})") }, 
-    o => o.Id > 0 && o.Name == DbFunc.Expr<string>($"IF({o.Name} LIKE {name}, '张三', '李四')"));
-```
+await easiesProvider.From<Student>().UpdateAsync(o => new Student { Age = DbFunc.Expr<int>($"IF({o.Name} in {names}, 18, {a.Age})") });
 
+//DbFunc 还提供基本的聚合函数 Count Avg Sum Max Min
+```
+强类型实体
+------------------------------------------------------------
+```csharp
+var studentEntity = easiesProvider.Entity<Student>();
+
+studentEntity.InsertAsync(...);
+studentEntity.UpdateAsync(...);
+studentEntity.DeleteAsync(...);
+studentEntity.Where(...);
+...
+//使用强类型实体可省略每次调用传递泛型，更多的方法不在此展示。
+```
+动态映射表名
+------------------------------------------------------------
+```csharp
+//可用于分表操作
+
+//Class = tb_class
+using (new DynamicDbMappingScope(map => map.SetTableName<Class>("tb_class1")))
+{
+    //Class = tb_class1
+    await easiesProvider.InsertAsync(...);
+
+    using (new DynamicDbMappingScope(map => map.SetTableName<Class>("tb_class2")))
+    {
+        //Class = tb_class2
+        await easiesProvider.InsertAsync(...);
+    }
+
+    //Class = tb_class1
+    await easiesProvider.InsertAsync(...);
+}
+//Class = tb_class
+```
 原生Sql执行
 ------------------------------------------------------------
 ```csharp
