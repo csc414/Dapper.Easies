@@ -214,7 +214,7 @@ await easiesProvider.From<Student>()
 await easiesProvider.From<Student>()
     .Where(s => DbFunc.In(
         s.ClassId,
-        EasiesProvider.From<Class>()
+        easiesProvider.From<Class>()
         .Select(c => c.Id)
         .SubQuery()
     ));
