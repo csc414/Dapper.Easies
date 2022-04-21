@@ -311,7 +311,9 @@ using (new DynamicDbMappingScope(map => map.SetTableName<Class>("tb_class1")))
 原生Sql执行
 ------------------------------------------------------------
 ```csharp
-//不需要释放，在IEasiesProvider生命周期会共用同一个DbConnection
+//生命周期默认是 Singleton。
+//Singleton 为每个查询创建一个新的连接。
+//Transient，Scoped 在 IEasiesProvider 生命周期中将共用一个 DbConnection。
 await easiesProvider.Connection.ExecuteAsync(...);
 
 //多库
