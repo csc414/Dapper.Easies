@@ -166,10 +166,39 @@ namespace Dapper.Easies.MySql.Tests
 
         public override void WhereComplicatedTest(string sql, IParameterLookup parameters)
         {
-            Assert.Equal("SELECT t.`Id` AS `Id`, t.`ClassId` AS `ClassId`, t.`StudentName` AS `Name`, t.`Age` AS `Age`, t.`CreateTime` AS `CreateTime` FROM `tb_students` t WHERE t.`Age` = (t.`Age` * @p0 * @p1) + t.`Age` / @p2", sql);
+            Assert.Equal("SELECT t.`Id` AS `Id`, t.`ClassId` AS `ClassId`, t.`StudentName` AS `Name`, t.`Age` AS `Age`, t.`CreateTime` AS `CreateTime` FROM `tb_students` t WHERE t.`Age` = (t.`Age` * @p0 * @p1) + t.`Age` / @p2 AND t.`StudentName` = @p3", sql);
             Assert.Equal(2, parameters["p0"]);
             Assert.Equal(0.25, parameters["p1"]);
             Assert.Equal(2, parameters["p2"]);
+            Assert.Equal("张三", parameters["p3"]);
+        }
+
+        public override void ExprJoinTest(string sql)
+        {
+            Assert.Equal("SELECT t.`Id` AS `Id`, t.`ClassId` AS `ClassId`, t.`StudentName` AS `Name`, t.`Age` AS `Age`, t.`CreateTime` AS `CreateTime` FROM `tb_students` t JOIN `tb_classes` t1 ON t.`ClassId` = t1.`Id`", sql);
+        }
+
+        public override void ExprWhereTest(string sql, IParameterLookup parameters)
+        {
+            Assert.Equal("SELECT t.`Id` AS `Id`, t.`ClassId` AS `ClassId`, t.`StudentName` AS `Name`, t.`Age` AS `Age`, t.`CreateTime` AS `CreateTime` FROM `tb_students` t WHERE t.`StudentName` LIKE @p0 AND t.`Age` = @p1", sql);
+            Assert.Equal("%张三%", parameters["p0"]);
+            Assert.Equal(18, parameters["p1"]);
+        }
+
+        public override void ExprSelectTest(string sql, IParameterLookup parameters)
+        {
+            Assert.Equal("SELECT (t.`StudentName` + @p0) AS `Name` FROM `tb_students` t", sql);
+            Assert.Equal("张三", parameters["p0"]);
+        }
+
+        public override void SubQueryTest(string sql)
+        {
+            Assert.Equal("SELECT t.`Id` AS `Id`, t.`ClassId` AS `ClassId`, t.`StudentName` AS `Name`, t.`Age` AS `Age`, t.`CreateTime` AS `CreateTime` FROM `tb_students` t WHERE t.`ClassId` IN (SELECT tt.`Id` FROM `tb_classes` tt)", sql);
+        }
+
+        public override void SubQueryScalarTest(string sql)
+        {
+            Assert.Equal("SELECT t.`ClassName` AS `ClassName`, (SELECT COUNT(*) FROM `tb_students` tt WHERE tt.`ClassId` = t.`Id`) AS `StudentCount` FROM `tb_classes` t", sql);
         }
     }
 }

@@ -328,7 +328,7 @@ namespace Dapper.Easies.Tests
             WhereNotInTest(result.sql, result.parameters);
 
             result = student
-                .Where(o => o.Age == o.Age * 2 * 0.25 + o.Age / 2)
+                .Where(o => o.Age == o.Age * 2 * 0.25 + o.Age / 2 && o.Name == name)
                 .GetSql();
             WhereComplicatedTest(result.sql, result.parameters);
         }
@@ -340,5 +340,76 @@ namespace Dapper.Easies.Tests
         public abstract void WhereNotInTest(string sql, IParameterLookup parameters);
 
         public abstract void WhereComplicatedTest(string sql, IParameterLookup parameters);
+
+        [Fact]
+        public void Expr()
+        {
+            (string sql, DynamicParameters parameters) result;
+
+            var name = "张三";
+            var age = 18;
+
+            var student = EasiesProvider.Entity<Student>();
+            
+            result = student
+                .Join<Class>((a, b) => $"{a.ClassId} = {b.Id}")
+                .GetSql();
+            ExprJoinTest(result.sql);
+
+            result = student
+                .Where(o => $"{o.Name} LIKE {$"%{name}%"} AND {o.Age} = {age}")
+                .GetSql();
+            ExprWhereTest(result.sql, result.parameters);
+
+            result = student
+                .Where(o => DbFunc.Like(o.Name, $"%{name}%") && DbFunc.Expr<bool>($"{o.Age} = {age}"))
+                .GetSql();
+            ExprWhereTest(result.sql, result.parameters);
+
+            result = student
+                .Select(o => new { Name = DbFunc.Expr<string>($"({o.Name} + {name})") })
+                .GetSql();
+            ExprSelectTest(result.sql, result.parameters);
+
+            //DbFunc.Expr 可嵌套在任何Lambda表达式内执行，相当于嵌入原生Sql
+        }
+
+        public abstract void ExprJoinTest(string sql);
+
+        public abstract void ExprWhereTest(string sql, IParameterLookup parameters);
+
+        public abstract void ExprSelectTest(string sql, IParameterLookup parameters);
+
+        [Fact]
+        public void SubQuery()
+        {
+            (string sql, DynamicParameters parameters) result;
+
+            result = EasiesProvider.From<Student>()
+                  .Where(s => DbFunc.In(
+                      s.ClassId,
+                      EasiesProvider.From<Class>()
+                      .Select(c => c.Id)
+                      .SubQuery()
+                  ))
+                  .GetSql();
+            SubQueryTest(result.sql);
+
+            result = EasiesProvider.From<Class>()
+                .Select(c => new 
+                {
+                    ClassName = c.Name,
+                    StudentCount = EasiesProvider.From<Student>()
+                                    .Where(s => s.ClassId == c.Id)
+                                    .Select(s => DbFunc.Count())
+                                    .SubQueryScalar()
+                })
+                .GetSql();
+            SubQueryScalarTest(result.sql);
+        }
+
+        public abstract void SubQueryTest(string sql);
+
+        public abstract void SubQueryScalarTest(string sql);
     }
 }
