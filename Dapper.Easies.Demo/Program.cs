@@ -78,11 +78,11 @@ namespace Dapper.Easies.Demo
             cls1.Name = "六年一班2222";
             cls1.CreateTime = DateTime.Now;
 
-            //using (new DynamicDbMappingScope(map => map.SetTableName<Class>("bnt_class1")))
+            //using (DynamicDbMappingScope.Create(map => map.SetTableName<Class>("bnt_class1")))
             //{
             //    var c = await easiesProvider.InsertAsync(new[] { cls, cls1 });
 
-            //    using (new DynamicDbMappingScope(map => map.SetTableName<Class>("bnt_class2")))
+            //    using (DynamicDbMappingScope.Create(map => map.SetTableName<Class>("bnt_class2")))
             //    {
             //        cls.Name = "六年三班";
             //        cls1.Name = "六年四班";
