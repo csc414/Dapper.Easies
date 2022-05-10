@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -64,14 +65,16 @@ namespace Dapper.Easies
             _context.ThenByMetedata = new OrderByMetedata(orderFields, sortType);
         }
 
+        protected Task<T> InternalExecuteAsync<T>(Func<IDbConnection, Task<T>> func) => _context.Connection.ExecuteAsync(_context.DbObject.ConnectionFactory, func);
+
         public Task<long> CountAsync()
         {
-            return _context.Connection.ExecuteScalarAsync<long>(_context.Converter.ToQuerySql(_context, out var parameters, aggregateInfo: new AggregateInfo(AggregateType.Count, null)), parameters);
+            return InternalExecuteAsync(conn => conn.ExecuteScalarAsync<long>(_context.Converter.ToQuerySql(_context, out var parameters, aggregateInfo: new AggregateInfo(AggregateType.Count, null)), parameters));
         }
 
         protected Task<long> CountAsync(Expression field)
         {
-            return _context.Connection.ExecuteScalarAsync<long>(_context.Converter.ToQuerySql(_context, out var parameters, aggregateInfo: new AggregateInfo(AggregateType.Count, field)), parameters);
+            return InternalExecuteAsync(conn => conn.ExecuteScalarAsync<long>(_context.Converter.ToQuerySql(_context, out var parameters, aggregateInfo: new AggregateInfo(AggregateType.Count, field)), parameters));
         }
 
         protected Task<TResult> MaxAsync<TResult>(Expression field)
@@ -79,7 +82,7 @@ namespace Dapper.Easies
             if (field == null)
                 throw new ArgumentException("字段不能为空");
 
-            return _context.Connection.ExecuteScalarAsync<TResult>(_context.Converter.ToQuerySql(_context, out var parameters, aggregateInfo: new AggregateInfo(AggregateType.Max, field)), parameters);
+            return InternalExecuteAsync(conn => conn.ExecuteScalarAsync<TResult>(_context.Converter.ToQuerySql(_context, out var parameters, aggregateInfo: new AggregateInfo(AggregateType.Max, field)), parameters));
         }
 
         protected Task<TResult> MinAsync<TResult>(Expression field)
@@ -87,7 +90,7 @@ namespace Dapper.Easies
             if (field == null)
                 throw new ArgumentException("字段不能为空");
 
-            return _context.Connection.ExecuteScalarAsync<TResult>(_context.Converter.ToQuerySql(_context, out var parameters, aggregateInfo: new AggregateInfo(AggregateType.Min, field)), parameters);
+            return InternalExecuteAsync(conn => conn.ExecuteScalarAsync<TResult>(_context.Converter.ToQuerySql(_context, out var parameters, aggregateInfo: new AggregateInfo(AggregateType.Min, field)), parameters));
         }
 
         protected Task<decimal> AvgAsync<TResult>(Expression field)
@@ -95,7 +98,7 @@ namespace Dapper.Easies
             if (field == null)
                 throw new ArgumentException("字段不能为空");
 
-            return _context.Connection.ExecuteScalarAsync<decimal>(_context.Converter.ToQuerySql(_context, out var parameters, aggregateInfo: new AggregateInfo(AggregateType.Avg, field)), parameters);
+            return InternalExecuteAsync(conn => conn.ExecuteScalarAsync<decimal>(_context.Converter.ToQuerySql(_context, out var parameters, aggregateInfo: new AggregateInfo(AggregateType.Avg, field)), parameters));
         }
 
         protected Task<decimal> SumAsync<TResult>(Expression field)
@@ -103,7 +106,7 @@ namespace Dapper.Easies
             if (field == null)
                 throw new ArgumentException("字段不能为空");
 
-            return _context.Connection.ExecuteScalarAsync<decimal>(_context.Converter.ToQuerySql(_context, out var parameters, aggregateInfo: new AggregateInfo(AggregateType.Sum, field)), parameters);
+            return InternalExecuteAsync(conn => conn.ExecuteScalarAsync<decimal>(_context.Converter.ToQuerySql(_context, out var parameters, aggregateInfo: new AggregateInfo(AggregateType.Sum, field)), parameters));
         }
     }
 
@@ -191,17 +194,17 @@ namespace Dapper.Easies
 
         public Task<T> FirstAsync()
         {
-            return _context.Connection.QueryFirstAsync<T>(_context.Converter.ToQuerySql(_context, out var parameters, take: 1), parameters);
+            return InternalExecuteAsync(conn => conn.QueryFirstAsync<T>(_context.Converter.ToQuerySql(_context, out var parameters, take: 1), parameters));
         }
 
         public Task<T> FirstOrDefaultAsync()
         {
-            return _context.Connection.QueryFirstOrDefaultAsync<T>(_context.Converter.ToQuerySql(_context, out var parameters, take: 1), parameters);
+            return InternalExecuteAsync(conn => conn.QueryFirstOrDefaultAsync<T>(_context.Converter.ToQuerySql(_context, out var parameters, take: 1), parameters));
         }
 
         public Task<IEnumerable<T>> QueryAsync()
         {
-            return _context.Connection.QueryAsync<T>(_context.Converter.ToQuerySql(_context, out var parameters), parameters);
+            return InternalExecuteAsync(conn => conn.QueryAsync<T>(_context.Converter.ToQuerySql(_context, out var parameters), parameters));
         }
 
         public async Task<bool> ExistAsync()
@@ -211,7 +214,7 @@ namespace Dapper.Easies
 
         public Task<int> DeleteAsync()
         {
-            return _context.Connection.ExecuteAsync(_context.Converter.ToDeleteSql(_context, out var parameters), parameters);
+            return InternalExecuteAsync(conn => conn.ExecuteAsync(_context.Converter.ToDeleteSql(_context, out var parameters), parameters));
         }
 
         public Task<int> UpdateAsync(Expression<Func<T>> updateFields) => InternalUpdateAsync(updateFields);
@@ -221,7 +224,7 @@ namespace Dapper.Easies
         Task<int> InternalUpdateAsync(Expression updateFields)
         {
             var sql = _context.Converter.ToUpdateFieldsSql(updateFields, _context, out var parameters);
-            return _context.Connection.ExecuteAsync(sql, parameters);
+            return InternalExecuteAsync(conn => conn.ExecuteAsync(sql, parameters));
         }
 
         public Task<long> CountAsync(Expression<Func<T, object>> field) => base.CountAsync(field);

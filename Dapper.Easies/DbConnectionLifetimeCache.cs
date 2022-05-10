@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Dapper.Easies
 {
@@ -51,6 +52,26 @@ namespace Dapper.Easies
 
                 _connections.Clear();
             }
+        }
+
+        public Task ExecuteAsync(string connectionStringName, Func<IDbConnection, Task> func)
+        {
+            return ExecuteAsync(_options.GetConnectionFactory(connectionStringName), func);
+        }
+
+        public Task<T> ExecuteAsync<T>(string connectionStringName, Func<IDbConnection, Task<T>> func)
+        {
+            return ExecuteAsync(_options.GetConnectionFactory(connectionStringName), func);
+        }
+
+        public Task ExecuteAsync(IDbConnectionFactory factory, Func<IDbConnection, Task> func)
+        {
+            return func(factory.Create());
+        }
+
+        public Task<T> ExecuteAsync<T>(IDbConnectionFactory factory, Func<IDbConnection, Task<T>> func)
+        {
+            return func(factory.Create());
         }
     }
 }

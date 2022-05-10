@@ -53,8 +53,8 @@ namespace Dapper.Easies
                 GetGroupBy(sqlSyntax, context, parameterBuilder),
                 GetPredicate(sqlSyntax, context.HavingExpressions, context, parser),
                 aggregateInfo == null ? GetOrderBy(sqlSyntax, context, parameterBuilder) : null,
-                context.Skip,
-                take ?? context.Take,
+                take == null ? context.Skip : 0,
+                take == null ? context.Take : take.Value,
                 context.Distinct);
             parameters = parameterBuilder.GetDynamicParameters();
             if (_options.DevelopmentMode)
@@ -211,24 +211,24 @@ namespace Dapper.Easies
             if (aggregateInfo != null)
             {
                 var lambda = (LambdaExpression)aggregateInfo.Expression;
-                var expr = ExpressionParser.GetExpression(lambda, builder, sqlSyntax, context, lambda?.Parameters);
-                switch (aggregateInfo.Type)
+                var args = lambda == null ? Array.Empty<Expression>() : new[] { lambda.Body };
+                var result = sqlSyntax.Method(aggregateInfo.Type.ToString(), args, builder, GetExpr, GetValue);
+                return new[] { result };
+
+                string GetExpr(Expression exp)
                 {
-                    case AggregateType.Count:
-                        var field = "*";
-                        if (aggregateInfo.Expression != null)
-                            field = expr;
-                        return new[] { $"COUNT({field})" };
-                    case AggregateType.Max:
-                        return new[] { $"MAX({expr})" };
-                    case AggregateType.Min:
-                        return new[] { $"MIN({expr})" };
-                    case AggregateType.Avg:
-                        return new[] { $"AVG({expr})" };
-                    case AggregateType.Sum:
-                        return new[] { $"SUM({expr})" };
-                    default:
-                        throw new NotImplementedException($"AggregateType：{aggregateInfo.Type}");
+                    if (exp == null)
+                        return null;
+
+                    return ExpressionParser.GetExpression(exp, builder, sqlSyntax, context, lambda?.Parameters);
+                }
+
+                object GetValue(Expression exp)
+                {
+                    if (exp == null)
+                        return null;
+
+                    return ExpressionParser.GetValue(exp);
                 }
             }
 
@@ -266,7 +266,7 @@ namespace Dapper.Easies
                 {
                     aliasIndex = lambda.Parameters.IndexOf(parameter);
                     specificDbObject = DbObject.Get(parameter.Type);
-                    if(specificDbObject == null)
+                    if (specificDbObject == null)
                     {
                         var tableAlias = context.Alias[aliasIndex];
                         return parameter.Type.GetProperties().Select(o => $"{tableAlias.Alias}.{sqlSyntax.EscapePropertyName(o.Name)}");

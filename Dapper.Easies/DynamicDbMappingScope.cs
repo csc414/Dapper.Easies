@@ -12,6 +12,11 @@ namespace Dapper.Easies
 
         private readonly Lazy<DbMappingHolder> _holder;
 
+        public static DynamicDbMappingScope Create(Action<IDbMapper> action)
+        {
+            return new DynamicDbMappingScope(action);
+        }
+
         public DynamicDbMappingScope(Action<IDbMapper> mapAction)
         {
             if(mapAction == null)

@@ -7,14 +7,11 @@ namespace Dapper.Easies
 {
     public class EasiesOptionsBuilder
     {
+        public static EasiesOptionsBuilder Instance { get; } = new EasiesOptionsBuilder();
+
         private EasiesOptions _options;
 
-        public EasiesOptionsBuilder(IServiceCollection services)
-        {
-            Services = services;
-        }
-
-        public IServiceCollection Services { get; }
+        private EasiesOptionsBuilder() { }
 
         /// <summary>
         /// 开发模式 会输出生成的 sql 语句

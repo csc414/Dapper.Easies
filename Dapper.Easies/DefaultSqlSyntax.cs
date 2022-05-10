@@ -166,9 +166,9 @@ namespace Dapper.Easies
             return $"ORDER BY {string.Join(", ", orderBy)} {orderBySortType}, {string.Join(", ", thenBy)} {thenBySortType}";
         }
 
-        public virtual string Method(MethodInfo method, Expression[] args, ParameterBuilder parameter, Func<Expression, string> getExpr, Func<Expression, object> getValue)
+        public virtual string Method(string methodName, Expression[] args, ParameterBuilder parameter, Func<Expression, string> getExpr, Func<Expression, object> getValue)
         {
-            switch (method.Name)
+            switch (methodName)
             {
                 case "Like":
                     return $"{getExpr(args[0])} LIKE {getExpr(args[1])}";
@@ -177,7 +177,8 @@ namespace Dapper.Easies
                 case "NotIn":
                     return $"{getExpr(args[0])} NOT IN {getExpr(args[1])}";
                 case "Count":
-                    return $"COUNT({getExpr(args.FirstOrDefault()) ?? "*"})";
+                    var field = args.FirstOrDefault();
+                    return $"COUNT({ (field == null ? "*" : getExpr(field))})";
                 case "Min":
                     return $"MIN({getExpr(args[0])})";
                 case "Max":

@@ -91,5 +91,36 @@ namespace Dapper.Easies
         /// <param name="entities"></param>
         /// <returns></returns>
         Task<int> UpdateAsync<T>(IEnumerable<T> entities) where T : IDbTable;
+
+        /// <summary>
+        /// 执行原生Sql，根据生命周期自动释放 Connection
+        /// </summary>
+        /// <param name="func"></param>
+        /// <returns></returns>
+        public Task ExecuteAsync(Func<IDbConnection, Task> func);
+
+        /// <summary>
+        /// 执行原生Sql，根据生命周期自动释放 Connection
+        /// </summary>
+        /// <param name="func"></param>
+        /// <returns></returns>
+        public Task<T> ExecuteAsync<T>(Func<IDbConnection, Task<T>> func);
+
+        /// <summary>
+        /// 执行原生Sql，根据生命周期自动释放 Connection
+        /// </summary>
+        /// <param name="connectionStringName"></param>
+        /// <param name="func"></param>
+        /// <returns></returns>
+        public Task ExecuteAsync(string connectionStringName, Func<IDbConnection, Task> func);
+
+        /// <summary>
+        /// 执行原生Sql，根据生命周期自动释放 Connection
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="connectionStringName"></param>
+        /// <param name="func"></param>
+        /// <returns></returns>
+        public Task<T> ExecuteAsync<T>(string connectionStringName, Func<IDbConnection, Task<T>> func);
     }
 }

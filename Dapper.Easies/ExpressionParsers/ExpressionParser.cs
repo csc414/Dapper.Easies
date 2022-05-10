@@ -261,11 +261,27 @@ namespace Dapper.Easies
                         }
                         else
                         {
-                            var result = sqlSyntax.Method(m.Method, m.Arguments.ToArray(), builder, exp => exp == null ? null : GetExpression(exp, builder, sqlSyntax, context, parameters), exp => exp == null ? null : GetValue(exp));
+                            var result = sqlSyntax.Method(m.Method.Name, m.Arguments.ToArray(), builder, GetExpr, GetValue);
                             if (result == null)
                                 throw new NotImplementedException($"MethodName：{m.Method.Name}");
 
                             return result;
+
+                            string GetExpr(Expression exp)
+                            {
+                                if(exp == null)
+                                    return null;
+
+                                return GetExpression(exp, builder, sqlSyntax, context, parameters);
+                            }
+
+                            object GetValue(Expression exp)
+                            {
+                                if (exp == null)
+                                    return null;
+
+                                return GetValue(exp);
+                            }
                         }
                     }
                 }

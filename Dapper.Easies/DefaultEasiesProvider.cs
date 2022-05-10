@@ -28,7 +28,7 @@ namespace Dapper.Easies
         public Task<T> GetAsync<T>(params object[] ids) where T : IDbObject
         {
             var sql = _sqlConverter.ToGetSql<T>(ids, out var parameters);
-            return GetConnection<T>().QueryFirstOrDefaultAsync<T>(sql, parameters);
+            return InternalExecuteAsync(conn => conn.QueryFirstOrDefaultAsync<T>(sql, parameters));
         }
 
         public async Task<bool> InsertAsync<T>(T entity) where T : IDbTable
@@ -39,7 +39,7 @@ namespace Dapper.Easies
             var sql = _sqlConverter.ToInsertSql<T>(out var hasIdentity);
             if (hasIdentity)
             {
-                var id = await GetConnection<T>().ExecuteScalarAsync<long>(sql, entity);
+                var id = await InternalExecuteAsync(conn => conn.ExecuteScalarAsync<long>(sql, entity));
                 if (id > 0)
                 {
                     var propertyInfo = DbObject.Get(typeof(T)).IdentityKey.PropertyInfo;
@@ -50,7 +50,7 @@ namespace Dapper.Easies
                 return false;
             }
             else
-                return await GetConnection<T>().ExecuteAsync(sql, entity) > 0;
+                return await InternalExecuteAsync(conn => conn.ExecuteAsync(sql, entity)) > 0;
         }
 
         public Task<int> InsertAsync<T>(IEnumerable<T> entities) where T : IDbTable
@@ -59,7 +59,7 @@ namespace Dapper.Easies
                 throw new ArgumentNullException(nameof(entities));
 
             var sql = _sqlConverter.ToInsertSql<T>(out _);
-            return GetConnection<T>().ExecuteAsync(sql, entities);
+            return InternalExecuteAsync(conn => conn.ExecuteAsync(sql, entities));
         }
 
         public Task<int> DeleteAsync<T>(T entity) where T : IDbTable
@@ -68,7 +68,7 @@ namespace Dapper.Easies
                 throw new ArgumentNullException(nameof(entity));
 
             var sql = _sqlConverter.ToDeleteSql<T>();
-            return GetConnection<T>().ExecuteAsync(sql, entity);
+            return InternalExecuteAsync(conn => conn.ExecuteAsync(sql, entity));
         }
 
         public Task<int> DeleteAsync<T>(IEnumerable<T> entities) where T : IDbTable
@@ -77,7 +77,7 @@ namespace Dapper.Easies
                 throw new ArgumentNullException(nameof(entities));
 
             var sql = _sqlConverter.ToDeleteSql<T>();
-            return GetConnection<T>().ExecuteAsync(sql, entities);
+            return InternalExecuteAsync(conn => conn.ExecuteAsync(sql, entities));
         }
 
         public Task<int> UpdateAsync<T>(T entity) where T : IDbTable
@@ -86,7 +86,7 @@ namespace Dapper.Easies
                 throw new ArgumentNullException(nameof(entity));
 
             var sql = _sqlConverter.ToUpdateSql<T>();
-            return GetConnection<T>().ExecuteAsync(sql, entity);
+            return InternalExecuteAsync(conn => conn.ExecuteAsync(sql, entity));
         }
 
         public Task<int> UpdateAsync<T>(IEnumerable<T> entities) where T : IDbTable
@@ -95,13 +95,21 @@ namespace Dapper.Easies
                 throw new ArgumentNullException(nameof(entities));
 
             var sql = _sqlConverter.ToUpdateSql<T>();
-            return GetConnection<T>().ExecuteAsync(sql, entities);
+            return InternalExecuteAsync(conn => conn.ExecuteAsync(sql, entities));
         }
-
-        IDbConnection GetConnection<T>() => _connection.GetConnection(DbObject.Get<T>()?.ConnectionFactory);
 
         public IDbConnection Connection => _connection.Connection;
 
         public IDbConnection GetConnection(string connectionStringName) => _connection.GetConnection(connectionStringName);
+
+        Task<T> InternalExecuteAsync<T>(Func<IDbConnection, Task<T>> func) => _connection.ExecuteAsync(DbObject.Get<T>()?.ConnectionFactory, func);
+
+        public Task ExecuteAsync(Func<IDbConnection, Task> func) => _connection.ExecuteAsync(EasiesOptions.DefaultName, func);
+
+        public Task<T> ExecuteAsync<T>(Func<IDbConnection, Task<T>> func) => _connection.ExecuteAsync(EasiesOptions.DefaultName, func);
+
+        public Task ExecuteAsync(string connectionStringName, Func<IDbConnection, Task> func) => _connection.ExecuteAsync(connectionStringName, func);
+
+        public Task<T> ExecuteAsync<T>(string connectionStringName, Func<IDbConnection, Task<T>> func) => _connection.ExecuteAsync(connectionStringName, func);
     }
 }
