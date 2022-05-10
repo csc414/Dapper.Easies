@@ -9,15 +9,13 @@ namespace Dapper.Easies
 {
     public class QueryContext : ICloneable
     {
-        private readonly IDbConnectionCache _connection;
-
         public QueryContext(IDbConnectionCache connection, ISqlConverter sqlConverter, DbObject dbObject) : this(connection, sqlConverter, dbObject, new[] { new DbAlias(dbObject.EscapeName, "t") })
         {
         }
 
         public QueryContext(IDbConnectionCache connection, ISqlConverter sqlConverter, DbObject dbObject, IEnumerable<DbAlias> alias)
         {
-            _connection = connection;
+            Connection = connection;
             Converter = sqlConverter;
             DbObject = dbObject;
             Alias = new List<DbAlias>(alias);
@@ -35,7 +33,7 @@ namespace Dapper.Easies
 
         public ISqlConverter Converter { get; }
 
-        public IDbConnection Connection => _connection.GetConnection(DbObject.ConnectionFactory);
+        public IDbConnectionCache Connection { get; }
 
         public IEnumerable<JoinMetedata> JoinMetedatas => _joinMetedatas;
 
@@ -107,7 +105,7 @@ namespace Dapper.Easies
 
         public object Clone()
         {
-            var context = new QueryContext(_connection, Converter, DbObject, Alias);
+            var context = new QueryContext(Connection, Converter, DbObject, Alias);
             if (_havingExpressions != null)
                 context._havingExpressions = new List<Expression>(_havingExpressions);
             if (_joinMetedatas != null)

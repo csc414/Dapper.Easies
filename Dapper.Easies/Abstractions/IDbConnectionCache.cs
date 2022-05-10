@@ -1,4 +1,6 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
+using System.Threading.Tasks;
 
 namespace Dapper.Easies
 {
@@ -22,5 +24,13 @@ namespace Dapper.Easies
         /// <param name="connectionStringName"></param>
         /// <returns></returns>
         IDbConnection GetConnection(string connectionStringName);
+
+        Task ExecuteAsync(string connectionStringName, Func<IDbConnection, Task> func);
+
+        Task<T> ExecuteAsync<T>(string connectionStringName, Func<IDbConnection, Task<T>> func);
+
+        Task ExecuteAsync(IDbConnectionFactory factory, Func<IDbConnection, Task> func);
+
+        Task<T> ExecuteAsync<T>(IDbConnectionFactory factory, Func<IDbConnection, Task<T>> func);
     }
 }
