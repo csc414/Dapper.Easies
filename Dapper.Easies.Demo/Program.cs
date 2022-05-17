@@ -35,6 +35,7 @@ namespace Dapper.Easies.Demo
             await easiesProvider.From<Class>()
                 .Join(subQuery, (a, b) => a.Id == b.ClassId)
                 .Where((a, b) => b.StudentName == "测试")
+                .WhereIf(true, (a, b) => DbFunc.IsNotNull(a.Id))
                 .OrderBy((a, b) => b.ClassId)
                 .Select((a, b) => a)
                 .QueryAsync();
@@ -171,7 +172,7 @@ namespace Dapper.Easies.Demo
                 .Join<Class>((student, cls) => student.ClassId == cls.Id)
                 .Where((stu, cls) => stu.Age == 18);
 
-            await easiesProvider.UpdateAsync(student);
+            //await easiesProvider.UpdateAsync(student);
 
             await easiesProvider.From<Student>()
                 .Where(o => o.Id == 2 && o.StudentName == DbFunc.Expr<string>($"{o.StudentName}"))

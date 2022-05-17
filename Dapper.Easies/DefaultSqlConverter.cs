@@ -199,8 +199,18 @@ namespace Dapper.Easies
 
         string GetPredicate(ISqlSyntax sqlSyntax, IEnumerable<Expression> expressions, QueryContext context, PredicateExpressionParser parser)
         {
-            if (expressions?.Any() == true)
-                return string.Join(sqlSyntax.Operator(OperatorType.AndAlso), expressions.Select(o => parser.ToSql(o, context)));
+            var count = expressions?.Count();
+            if (count > 0)
+            {
+                var sqls = expressions.Select(o =>
+                {
+                    var sql = parser.ToSql(o, context);
+                    if (count > 1)
+                        return $"({sql})";
+                    return sql;
+                });
+                return string.Join(sqlSyntax.Operator(OperatorType.AndAlso), sqls);
+            }
             return null;
         }
 
