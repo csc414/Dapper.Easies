@@ -285,6 +285,8 @@ namespace Dapper.Easies
                         }
                     }
                 }
+
+                return builder.AddParameter(GetValue(expression));
             }
 
             if (expression is MemberExpression memberExpression)
