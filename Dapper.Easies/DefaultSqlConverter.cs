@@ -1,11 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using static Dapper.SqlMapper;
 
 namespace Dapper.Easies
 {
@@ -40,7 +37,7 @@ namespace Dapper.Easies
             return sql;
         }
 
-        public string ToQuerySql(QueryContext context, out DynamicParameters parameters, int? take = null, AggregateInfo aggregateInfo = null)
+        public string ToQuerySql(QueryContext context, out DynamicParameters parameters, int? skip = null, int? take = null, AggregateInfo aggregateInfo = null)
         {
             var sqlSyntax = context.DbObject.SqlSyntax;
             var parameterBuilder = new ParameterBuilder(sqlSyntax);
@@ -53,8 +50,8 @@ namespace Dapper.Easies
                 GetGroupBy(sqlSyntax, context, parameterBuilder),
                 GetPredicate(sqlSyntax, context.HavingExpressions, context, parser),
                 aggregateInfo == null ? GetOrderBy(sqlSyntax, context, parameterBuilder) : null,
-                take == null ? context.Skip : 0,
-                take == null ? context.Take : take.Value,
+                skip ?? context.Skip,
+                take ?? context.Take,
                 context.Distinct);
             parameters = parameterBuilder.GetDynamicParameters();
             if (_options.DevelopmentMode)

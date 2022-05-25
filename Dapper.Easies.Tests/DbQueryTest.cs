@@ -18,7 +18,7 @@ namespace Dapper.Easies.Tests
         public void FirstOrDefault()
         {
             var result = EasiesProvider.From<Student>()
-                .GetSql(1);
+                .GetSql(0, 1);
             FirstOrDefaultTest(result.sql);
         }
 

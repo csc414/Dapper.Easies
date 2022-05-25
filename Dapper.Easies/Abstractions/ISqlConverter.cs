@@ -9,7 +9,7 @@ namespace Dapper.Easies
     {
         string ToQuerySql(QueryContext context, ParameterBuilder parameterBuilder);
 
-        string ToQuerySql(QueryContext context, out DynamicParameters parameters, int? take = null, AggregateInfo aggregateInfo = null);
+        string ToQuerySql(QueryContext context, out DynamicParameters parameters, int? skip = null, int? take = null, AggregateInfo aggregateInfo = null);
 
         string ToGetSql<T>(object[] ids, out DynamicParameters parameters);
 
