@@ -187,6 +187,12 @@ namespace Dapper.Easies
                     return $"AVG({getExpr(args[0])})";
                 case "Sum":
                     return $"SUM({getExpr(args[0])})";
+                case "IsNull":
+                    return $"{getExpr(args[0])} IS NULL";
+                case "IsNotNull":
+                    return $"{getExpr(args[0])} IS NOT NULL";
+                case "N":
+                    return getExpr(args[0]);
                 default:
                     return null;
             }

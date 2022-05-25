@@ -5,6 +5,7 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -69,7 +70,7 @@ namespace Dapper.Easies
 
         public Task<long> CountAsync()
         {
-            return InternalExecuteAsync(conn => conn.ExecuteScalarAsync<long>(_context.Converter.ToQuerySql(_context, out var parameters, aggregateInfo: new AggregateInfo(AggregateType.Count, null)), parameters));
+            return CountAsync(null);
         }
 
         protected Task<long> CountAsync(Expression field)
@@ -194,12 +195,12 @@ namespace Dapper.Easies
 
         public Task<T> FirstAsync()
         {
-            return InternalExecuteAsync(conn => conn.QueryFirstAsync<T>(_context.Converter.ToQuerySql(_context, out var parameters, take: 1), parameters));
+            return InternalExecuteAsync(conn => conn.QueryFirstAsync<T>(_context.Converter.ToQuerySql(_context, out var parameters, skip: 0, take: 1), parameters));
         }
 
         public Task<T> FirstOrDefaultAsync()
         {
-            return InternalExecuteAsync(conn => conn.QueryFirstOrDefaultAsync<T>(_context.Converter.ToQuerySql(_context, out var parameters, take: 1), parameters));
+            return InternalExecuteAsync(conn => conn.QueryFirstOrDefaultAsync<T>(_context.Converter.ToQuerySql(_context, out var parameters, skip: 0, take: 1), parameters));
         }
 
         public Task<IEnumerable<T>> QueryAsync()
@@ -207,9 +208,40 @@ namespace Dapper.Easies
             return InternalExecuteAsync(conn => conn.QueryAsync<T>(_context.Converter.ToQuerySql(_context, out var parameters), parameters));
         }
 
+        public Task<IEnumerable<TResult>> QueryAsync<TResult>() where TResult : ITuple
+        {
+            return InternalExecuteAsync(conn => conn.QueryAsync<TResult>(_context.Converter.ToQuerySql(_context, out var parameters), parameters));
+        }
+
+        public Task<(IEnumerable<T> data, long total, int max_page)> GetPagerAsync(int page, int size) => InternalGetPagerAsync<T>(page, size);
+
+        public Task<(IEnumerable<TResult> data, long total, int max_page)> GetPagerAsync<TResult>(int page, int size) where TResult : ITuple => InternalGetPagerAsync<TResult>(page, size);
+
+        async Task<(IEnumerable<TResult> data, long total, int max_page)> InternalGetPagerAsync<TResult>(int page, int size)
+        {
+            var total = await CountAsync();
+            var max_page = Convert.ToInt32(Math.Ceiling(total * 1f / size));
+            if (page > max_page)
+                return (Enumerable.Empty<TResult>(), total, max_page);
+
+            var data = await InternalExecuteAsync(conn => conn.QueryAsync<TResult>(_context.Converter.ToQuerySql(_context, out var parameters, skip: (page - 1) * size, take: size), parameters));
+            return (data, total, max_page);
+        }
+
+        public Task<(IEnumerable<T> data, long total)> GetLimitAsync(int skip, int take) => InternalGetLimitAsync<T>(skip, take);
+
+        public Task<(IEnumerable<TResult> data, long total)> GetLimitAsync<TResult>(int skip, int take) where TResult : ITuple => InternalGetLimitAsync<TResult>(skip, take);
+
+        async Task<(IEnumerable<TResult> data, long total)> InternalGetLimitAsync<TResult>(int skip, int take)
+        {
+            var total = await CountAsync();
+            var data = await InternalExecuteAsync(conn => conn.QueryAsync<TResult>(_context.Converter.ToQuerySql(_context, out var parameters, skip: skip, take: take), parameters));
+            return (data, total);
+        }
+
         public async Task<bool> ExistAsync()
         {
-            return await base.CountAsync(null) > 0;
+            return await CountAsync() > 0;
         }
 
         public Task<int> DeleteAsync()

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -32,26 +33,6 @@ namespace Dapper.Easies
         {
             query.Context.Distinct = true;
             return query;
-        }
-
-        public static async Task<(IEnumerable<T> data, long total, int max_page)> GetPagerAsync<T>(this ISelectedDbQuery<T> query, int page, int size)
-        {
-            var baseQuery = (IDbQuery<T>)query;
-            var total = await baseQuery.CountAsync();
-            var max_page = Convert.ToInt32(Math.Ceiling(total * 1f / size));
-            if (page > max_page)
-                return (Enumerable.Empty<T>(), total, max_page);
-
-            var data = await baseQuery.Skip((page - 1) * size).Take(size).QueryAsync();
-            return (data, total, max_page);
-        }
-
-        public static async Task<(IEnumerable<T> data, long total)> GetLimitAsync<T>(this ISelectedDbQuery<T> query, int skip, int take)
-        {
-            var baseQuery = (IDbQuery<T>)query;
-            var total = await baseQuery.CountAsync();
-            var data = await baseQuery.Skip(skip).Take(take).QueryAsync();
-            return (data, total);
         }
 
         /// <summary>
@@ -98,6 +79,51 @@ namespace Dapper.Easies
         public static IEnumerable<string> SubQuery(this ISelectedDbQuery<string> _)
         {
             throw new InvalidOperationException("Do not call this method directly.");
+        }
+
+        public static IDbQuery<T> WhereIf<T>(this IDbQuery<T> query, bool condition, Expression<Func<T, bool>> ifTrue, Expression<Func<T, bool>> ifFalse = null)
+        {
+            if (condition)
+                return query.Where(ifTrue);
+            else if (ifFalse != null)
+                return query.Where(ifFalse);
+            return query;
+        }
+
+        public static IDbQuery<T1, T2> WhereIf<T1, T2>(this IDbQuery<T1, T2> query, bool condition, Expression<Func<T1, T2, bool>> ifTrue, Expression<Func<T1, T2, bool>> ifFalse = null)
+        {
+            if (condition)
+                return query.Where(ifTrue);
+            else if (ifFalse != null)
+                return query.Where(ifFalse);
+            return query;
+        }
+
+        public static IDbQuery<T1, T2, T3> WhereIf<T1, T2, T3>(this IDbQuery<T1, T2, T3> query, bool condition, Expression<Func<T1, T2, T3, bool>> ifTrue, Expression<Func<T1, T2, T3, bool>> ifFalse = null)
+        {
+            if (condition)
+                return query.Where(ifTrue);
+            else if (ifFalse != null)
+                return query.Where(ifFalse);
+            return query;
+        }
+
+        public static IDbQuery<T1, T2, T3, T4> WhereIf<T1, T2, T3, T4>(this IDbQuery<T1, T2, T3, T4> query, bool condition, Expression<Func<T1, T2, T3, T4, bool>> ifTrue, Expression<Func<T1, T2, T3, T4, bool>> ifFalse = null)
+        {
+            if (condition)
+                return query.Where(ifTrue);
+            else if (ifFalse != null)
+                return query.Where(ifFalse);
+            return query;
+        }
+
+        public static IDbQuery<T1, T2, T3, T4, T5> WhereIf<T1, T2, T3, T4, T5>(this IDbQuery<T1, T2, T3, T4, T5> query, bool condition, Expression<Func<T1, T2, T3, T4, T5, bool>> ifTrue, Expression<Func<T1, T2, T3, T4, T5, bool>> ifFalse = null)
+        {
+            if (condition)
+                return query.Where(ifTrue);
+            else if (ifFalse != null)
+                return query.Where(ifFalse);
+            return query;
         }
     }
 }

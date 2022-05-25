@@ -80,5 +80,20 @@ namespace Dapper.Easies
         {
             throw new InvalidOperationException("Do not call this method directly.");
         }
+
+        public static bool IsNull<T>(T field) where T : unmanaged
+        {
+            throw new InvalidOperationException("Do not call this method directly.");
+        }
+
+        public static bool IsNotNull<T>(T field) where T : unmanaged
+        {
+            throw new InvalidOperationException("Do not call this method directly.");
+        }
+
+        public static T? N<T>(T field) where T : unmanaged
+        {
+            throw new InvalidOperationException("Do not call this method directly.");
+        }
     }
 }

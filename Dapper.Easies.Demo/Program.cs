@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace Dapper.Easies.Demo
@@ -35,6 +36,7 @@ namespace Dapper.Easies.Demo
             await easiesProvider.From<Class>()
                 .Join(subQuery, (a, b) => a.Id == b.ClassId)
                 .Where((a, b) => b.StudentName == "测试")
+                .WhereIf(true, (a, b) => DbFunc.IsNotNull(a.Id))
                 .OrderBy((a, b) => b.ClassId)
                 .Select((a, b) => a)
                 .QueryAsync();
@@ -42,7 +44,7 @@ namespace Dapper.Easies.Demo
             await easiesProvider.From<Class>()
                 .Where(o => DbFunc.In(o.Id, easiesProvider.From<Class>().Select(o => o.Id).SubQuery()))
                 .QueryAsync();
-
+            
             var result = await easiesProvider.From<Class>()
                 .Select((o) => new
                 {
@@ -56,8 +58,8 @@ namespace Dapper.Easies.Demo
 
             var pager = await easiesProvider.From<Student>()
                 .Join<Class>((a, b) => a.ClassId == b.Id)
-                .Select((a, b) => a.Age)
-                .GetPagerAsync(1, 10);
+                .Select((a, b) => new { a.Age, a.Id })
+                .GetPagerAsync<(int?, int)>(1, 10);
 
             await easiesProvider.From<Student>()
                 .UpdateAsync(o => new Student { Age = o.Age + 1 });
@@ -171,11 +173,11 @@ namespace Dapper.Easies.Demo
                 .Join<Class>((student, cls) => student.ClassId == cls.Id)
                 .Where((stu, cls) => stu.Age == 18);
 
-            await easiesProvider.UpdateAsync(student);
+            //await easiesProvider.UpdateAsync(student);
 
-            await easiesProvider.From<Student>()
-                .Where(o => o.Id == 2 && o.StudentName == DbFunc.Expr<string>($"{o.StudentName}"))
-                .UpdateAsync(o => new Student { Age = DbFunc.Expr<int?>($"{student.Age}") });
+            //await easiesProvider.From<Student>()
+            //    .Where(o => o.Id == 2 && o.StudentName == DbFunc.Expr<string>($"{o.StudentName}"))
+            //    .UpdateAsync(o => new Student { Age = DbFunc.Expr<int?>($"{student.Age}") });
 
             await easiesProvider.From<Student>()
                 .Where(o => o.Id == 2)
