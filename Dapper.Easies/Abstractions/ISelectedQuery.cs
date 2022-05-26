@@ -10,6 +10,10 @@ namespace Dapper.Easies
 
         Task<T> FirstOrDefaultAsync();
 
+        Task<TResult> FirstAsync<TResult>() where TResult : ITuple;
+
+        Task<TResult> FirstOrDefaultAsync<TResult>() where TResult : ITuple;
+
         Task<IEnumerable<T>> QueryAsync();
 
         Task<IEnumerable<TResult>> QueryAsync<TResult>() where TResult : ITuple;

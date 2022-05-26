@@ -203,6 +203,16 @@ namespace Dapper.Easies
             return InternalExecuteAsync(conn => conn.QueryFirstOrDefaultAsync<T>(_context.Converter.ToQuerySql(_context, out var parameters, skip: 0, take: 1), parameters));
         }
 
+        public Task<TResult> FirstAsync<TResult>() where TResult : ITuple
+        {
+            return InternalExecuteAsync(conn => conn.QueryFirstAsync<TResult>(_context.Converter.ToQuerySql(_context, out var parameters, skip: 0, take: 1), parameters));
+        }
+
+        public Task<TResult> FirstOrDefaultAsync<TResult>() where TResult : ITuple
+        {
+            return InternalExecuteAsync(conn => conn.QueryFirstOrDefaultAsync<TResult>(_context.Converter.ToQuerySql(_context, out var parameters, skip: 0, take: 1), parameters));
+        }
+
         public Task<IEnumerable<T>> QueryAsync()
         {
             return InternalExecuteAsync(conn => conn.QueryAsync<T>(_context.Converter.ToQuerySql(_context, out var parameters), parameters));
