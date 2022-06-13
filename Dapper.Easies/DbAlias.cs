@@ -6,14 +6,11 @@ namespace Dapper.Easies
 {
     public struct DbAlias
     {
-        public DbAlias(string name, string alias, bool isExpr = false)
+        public DbAlias(string name, string alias)
         {
             Name = name;
             Alias = alias;
-            IsExpr = isExpr;
         }
-
-        public bool IsExpr { get; }
 
         public string Name { get; }
 

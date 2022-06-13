@@ -21,7 +21,7 @@ namespace Dapper.Easies.Demo
                 //builder.UseSqlite("Data Source=D:\\school.db");
                 builder.UseMySql("Host=localhost;UserName=root;Password=123456;Database=School;Port=3306;CharSet=utf8mb4;Connection Timeout=1200;Allow User Variables=true;");
 
-                builder.UseSqlServer("MSSQL", "Data Source=localhost;User Id=sa;Password=123456@Cxc;Initial Catalog=School;");
+                //builder.UseSqlServer("MSSQL", "Data Source=localhost;User Id=sa;Password=123456@Cxc;Initial Catalog=School;");
             });
             services.AddLogging(builder =>
             {
@@ -31,30 +31,39 @@ namespace Dapper.Easies.Demo
 
             var easiesProvider = serviceProvider.GetRequiredService<IEasiesProvider>();
 
-            var subQuery = easiesProvider.From<Student>().Where(c => c.ClassId == Guid.NewGuid()).Select(o => new { o.ClassId, o.StudentName });
+            //var subQuery = easiesProvider.From<Student>().Where(c => c.ClassId == Guid.NewGuid()).Select(o => new { o.ClassId, o.StudentName });
 
-            await easiesProvider.From<Class>()
-                .Join(subQuery, (a, b) => a.Id == b.ClassId)
-                .Where((a, b) => b.StudentName == "测试")
-                .WhereIf(true, (a, b) => DbFunc.IsNotNull(a.Id))
-                .OrderBy((a, b) => b.ClassId)
-                .Select((a, b) => a)
-                .QueryAsync();
+            //await easiesProvider.From<Class>()
+            //    .Join(subQuery, (a, b) => a.Id == b.ClassId)
+            //    .Where((a, b) => b.StudentName == "测试")
+            //    .WhereIf(true, (a, b) => DbFunc.IsNotNull(a.Id))
+            //    .OrderBy((a, b) => b.ClassId)
+            //    .Select((a, b) => a)
+            //    .QueryAsync();
 
-            await easiesProvider.From<Class>()
-                .Where(o => DbFunc.In(o.Id, easiesProvider.From<Class>().Select(o => o.Id).SubQuery()))
-                .QueryAsync();
-            
-            var result = await easiesProvider.From<Class>()
-                .Select((o) => new
-                {
-                    o.Name,
-                    Count = easiesProvider.From<Student>()
-                            .Where(c => c.ClassId == o.Id)
-                            .Select(c => DbFunc.Count())
-                            .SubQueryScalar()
-                })
-                .QueryAsync();
+            //await easiesProvider.From<Class>()
+            //    .Where(o => DbFunc.In(o.Id, easiesProvider.From<Class>().Select(o => o.Id).SubQuery()))
+            //    .QueryAsync();
+
+            //var result = await easiesProvider.From<Class>()
+            //    .Select((o) => new
+            //    {
+            //        o.Name,
+            //        Count = easiesProvider.From<Student>()
+            //                .Where(c => c.ClassId == o.Id)
+            //                .Select(c => DbFunc.Count())
+            //                .SubQueryScalar()
+            //    })
+            //    .QueryAsync();
+
+            var result = await easiesProvider.From<Student>()
+               .Join<Class>()
+               .Where((o ,_) => o.IsOk)
+               .GroupBy((o, _) => new { o.IsOk, o.ClassId })
+               .Having((o, _) => o.ClassName.Contains("阿萨"))
+               .Select((o, _) => new { o.IsOk, o.ClassId })
+               .OrderBy(o => o.IsOk)
+               .QueryAsync();
 
             var pager = await easiesProvider.From<Student>()
                 .Join<Class>((a, b) => a.ClassId == b.Id)

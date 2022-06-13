@@ -135,7 +135,7 @@ namespace Dapper.Easies
                         property.PrimaryKey = attr?.PrimaryKey ?? false;
                         property.Ignore = attr?.Ignore ?? false;
                         property.EscapeName = obj.SqlSyntax.EscapePropertyName(property.DbName);
-                        property.EscapeNameAsAlias = obj.SqlSyntax.PropertyNameAlias(new DbAlias(property.DbName, property.PropertyInfo.Name));
+                        property.EscapeNameAsAlias = obj.SqlSyntax.AliasPropertyName(property.EscapeName, obj.SqlSyntax.EscapePropertyName(property.PropertyInfo.Name));
                         obj.Add(p.Name, property);
                         if (attr != null && attr.PrimaryKey && attr.Identity && obj.IdentityKey == null)
                         {

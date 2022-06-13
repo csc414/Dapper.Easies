@@ -15,7 +15,7 @@ namespace Dapper.Easies.Demo
         public DateTime CreateTime { get; set; }
     }
 
-    [DbObject("bnt_class", ConnectionStringName = "MSSQL")]
+    //[DbObject("bnt_class", ConnectionStringName = "MSSQL")]
     public class MClass : IDbTable
     {
         [DbProperty(PrimaryKey = true)]

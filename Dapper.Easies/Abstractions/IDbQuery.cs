@@ -8,7 +8,7 @@ namespace Dapper.Easies
 {
     public interface IDbQuery
     {
-        internal QueryContext Context { get; }
+        public QueryContext Context { get; }
     }
 
     public interface IDbQuery<T> : IGeneralDbQuery<T>, IOperateDbQuery<T>

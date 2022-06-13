@@ -49,18 +49,18 @@ namespace Dapper.Easies
             _context.AddJoin(typeof(TJoin), joinExpression, type, query);
         }
 
-        protected void SetOrderBy(IEnumerable<Expression> orderFields, SortType sortType)
+        protected void SetOrderBy(Expression orderFields, SortType sortType)
         {
-            if (orderFields == null || !orderFields.Any())
+            if (orderFields == null)
                 throw new ArgumentException("排序字段不能为空");
 
             _context.OrderByMetedata = new OrderByMetedata(orderFields, sortType);
             _context.ThenByMetedata = null;
         }
 
-        protected void SetThenBy(IEnumerable<Expression> orderFields, SortType sortType)
+        protected void SetThenBy(Expression orderFields, SortType sortType)
         {
-            if (orderFields == null || !orderFields.Any())
+            if (orderFields == null)
                 throw new ArgumentException("排序字段不能为空");
 
             _context.ThenByMetedata = new OrderByMetedata(orderFields, sortType);
@@ -169,25 +169,25 @@ namespace Dapper.Easies
             return new DbQuery<T, TJoin>(_context);
         }
 
-        public IOrderedDbQuery<T> OrderBy(params Expression<Func<T, object>>[] orderFields)
+        public IOrderedDbQuery<T> OrderBy(Expression<Func<T, object>> orderFields)
         {
             SetOrderBy(orderFields, SortType.Asc);
             return this;
         }
 
-        public IOrderedDbQuery<T> OrderByDescending(params Expression<Func<T, object>>[] orderFields)
+        public IOrderedDbQuery<T> OrderByDescending(Expression<Func<T, object>> orderFields)
         {
             SetOrderBy(orderFields, SortType.Desc);
             return this;
         }
 
-        public IOrderedDbQuery<T> ThenBy(params Expression<Func<T, object>>[] orderFields)
+        public IOrderedDbQuery<T> ThenBy(Expression<Func<T, object>> orderFields)
         {
             SetThenBy(orderFields, SortType.Asc);
             return this;
         }
 
-        public IOrderedDbQuery<T> ThenByDescending(params Expression<Func<T, object>>[] orderFields)
+        public IOrderedDbQuery<T> ThenByDescending(Expression<Func<T, object>> orderFields)
         {
             SetThenBy(orderFields, SortType.Desc);
             return this;
@@ -294,25 +294,25 @@ namespace Dapper.Easies
             return new DbQuery<TResult>(_context);
         }
 
-        IGroupingOrderedDbQuery<T> IGroupingSelectedDbQuery<T>.OrderBy(params Expression<Func<T, object>>[] orderFields)
+        IGroupingOrderedDbQuery<T> IGroupingSelectedDbQuery<T>.OrderBy(Expression<Func<T, object>> orderFields)
         {
             SetOrderBy(orderFields, SortType.Asc);
             return this;
         }
 
-        IGroupingOrderedDbQuery<T> IGroupingSelectedDbQuery<T>.OrderByDescending(params Expression<Func<T, object>>[] orderFields)
+        IGroupingOrderedDbQuery<T> IGroupingSelectedDbQuery<T>.OrderByDescending(Expression<Func<T, object>> orderFields)
         {
             SetOrderBy(orderFields, SortType.Desc);
             return this;
         }
 
-        IGroupingOrderedDbQuery<T> IGroupingOrderedDbQuery<T>.ThenBy(params Expression<Func<T, object>>[] orderFields)
+        IGroupingOrderedDbQuery<T> IGroupingOrderedDbQuery<T>.ThenBy(Expression<Func<T, object>> orderFields)
         {
             SetThenBy(orderFields, SortType.Asc);
             return this;
         }
 
-        IGroupingOrderedDbQuery<T> IGroupingOrderedDbQuery<T>.ThenByDescending(params Expression<Func<T, object>>[] orderFields)
+        IGroupingOrderedDbQuery<T> IGroupingOrderedDbQuery<T>.ThenByDescending(Expression<Func<T, object>> orderFields)
         {
             SetThenBy(orderFields, SortType.Desc);
             return this;
@@ -331,7 +331,7 @@ namespace Dapper.Easies
         }
     }
 
-    public class DbQuery<T1, T2> : DbQuery<T1>, IDbQuery<T1, T2>, IOrderedDbQuery<T1, T2>, IGroupingDbQuery<T1, T2>, IGroupingSelectedDbQuery<T1, T2>, IGroupingOrderedDbQuery<T1, T2>
+    public class DbQuery<T1, T2> : DbQuery<T1>, IDbQuery<T1, T2>, IOrderedDbQuery<T1, T2>, IGroupingDbQuery<T1, T2>
     {
         internal DbQuery(QueryContext context) : base(context) { }
 
@@ -389,25 +389,25 @@ namespace Dapper.Easies
             return new DbQuery<T1, T2, TJoin>(_context);
         }
 
-        public IOrderedDbQuery<T1, T2> OrderBy(params Expression<Func<T1, T2, object>>[] orderFields)
+        public IOrderedDbQuery<T1, T2> OrderBy(Expression<Func<T1, T2, object>> orderFields)
         {
             SetOrderBy(orderFields, SortType.Asc);
             return this;
         }
 
-        public IOrderedDbQuery<T1, T2> OrderByDescending(params Expression<Func<T1, T2, object>>[] orderFields)
+        public IOrderedDbQuery<T1, T2> OrderByDescending(Expression<Func<T1, T2, object>> orderFields)
         {
             SetOrderBy(orderFields, SortType.Desc);
             return this;
         }
 
-        public IOrderedDbQuery<T1, T2> ThenBy(params Expression<Func<T1, T2, object>>[] orderFields)
+        public IOrderedDbQuery<T1, T2> ThenBy(Expression<Func<T1, T2, object>> orderFields)
         {
             SetThenBy(orderFields, SortType.Asc);
             return this;
         }
 
-        public IOrderedDbQuery<T1, T2> ThenByDescending(params Expression<Func<T1, T2, object>>[] orderFields)
+        public IOrderedDbQuery<T1, T2> ThenByDescending(Expression<Func<T1, T2, object>> orderFields)
         {
             SetThenBy(orderFields, SortType.Desc);
             return this;
@@ -438,30 +438,6 @@ namespace Dapper.Easies
             return new DbQuery<TResult>(_context);
         }
 
-        IGroupingOrderedDbQuery<T1, T2> IGroupingSelectedDbQuery<T1, T2>.OrderBy(params Expression<Func<T1, T2, object>>[] orderFields)
-        {
-            SetOrderBy(orderFields, SortType.Asc);
-            return this;
-        }
-
-        IGroupingOrderedDbQuery<T1, T2> IGroupingSelectedDbQuery<T1, T2>.OrderByDescending(params Expression<Func<T1, T2, object>>[] orderFields)
-        {
-            SetOrderBy(orderFields, SortType.Desc);
-            return this;
-        }
-
-        IGroupingOrderedDbQuery<T1, T2> IGroupingOrderedDbQuery<T1, T2>.ThenBy(params Expression<Func<T1, T2, object>>[] orderFields)
-        {
-            SetThenBy(orderFields, SortType.Asc);
-            return this;
-        }
-
-        IGroupingOrderedDbQuery<T1, T2> IGroupingOrderedDbQuery<T1, T2>.ThenByDescending(params Expression<Func<T1, T2, object>>[] orderFields)
-        {
-            SetThenBy(orderFields, SortType.Desc);
-            return this;
-        }
-
         IGroupingDbQuery<T1, T2> IGroupingDbQuery<T1, T2>.Having(Expression<Func<T1, T2, bool>> predicate)
         {
             AddHavingExpression(predicate);
@@ -475,7 +451,7 @@ namespace Dapper.Easies
         }
     }
 
-    public class DbQuery<T1, T2, T3> : DbQuery<T1, T2>, IDbQuery<T1, T2, T3>, IOrderedDbQuery<T1, T2, T3>, IGroupingDbQuery<T1, T2, T3>, IGroupingSelectedDbQuery<T1, T2, T3>, IGroupingOrderedDbQuery<T1, T2, T3>
+    public class DbQuery<T1, T2, T3> : DbQuery<T1, T2>, IDbQuery<T1, T2, T3>, IOrderedDbQuery<T1, T2, T3>, IGroupingDbQuery<T1, T2, T3>
     {
         internal DbQuery(QueryContext context) : base(context) { }
 
@@ -533,25 +509,25 @@ namespace Dapper.Easies
             return new DbQuery<T1, T2, T3, TJoin>(_context);
         }
 
-        public IOrderedDbQuery<T1, T2, T3> OrderBy(params Expression<Func<T1, T2, T3, object>>[] orderFields)
+        public IOrderedDbQuery<T1, T2, T3> OrderBy(Expression<Func<T1, T2, T3, object>> orderFields)
         {
             SetOrderBy(orderFields, SortType.Asc);
             return this;
         }
 
-        public IOrderedDbQuery<T1, T2, T3> OrderByDescending(params Expression<Func<T1, T2, T3, object>>[] orderFields)
+        public IOrderedDbQuery<T1, T2, T3> OrderByDescending(Expression<Func<T1, T2, T3, object>> orderFields)
         {
             SetOrderBy(orderFields, SortType.Desc);
             return this;
         }
 
-        public IOrderedDbQuery<T1, T2, T3> ThenBy(params Expression<Func<T1, T2, T3, object>>[] orderFields)
+        public IOrderedDbQuery<T1, T2, T3> ThenBy(Expression<Func<T1, T2, T3, object>> orderFields)
         {
             SetThenBy(orderFields, SortType.Asc);
             return this;
         }
 
-        public IOrderedDbQuery<T1, T2, T3> ThenByDescending(params Expression<Func<T1, T2, T3, object>>[] orderFields)
+        public IOrderedDbQuery<T1, T2, T3> ThenByDescending(Expression<Func<T1, T2, T3, object>> orderFields)
         {
             SetThenBy(orderFields, SortType.Desc);
             return this;
@@ -582,30 +558,6 @@ namespace Dapper.Easies
             return new DbQuery<TResult>(_context);
         }
 
-        IGroupingOrderedDbQuery<T1, T2, T3> IGroupingSelectedDbQuery<T1, T2, T3>.OrderBy(params Expression<Func<T1, T2, T3, object>>[] orderFields)
-        {
-            SetOrderBy(orderFields, SortType.Asc);
-            return this;
-        }
-
-        IGroupingOrderedDbQuery<T1, T2, T3> IGroupingSelectedDbQuery<T1, T2, T3>.OrderByDescending(params Expression<Func<T1, T2, T3, object>>[] orderFields)
-        {
-            SetOrderBy(orderFields, SortType.Desc);
-            return this;
-        }
-
-        IGroupingOrderedDbQuery<T1, T2, T3> IGroupingOrderedDbQuery<T1, T2, T3>.ThenBy(params Expression<Func<T1, T2, T3, object>>[] orderFields)
-        {
-            SetThenBy(orderFields, SortType.Asc);
-            return this;
-        }
-
-        IGroupingOrderedDbQuery<T1, T2, T3> IGroupingOrderedDbQuery<T1, T2, T3>.ThenByDescending(params Expression<Func<T1, T2, T3, object>>[] orderFields)
-        {
-            SetThenBy(orderFields, SortType.Desc);
-            return this;
-        }
-
         IGroupingDbQuery<T1, T2, T3> IGroupingDbQuery<T1, T2, T3>.Having(Expression<Func<T1, T2, T3, bool>> predicate)
         {
             AddHavingExpression(predicate);
@@ -619,7 +571,7 @@ namespace Dapper.Easies
         }
     }
 
-    public class DbQuery<T1, T2, T3, T4> : DbQuery<T1, T2, T3>, IDbQuery<T1, T2, T3, T4>, IOrderedDbQuery<T1, T2, T3, T4>, IGroupingDbQuery<T1, T2, T3, T4>, IGroupingSelectedDbQuery<T1, T2, T3, T4>, IGroupingOrderedDbQuery<T1, T2, T3, T4>
+    public class DbQuery<T1, T2, T3, T4> : DbQuery<T1, T2, T3>, IDbQuery<T1, T2, T3, T4>, IOrderedDbQuery<T1, T2, T3, T4>, IGroupingDbQuery<T1, T2, T3, T4>
     {
         internal DbQuery(QueryContext context) : base(context) { }
 
@@ -677,25 +629,25 @@ namespace Dapper.Easies
             return new DbQuery<T1, T2, T3, T4, TJoin>(_context);
         }
 
-        public IOrderedDbQuery<T1, T2, T3, T4> OrderBy(params Expression<Func<T1, T2, T3, T4, object>>[] orderFields)
+        public IOrderedDbQuery<T1, T2, T3, T4> OrderBy(Expression<Func<T1, T2, T3, T4, object>> orderFields)
         {
             SetOrderBy(orderFields, SortType.Asc);
             return this;
         }
 
-        public IOrderedDbQuery<T1, T2, T3, T4> OrderByDescending(params Expression<Func<T1, T2, T3, T4, object>>[] orderFields)
+        public IOrderedDbQuery<T1, T2, T3, T4> OrderByDescending(Expression<Func<T1, T2, T3, T4, object>> orderFields)
         {
             SetOrderBy(orderFields, SortType.Desc);
             return this;
         }
 
-        public IOrderedDbQuery<T1, T2, T3, T4> ThenBy(params Expression<Func<T1, T2, T3, T4, object>>[] orderFields)
+        public IOrderedDbQuery<T1, T2, T3, T4> ThenBy(Expression<Func<T1, T2, T3, T4, object>> orderFields)
         {
             SetThenBy(orderFields, SortType.Asc);
             return this;
         }
 
-        public IOrderedDbQuery<T1, T2, T3, T4> ThenByDescending(params Expression<Func<T1, T2, T3, T4, object>>[] orderFields)
+        public IOrderedDbQuery<T1, T2, T3, T4> ThenByDescending(Expression<Func<T1, T2, T3, T4, object>> orderFields)
         {
             SetThenBy(orderFields, SortType.Desc);
             return this;
@@ -726,30 +678,6 @@ namespace Dapper.Easies
             return new DbQuery<TResult>(_context);
         }
 
-        IGroupingOrderedDbQuery<T1, T2, T3, T4> IGroupingSelectedDbQuery<T1, T2, T3, T4>.OrderBy(params Expression<Func<T1, T2, T3, T4, object>>[] orderFields)
-        {
-            SetOrderBy(orderFields, SortType.Asc);
-            return this;
-        }
-
-        IGroupingOrderedDbQuery<T1, T2, T3, T4> IGroupingSelectedDbQuery<T1, T2, T3, T4>.OrderByDescending(params Expression<Func<T1, T2, T3, T4, object>>[] orderFields)
-        {
-            SetOrderBy(orderFields, SortType.Desc);
-            return this;
-        }
-
-        IGroupingOrderedDbQuery<T1, T2, T3, T4> IGroupingOrderedDbQuery<T1, T2, T3, T4>.ThenBy(params Expression<Func<T1, T2, T3, T4, object>>[] orderFields)
-        {
-            SetThenBy(orderFields, SortType.Asc);
-            return this;
-        }
-
-        IGroupingOrderedDbQuery<T1, T2, T3, T4> IGroupingOrderedDbQuery<T1, T2, T3, T4>.ThenByDescending(params Expression<Func<T1, T2, T3, T4, object>>[] orderFields)
-        {
-            SetThenBy(orderFields, SortType.Desc);
-            return this;
-        }
-
         IGroupingDbQuery<T1, T2, T3, T4> IGroupingDbQuery<T1, T2, T3, T4>.Having(Expression<Func<T1, T2, T3, T4, bool>> predicate)
         {
             AddHavingExpression(predicate);
@@ -763,7 +691,7 @@ namespace Dapper.Easies
         }
     }
 
-    public class DbQuery<T1, T2, T3, T4, T5> : DbQuery<T1, T2, T3, T4>, IDbQuery<T1, T2, T3, T4, T5>, IOrderedDbQuery<T1, T2, T3, T4, T5>, IGroupingDbQuery<T1, T2, T3, T4, T5>, IGroupingSelectedDbQuery<T1, T2, T3, T4, T5>, IGroupingOrderedDbQuery<T1, T2, T3, T4, T5>
+    public class DbQuery<T1, T2, T3, T4, T5> : DbQuery<T1, T2, T3, T4>, IDbQuery<T1, T2, T3, T4, T5>, IOrderedDbQuery<T1, T2, T3, T4, T5>, IGroupingDbQuery<T1, T2, T3, T4, T5>
     {
         internal DbQuery(QueryContext context) : base(context) { }
 
@@ -785,25 +713,25 @@ namespace Dapper.Easies
             return new DbQuery<TResult>(_context);
         }
 
-        public IOrderedDbQuery<T1, T2, T3, T4, T5> OrderBy(params Expression<Func<T1, T2, T3, T4, T5, object>>[] orderFields)
+        public IOrderedDbQuery<T1, T2, T3, T4, T5> OrderBy(Expression<Func<T1, T2, T3, T4, T5, object>> orderFields)
         {
             SetOrderBy(orderFields, SortType.Asc);
             return this;
         }
 
-        public IOrderedDbQuery<T1, T2, T3, T4, T5> OrderByDescending(params Expression<Func<T1, T2, T3, T4, T5, object>>[] orderFields)
+        public IOrderedDbQuery<T1, T2, T3, T4, T5> OrderByDescending(Expression<Func<T1, T2, T3, T4, T5, object>> orderFields)
         {
             SetOrderBy(orderFields, SortType.Desc);
             return this;
         }
 
-        public IOrderedDbQuery<T1, T2, T3, T4, T5> ThenBy(params Expression<Func<T1, T2, T3, T4, T5, object>>[] orderFields)
+        public IOrderedDbQuery<T1, T2, T3, T4, T5> ThenBy(Expression<Func<T1, T2, T3, T4, T5, object>> orderFields)
         {
             SetThenBy(orderFields, SortType.Asc);
             return this;
         }
 
-        public IOrderedDbQuery<T1, T2, T3, T4, T5> ThenByDescending(params Expression<Func<T1, T2, T3, T4, T5, object>>[] orderFields)
+        public IOrderedDbQuery<T1, T2, T3, T4, T5> ThenByDescending(Expression<Func<T1, T2, T3, T4, T5, object>> orderFields)
         {
             SetThenBy(orderFields, SortType.Desc);
             return this;
@@ -832,30 +760,6 @@ namespace Dapper.Easies
         {
             _context.SelectorExpression = selector;
             return new DbQuery<TResult>(_context);
-        }
-
-        IGroupingOrderedDbQuery<T1, T2, T3, T4, T5> IGroupingSelectedDbQuery<T1, T2, T3, T4, T5>.OrderBy(params Expression<Func<T1, T2, T3, T4, T5, object>>[] orderFields)
-        {
-            SetOrderBy(orderFields, SortType.Asc);
-            return this;
-        }
-
-        IGroupingOrderedDbQuery<T1, T2, T3, T4, T5> IGroupingSelectedDbQuery<T1, T2, T3, T4, T5>.OrderByDescending(params Expression<Func<T1, T2, T3, T4, T5, object>>[] orderFields)
-        {
-            SetOrderBy(orderFields, SortType.Desc);
-            return this;
-        }
-
-        IGroupingOrderedDbQuery<T1, T2, T3, T4, T5> IGroupingOrderedDbQuery<T1, T2, T3, T4, T5>.ThenBy(params Expression<Func<T1, T2, T3, T4, T5, object>>[] orderFields)
-        {
-            SetThenBy(orderFields, SortType.Asc);
-            return this;
-        }
-
-        IGroupingOrderedDbQuery<T1, T2, T3, T4, T5> IGroupingOrderedDbQuery<T1, T2, T3, T4, T5>.ThenByDescending(params Expression<Func<T1, T2, T3, T4, T5, object>>[] orderFields)
-        {
-            SetThenBy(orderFields, SortType.Desc);
-            return this;
         }
 
         IGroupingDbQuery<T1, T2, T3, T4, T5> IGroupingDbQuery<T1, T2, T3, T4, T5>.Having(Expression<Func<T1, T2, T3, T4, T5, bool>> predicate)

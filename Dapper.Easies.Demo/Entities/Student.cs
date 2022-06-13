@@ -25,7 +25,7 @@ namespace Dapper.Easies.Demo
         public string ClassName { get; set; }
     }
 
-    [DbObject("bnt_student", ConnectionStringName = "MSSQL")]
+    //[DbObject("bnt_student", ConnectionStringName = "MSSQL")]
     public class MStudent : IDbTable
     {
         [DbProperty(PrimaryKey = true, Identity = true)]

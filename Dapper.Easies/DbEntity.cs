@@ -74,9 +74,9 @@ namespace Dapper.Easies
 
         public IDbQuery<T, TJoin> Join<TJoin>(Expression<Func<T, TJoin, string>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject => _provider.From<T>().Join(on, type);
 
-        public IOrderedDbQuery<T> OrderBy(params Expression<Func<T, object>>[] orderFields) => _provider.From<T>().OrderBy(orderFields);
+        public IOrderedDbQuery<T> OrderBy(Expression<Func<T, object>> orderFields) => _provider.From<T>().OrderBy(orderFields);
 
-        public IOrderedDbQuery<T> OrderByDescending<TField>(params Expression<Func<T, object>>[] orderFields) => _provider.From<T>().OrderByDescending(orderFields);
+        public IOrderedDbQuery<T> OrderByDescending<TField>(Expression<Func<T, object>> orderFields) => _provider.From<T>().OrderByDescending(orderFields);
 
         public IGroupingDbQuery<T> GroupBy<TFields>(Expression<Func<T, TFields>> fields) => _provider.From<T>().GroupBy(fields);
 
