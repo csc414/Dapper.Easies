@@ -68,7 +68,14 @@ namespace Dapper.Easies
 
         public DbProperty IdentityKey { get; set; }
 
-        public DbProperty this[string name] => _properties[name];
+        public DbProperty this[string name]
+        {
+            get
+            {
+                _properties.TryGetValue(name, out var property);
+                return property;
+            }
+        }
 
         internal bool Add(string name, DbProperty property) => _properties.TryAdd(name, property);
 

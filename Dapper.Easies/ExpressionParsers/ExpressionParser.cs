@@ -95,8 +95,13 @@ namespace Dapper.Easies
             return node;
         }
 
+        private int _calcDeep = 0;
+
+        protected int CalcDeep => _calcDeep;
+
         protected virtual Expression VisitCalculate(BinaryExpression node)
         {
+            _calcDeep++;
             var left = Visit(node.Left);
             var right = Visit(node.Right);
             if (left.NodeType == ExpressionType.Constant && right.NodeType == ExpressionType.Constant)
@@ -117,7 +122,7 @@ namespace Dapper.Easies
 
                 throw new NotSupportedException($"{node.NodeType} not supported");
             }
-
+            _calcDeep--;
             return AppendCalculate(left, right, node.NodeType);
         }
 
@@ -201,17 +206,16 @@ namespace Dapper.Easies
         protected virtual Expression VisitMethodCall(MethodCallExpression node)
         {
             Expression obj = Visit(node.Object);
-            var args = node.Arguments.Select(o => Visit(o));
             if (node.Object != null)
             {
                 if (obj == null)
                     throw new NullReferenceException();
 
                 if (obj is ConstantExpression constant)
-                    return Expression.Constant(node.Method.Invoke(constant.Value, GetConstantValue(args)));
+                    return Expression.Constant(node.Method.Invoke(constant.Value, VisitConstantExpressions(node.Arguments)));
                 else if (obj.NodeType == ExpressionType.MemberAccess)
                 {
-                    var result = AppendMethod(obj, node.Method, args.ToArray());
+                    var result = AppendMethod(obj, node.Method, node.Arguments.Select(o => Visit(o)).ToArray());
                     if (result != null)
                         return result;
                 }
@@ -220,17 +224,29 @@ namespace Dapper.Easies
             }
             else if (s_dbObjectExtensionType == node.Method.ReflectedType || s_dbFuncType == node.Method.ReflectedType)
             {
-                var result = AppendMethod(null, node.Method, args.ToArray());
+                var result = AppendMethod(null, node.Method, node.Arguments.Select(o => Visit(o)).ToArray());
                 if (result != null)
                     return result;
             }
             else
             {
-                if (node.Method.Name.Equals("Format", StringComparison.Ordinal) && args.Any(o => o.NodeType == ExpressionType.MemberAccess))
+                IEnumerable<Expression> arguments;
+                if (node.Method.Name.Equals("Format", StringComparison.Ordinal))
                 {
-                    var vals = args.Select((o, i) =>
+                    var skip = 0;
+                    if (node.Arguments.Count == 2 && node.Arguments[1] is NewArrayExpression newArray)
+                        arguments = newArray.Expressions.Select(o => Visit(o));
+                    else
                     {
-                        if (i > 0)
+                        arguments = node.Arguments.Select(o => Visit(o));
+                        skip = 1;
+                    }
+
+                    if (arguments.Any(o => o.NodeType == ExpressionType.MemberAccess))
+                    {
+                        if (skip > 0)
+                            arguments = arguments.Skip(skip);
+                        var vals = arguments.Select((o, i) =>
                         {
                             if (o is MemberExpression parameter)
                                 return GetPropertyName(parameter);
@@ -238,15 +254,15 @@ namespace Dapper.Easies
                                 return GetParameterName(constant.Value);
                             else
                                 throw new NotSupportedException($"{o}");
-                        }
+                        }).ToArray();
 
-                        return GetConstantValue<string>(o);
-                    });
-
-                    return new ExprExpression(string.Format(vals.First(), vals.Skip(1).ToArray()));
+                        return new ExprExpression(string.Format(GetConstantValue<string>(node.Arguments[0]), vals));
+                    }
                 }
+                else
+                    arguments = node.Arguments.Select(o => Visit(o));
 
-                return Expression.Constant(node.Method.Invoke(null, GetConstantValue(args)));
+                return Expression.Constant(node.Method.Invoke(null, GetConstantValue(arguments)));
             }
 
             return node;
@@ -255,10 +271,9 @@ namespace Dapper.Easies
         protected virtual Expression VisitLogical(BinaryExpression node)
         {
             var left = Visit(node.Left);
+            Handle(left);
             AppendLogicalOperator(node.NodeType);
             var right = Visit(node.Right);
-
-            Handle(left);
             Handle(right);
 
             void Handle(Expression exp)
@@ -279,16 +294,27 @@ namespace Dapper.Easies
             if (node.NodeType == ExpressionType.Quote)
                 return Expression.Constant(node.Operand);
 
+            if (node.NodeType == ExpressionType.Not)
+            {
+                if (node.Operand is MemberExpression member)
+                {
+                    AppendPredicate(member, Expression.Constant(false, node.Type), ExpressionType.Equal);
+                }
+                else
+                {
+                    AppendNot(() =>
+                    {
+                        var exp = Visit(node.Operand);
+                        if (exp is SqlExpression sql)
+                            AppendSql(sql.Sql);
+                    });
+                }
+                return node;
+            }
+
             Expression operand = Visit(node.Operand);
             if (node.NodeType == ExpressionType.Convert)
                 return operand;
-            else if (node.NodeType == ExpressionType.Not)
-            {
-                if (operand is MemberExpression member)
-                    AppendPredicate(member, Expression.Constant(false, node.Type), ExpressionType.Equal);
-                else if (operand is SqlExpression sql)
-                    return AppendNot(sql);
-            }
             else if (node.NodeType == ExpressionType.ArrayLength && operand is ConstantExpression constant)
             {
                 if (constant.Value == null)
@@ -376,9 +402,8 @@ namespace Dapper.Easies
         {
         }
 
-        protected virtual Expression AppendNot(SqlExpression sql)
+        protected virtual void AppendNot(Action exec)
         {
-            return sql;
         }
 
         protected SqlExpression CreateSql(string sql)

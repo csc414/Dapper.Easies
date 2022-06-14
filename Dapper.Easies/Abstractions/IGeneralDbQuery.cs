@@ -9,6 +9,8 @@ namespace Dapper.Easies
     {
         ISelectedDbQuery<TResult> Select<TResult>(Expression<Func<T, TResult>> selector);
 
+        ISelectedDbQuery<TResult> Select<TResult>();
+
         IDbQuery<T> Where(Expression<Func<T, bool>> predicate);
 
         IDbQuery<T> Where(Expression<Func<T, string>> expression);

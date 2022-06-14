@@ -315,7 +315,7 @@ namespace Dapper.Easies.MySql
 
         public virtual string AliasPropertyName(string name, string alias)
         {
-            return $"{name} AS {alias}";
+            return $"{name} {alias}";
         }
     }
 }

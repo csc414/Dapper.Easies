@@ -43,7 +43,7 @@ namespace Dapper.Easies
             _sb = null;
         }
 
-        public virtual void Visit(IEnumerable<Expression> nodes, StringBuilder sb, ParameterBuilder parameters)
+        public virtual void Visit(IReadOnlyCollection<Expression> nodes, StringBuilder sb, ParameterBuilder parameters)
         {
             _sb = sb;
             _parameters = parameters;
@@ -52,9 +52,11 @@ namespace Dapper.Easies
             {
                 if (hasLoop)
                     AppendLogicalOperator(ExpressionType.AndAlso);
-                Builder.Append("(");
+                if (nodes.Count > 1)
+                    Builder.Append("(");
                 Visit(node);
-                Builder.Append(")");
+                if (nodes.Count > 1)
+                    Builder.Append(")");
                 hasLoop = true;
             }
             _sb = null;
@@ -63,18 +65,37 @@ namespace Dapper.Easies
 
         public virtual void VisitFields(Expression node, StringBuilder sb, ParameterBuilder parameters, string separator = ", ", bool hasAlias = true, bool updateMode = false)
         {
-            var lambda = (LambdaExpression)node;
-            SetLambdaExpression(lambda);
-            node = lambda.Body;
+            if(node is LambdaExpression lambda)
+            {
+                SetLambdaExpression(lambda);
+                node = lambda.Body;
+            }
             _sb = sb;
             _parameters = parameters;
-            if (node is MemberInitExpression memberInitExp)
+            if (node is SelectTypeExpression selectType)
+            {
+                var table = Context.DbObject;
+                var i = 0;
+                foreach (var property in selectType.SelectType.GetProperties())
+                {
+                    var p = table[property.Name];
+                    if (p != null)
+                    {
+                        if (i > 0)
+                            Builder.Append(separator);
+
+                        Builder.Append(p.EscapeNameAsAlias);
+                        i++;
+                    }
+                }
+            }
+            else if (node is MemberInitExpression memberInitExp)
                 VisitMemberInit(memberInitExp, separator, hasAlias, updateMode);
             else if (node is NewExpression newExp)
                 VisitNew(newExp, separator, hasAlias);
             else if (node is ParameterExpression parameter)
             {
-                var aliasIndex = lambda.Parameters.IndexOf(parameter);
+                var aliasIndex = Lambda.Parameters.IndexOf(parameter);
                 var specificDbObject = DbObject.Get(parameter.Type);
                 if (specificDbObject == null)
                 {
@@ -135,7 +156,7 @@ namespace Dapper.Easies
 
                 if (node.Bindings[i] is MemberAssignment assignment)
                 {
-                    if(updateMode)
+                    if (updateMode)
                     {
                         Builder.Append($"{Context.Alias[0].Alias}.{Context.DbObject[assignment.Member.Name].EscapeName} = ");
                         var arg = Visit(assignment.Expression);
@@ -157,7 +178,7 @@ namespace Dapper.Easies
                                 Builder.Append(GetPropertyName(member));
                         }
                         else if (hasAlias && arg is SqlExpression sql)
-                            Builder.Append(SqlSyntax.AliasPropertyName($"({sql.Sql})", SqlSyntax.EscapePropertyName(assignment.Member.Name)));
+                            Builder.Append(SqlSyntax.AliasPropertyName(sql.Sql, SqlSyntax.EscapePropertyName(assignment.Member.Name)));
                     }
                 }
             }
@@ -180,7 +201,7 @@ namespace Dapper.Easies
                         Builder.Append(GetPropertyName(memberExp));
                 }
                 else if (hasAlias && arg is SqlExpression sql)
-                    Builder.Append(SqlSyntax.AliasPropertyName($"({sql.Sql})", SqlSyntax.EscapePropertyName(member.Name)));
+                    Builder.Append(SqlSyntax.AliasPropertyName(sql.Sql, SqlSyntax.EscapePropertyName(member.Name)));
             }
             return node;
         }
@@ -192,7 +213,7 @@ namespace Dapper.Easies
                 if (node.Method.Name.StartsWith("SubQuery", StringComparison.Ordinal))
                 {
                     var query = GetSubQuery(node.Arguments[0]);
-                    return CreateSql(query.Context.Converter.ToQuerySql(query.Context, Parameters));
+                    return CreateSql($"({query.Context.Converter.ToQuerySql(query.Context, Parameters)})");
                 }
             }
 
@@ -277,7 +298,7 @@ namespace Dapper.Easies
                         {
                             string content;
                             if (args[1] is SqlExpression sql)
-                                content = $"({sql.Sql})";
+                                content = sql.Sql;
                             else
                                 content = Parameters.Add(GetConstantValue(args[1]));
                             return CreateSql($"{GetPropertyName(args[0])} IN {content}");
@@ -405,19 +426,27 @@ namespace Dapper.Easies
             var leftStr = GetString(left);
             var rightStr = GetString(right);
 
+            string leftBracket = null;
+            string rightBracket = null;
+            if (CalcDeep > 0)
+            {
+                leftBracket = "(";
+                rightBracket = ")";
+            }
+
             switch (type)
             {
                 case ExpressionType.Add:
-                    return new SqlExpression($"({leftStr} + {rightStr})");
+                    return new SqlExpression($"{leftBracket}{leftStr} + {rightStr}{rightBracket}");
                 case ExpressionType.Subtract:
-                    return new SqlExpression($"({leftStr} - {rightStr})");
+                    return new SqlExpression($"{leftBracket}{leftStr} - {rightStr}{rightBracket}");
                 case ExpressionType.Multiply:
-                    return new SqlExpression($"({leftStr} * {rightStr})");
+                    return new SqlExpression($"{leftBracket}{leftStr} * {rightStr}{rightBracket}");
                 case ExpressionType.Divide:
-                    return new SqlExpression($"({leftStr} / {rightStr})");
+                    return new SqlExpression($"{leftBracket}{leftStr} / {rightStr}{rightBracket}");
+                default:
+                    throw new NotSupportedException($"{left} {type} {right}");
             }
-
-            return null;
 
             string GetString(Expression exp)
             {
@@ -437,9 +466,11 @@ namespace Dapper.Easies
             Builder.Append(sql);
         }
 
-        protected override Expression AppendNot(SqlExpression sql)
+        protected override void AppendNot(Action exec)
         {
-            return CreateSql($"NOT({sql.Sql})");
+            Builder.Append("NOT(");
+            exec();
+            Builder.Append(")");
         }
     }
 }

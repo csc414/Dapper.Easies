@@ -133,6 +133,12 @@ namespace Dapper.Easies
             return new DbQuery<TResult>(_context);
         }
 
+        public ISelectedDbQuery<TResult> Select<TResult>()
+        {
+            _context.SelectorExpression = new SelectTypeExpression(typeof(TResult));
+            return new DbQuery<TResult>(_context);
+        }
+
         public IDbQuery<T, TJoin> Join<TJoin>(ISelectedDbQuery<TJoin> query, JoinType type = JoinType.Inner) where TJoin : class
         {
             AddJoinMetedata<TJoin>(query, null, type);

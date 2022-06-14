@@ -12,12 +12,12 @@ namespace Dapper.Easies.Demo
 
         public Guid ClassId { get; set; }
 
-        [DbProperty("Name")]
-        public string StudentName { get; set; }
+        [DbProperty("StudentName")]
+        public string Name { get; set; }
 
         public int? Age { get; set; }
 
-        public bool IsOk { get; set; }
+        public bool IsAdult { get; set; }
 
         public DateTime CreateTime { get; set; }
 

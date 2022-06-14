@@ -35,11 +35,11 @@ namespace Dapper.Easies
 
         public IDbConnectionCache Connection { get; }
 
-        public IEnumerable<JoinMetedata> JoinMetedatas => _joinMetedatas;
+        public IReadOnlyCollection<JoinMetedata> JoinMetedatas => _joinMetedatas;
 
-        public IEnumerable<Expression> WhereExpressions => _whereExpressions;
+        public IReadOnlyCollection<Expression> WhereExpressions => _whereExpressions;
 
-        public IEnumerable<Expression> HavingExpressions => _havingExpressions;
+        public IReadOnlyCollection<Expression> HavingExpressions => _havingExpressions;
 
         public OrderByMetedata OrderByMetedata { get; internal set; }
 

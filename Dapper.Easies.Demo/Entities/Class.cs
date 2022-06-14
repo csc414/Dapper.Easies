@@ -15,6 +15,16 @@ namespace Dapper.Easies.Demo
         public DateTime CreateTime { get; set; }
     }
 
+    public class TestClass : BaseTestClass
+    {
+        public string Name { get; set; }
+    }
+
+    public class BaseTestClass
+    {
+        public DateTime CreateTime { get; set; }
+    }
+
     //[DbObject("bnt_class", ConnectionStringName = "MSSQL")]
     public class MClass : IDbTable
     {
