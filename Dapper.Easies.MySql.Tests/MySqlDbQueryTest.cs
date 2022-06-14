@@ -77,17 +77,17 @@ namespace Dapper.Easies.MySql.Tests
 
         public override void OrderByTest(string sql)
         {
-            Assert.Equal("SELECT t.`Id` AS `Id`, t.`ClassId` AS `ClassId`, t.`StudentName` AS `Name`, t.`Age` AS `Age`, t.`CreateTime` AS `CreateTime` FROM `tb_students` t ORDER BY t.`Id`, t.`StudentName` Asc, t.`Id`, t.`StudentName` Desc", sql);
+            Assert.Equal("SELECT t.`Id` AS `Id`, t.`ClassId` AS `ClassId`, t.`StudentName` AS `Name`, t.`Age` AS `Age`, t.`CreateTime` AS `CreateTime` FROM `tb_students` t ORDER BY t.`Id`, t.`StudentName` ASC, t.`Id`, t.`StudentName` DESC", sql);
         }
 
         public override void OrderByJoinTableTest(string sql)
         {
-            Assert.Equal("SELECT t.`Id` AS `Id`, t.`ClassId` AS `ClassId`, t.`StudentName` AS `Name`, t.`Age` AS `Age`, t.`CreateTime` AS `CreateTime` FROM `tb_students` t JOIN `tb_classes` t1 ORDER BY t.`Id`, t1.`ClassName` Asc, t.`Id`, t1.`ClassName` Desc", sql);
+            Assert.Equal("SELECT t.`Id` AS `Id`, t.`ClassId` AS `ClassId`, t.`StudentName` AS `Name`, t.`Age` AS `Age`, t.`CreateTime` AS `CreateTime` FROM `tb_students` t JOIN `tb_classes` t1 ORDER BY t.`Id`, t1.`ClassName` ASC, t.`Id`, t1.`ClassName` DESC", sql);
         }
 
         public override void OrderByJoinQueryTest(string sql)
         {
-            Assert.Equal("SELECT t.`Id` AS `Id`, t.`ClassId` AS `ClassId`, t.`StudentName` AS `Name`, t.`Age` AS `Age`, t.`CreateTime` AS `CreateTime` FROM `tb_students` t JOIN (SELECT t.`Id` AS `Id`, t.`ClassName` AS `Name` FROM `tb_classes` t) t1 ORDER BY t.`Id`, t1.`Name` Asc, t.`Id`, t1.`Name` Desc", sql);
+            Assert.Equal("SELECT t.`Id` AS `Id`, t.`ClassId` AS `ClassId`, t.`StudentName` AS `Name`, t.`Age` AS `Age`, t.`CreateTime` AS `CreateTime` FROM `tb_students` t JOIN (SELECT t.`Id` AS `Id`, t.`ClassName` AS `Name` FROM `tb_classes` t) t1 ORDER BY t.`Id`, t1.`Name` ASC, t.`Id`, t1.`Name` DESC", sql);
         }
 
         public override void GroupByTest(string sql)
@@ -112,7 +112,7 @@ namespace Dapper.Easies.MySql.Tests
 
         public override void GroupByHavingTest(string sql, IParameterLookup parameters)
         {
-            Assert.Equal("SELECT t.`Id` AS `Id`, COUNT(*) AS `Count` FROM `tb_students` t GROUP BY t.`Id` HAVING COUNT(*) > @p0", sql);
+            Assert.Equal("SELECT t.`Id` AS `Id`, (COUNT(*)) AS `Count` FROM `tb_students` t GROUP BY t.`Id` HAVING (COUNT(*) > @p0)", sql);
             Assert.Equal(0L, parameters["p0"]);
         }
 
@@ -148,25 +148,25 @@ namespace Dapper.Easies.MySql.Tests
 
         public override void WhereLikeTest(string sql, IParameterLookup parameters)
         {
-            Assert.Equal("SELECT t.`Id` AS `Id`, t.`ClassId` AS `ClassId`, t.`StudentName` AS `Name`, t.`Age` AS `Age`, t.`CreateTime` AS `CreateTime` FROM `tb_students` t WHERE t.`StudentName` LIKE @p0", sql);
+            Assert.Equal("SELECT t.`Id` AS `Id`, t.`ClassId` AS `ClassId`, t.`StudentName` AS `Name`, t.`Age` AS `Age`, t.`CreateTime` AS `CreateTime` FROM `tb_students` t WHERE (t.`StudentName` LIKE @p0)", sql);
             Assert.Equal("%ÕÅÈý%", parameters["p0"]);
         }
 
         public override void WhereInTest(string sql, IParameterLookup parameters)
         {
-            Assert.Equal("SELECT t.`Id` AS `Id`, t.`ClassId` AS `ClassId`, t.`StudentName` AS `Name`, t.`Age` AS `Age`, t.`CreateTime` AS `CreateTime` FROM `tb_students` t WHERE t.`Id` IN @p0", sql);
+            Assert.Equal("SELECT t.`Id` AS `Id`, t.`ClassId` AS `ClassId`, t.`StudentName` AS `Name`, t.`Age` AS `Age`, t.`CreateTime` AS `CreateTime` FROM `tb_students` t WHERE (t.`Id` IN @p0)", sql);
             Assert.IsAssignableFrom<IEnumerable<int>>(parameters["p0"]);
         }
 
         public override void WhereNotInTest(string sql, IParameterLookup parameters)
         {
-            Assert.Equal("SELECT t.`Id` AS `Id`, t.`ClassId` AS `ClassId`, t.`StudentName` AS `Name`, t.`Age` AS `Age`, t.`CreateTime` AS `CreateTime` FROM `tb_students` t WHERE t.`Id` NOT IN @p0", sql);
+            Assert.Equal("SELECT t.`Id` AS `Id`, t.`ClassId` AS `ClassId`, t.`StudentName` AS `Name`, t.`Age` AS `Age`, t.`CreateTime` AS `CreateTime` FROM `tb_students` t WHERE (t.`Id` NOT IN @p0)", sql);
             Assert.IsAssignableFrom<IEnumerable<int>>(parameters["p0"]);
         }
 
         public override void WhereComplicatedTest(string sql, IParameterLookup parameters)
         {
-            Assert.Equal("SELECT t.`Id` AS `Id`, t.`ClassId` AS `ClassId`, t.`StudentName` AS `Name`, t.`Age` AS `Age`, t.`CreateTime` AS `CreateTime` FROM `tb_students` t WHERE t.`Age` = (t.`Age` * @p0 * @p1) + t.`Age` / @p2 AND t.`StudentName` = @p3", sql);
+            Assert.Equal("SELECT t.`Id` AS `Id`, t.`ClassId` AS `ClassId`, t.`StudentName` AS `Name`, t.`Age` AS `Age`, t.`CreateTime` AS `CreateTime` FROM `tb_students` t WHERE (t.`Age` = (((t.`Age` * @p0) * @p1) + (t.`Age` / @p2)) AND t.`StudentName` = @p3)", sql);
             Assert.Equal(2, parameters["p0"]);
             Assert.Equal(0.25, parameters["p1"]);
             Assert.Equal(2, parameters["p2"]);
@@ -193,12 +193,12 @@ namespace Dapper.Easies.MySql.Tests
 
         public override void SubQueryTest(string sql)
         {
-            Assert.Equal("SELECT t.`Id` AS `Id`, t.`ClassId` AS `ClassId`, t.`StudentName` AS `Name`, t.`Age` AS `Age`, t.`CreateTime` AS `CreateTime` FROM `tb_students` t WHERE t.`ClassId` IN (SELECT tt.`Id` FROM `tb_classes` tt)", sql);
+            Assert.Equal("SELECT t.`Id` AS `Id`, t.`ClassId` AS `ClassId`, t.`StudentName` AS `Name`, t.`Age` AS `Age`, t.`CreateTime` AS `CreateTime` FROM `tb_students` t WHERE (t.`ClassId` IN (SELECT tt.`Id` FROM `tb_classes` tt))", sql);
         }
 
         public override void SubQueryScalarTest(string sql)
         {
-            Assert.Equal("SELECT t.`ClassName` AS `ClassName`, (SELECT COUNT(*) FROM `tb_students` tt WHERE tt.`ClassId` = t.`Id`) AS `StudentCount` FROM `tb_classes` t", sql);
+            Assert.Equal("SELECT t.`ClassName` AS `ClassName`, (SELECT COUNT(*) FROM `tb_students` tt WHERE (tt.`ClassId` = t.`Id`)) AS `StudentCount` FROM `tb_classes` t", sql);
         }
     }
 }

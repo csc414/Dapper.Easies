@@ -6,6 +6,7 @@
         <Description>基于Dapper的轻量级ORM</Description>
 		<Authors>cxc</Authors>
 		<PackageProjectUrl>https://github.com/csc414/Dapper.Easies</PackageProjectUrl>
+		<LangVersion>9.0</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>

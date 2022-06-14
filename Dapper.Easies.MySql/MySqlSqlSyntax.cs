@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -12,7 +11,6 @@ namespace Dapper.Easies.MySql
 
         public virtual string SelectFormat(QueryContext context, ParameterBuilder parameterBuilder, int? skip = null, int? take = null, AggregateInfo aggregateInfo = null)
         {
-            var sqlSyntax = context.DbObject.SqlSyntax;
             var parser = new MySqlExpressionParser(context);
             var sql = new StringBuilder("SELECT", 0x100);
             if (context.Distinct)
@@ -48,54 +46,37 @@ namespace Dapper.Easies.MySql
             }
             else if (context.SelectorExpression != null)
             {
-                var lambda = (LambdaExpression)context.SelectorExpression;
                 sql.Append(' ');
-                if (lambda.Body is ParameterExpression parameter)
-                {
-                    var aliasIndex = lambda.Parameters.IndexOf(parameter);
-                    var specificDbObject = DbObject.Get(parameter.Type);
-                    if (specificDbObject == null)
-                    {
-                        var tableAlias = context.Alias[aliasIndex];
-                        var i = 0;
-                        foreach (var property in parameter.Type.GetProperties())
-                        {
-                            if (i > 0)
-                                sql.Append(", ");
-                            sql.Append($"{tableAlias.Alias}.{sqlSyntax.EscapePropertyName(property.Name)}");
-                            i++;
-                        }
-                    }
-                    else
-                    {
-                        var i = 0;
-                        foreach (var property in specificDbObject.Properties)
-                        {
-                            if (i > 0)
-                                sql.Append(", ");
-                            sql.Append($"{alias.Alias}.{property.EscapeNameAsAlias}");
-                            i++;
-                        }
-                    }
-                }
-                else
-                    parser.VisitFields(context.SelectorExpression, sql, parameterBuilder);
+                parser.VisitFields(context.SelectorExpression, sql, parameterBuilder);
             }
             else
             {
-                var i = 0;
-                foreach (var property in context.DbObject.Properties)
-                {
-                    if (i > 0)
-                        sql.Append(", ");
-                    sql.Append($"{alias.Alias}.{property.EscapeNameAsAlias}");
-                    i++;
-                }
+                sql.Append(' ');
+                parser.VisitFields(context.DbObject, alias, sql);
             }
 
-            sql.Append(" FROM ");
-            sql.Append(AliasTableName(alias.Name, alias.Alias));
+            sql.Append($" FROM {AliasTableName(alias.Name, alias.Alias)}");
 
+            AppendJoin(parser, context, sql, parameterBuilder);
+
+            AppendWhere(parser, context, sql, parameterBuilder);
+
+            AppendGroup(parser, context, sql, parameterBuilder);
+
+            AppendHaving(parser, context, sql, parameterBuilder);
+
+            AppendSort(parser, context, sql, parameterBuilder);
+
+            var takeCount = take ?? context.Take;
+            if (takeCount > 0)
+                sql.Append($" LIMIT {skip ?? context.Skip},{takeCount}");
+
+            return sql.ToString();
+        }
+
+        protected void AppendJoin(MySqlExpressionParser parser, QueryContext context, StringBuilder sql, ParameterBuilder parameterBuilder)
+        {
+            var sqlSyntax = context.DbObject.SqlSyntax;
             if (context.JoinMetedatas != null)
             {
                 var i = 1;
@@ -131,26 +112,38 @@ namespace Dapper.Easies.MySql
                     i++;
                 }
             }
+        }
 
+        protected void AppendWhere(MySqlExpressionParser parser, QueryContext context, StringBuilder sql, ParameterBuilder parameterBuilder)
+        {
             if (context.WhereExpressions != null)
             {
                 sql.Append(" WHERE ");
                 parser.Visit(context.WhereExpressions, sql, parameterBuilder);
             }
+        }
 
+        protected void AppendGroup(MySqlExpressionParser parser, QueryContext context, StringBuilder sql, ParameterBuilder parameterBuilder)
+        {
             if (context.GroupByExpression != null)
             {
                 sql.Append(" GROUP BY ");
                 parser.VisitFields(context.GroupByExpression, sql, parameterBuilder, hasAlias: false);
             }
+        }
 
-            if(context.HavingExpressions != null)
+        protected void AppendHaving(MySqlExpressionParser parser, QueryContext context, StringBuilder sql, ParameterBuilder parameterBuilder)
+        {
+            if (context.HavingExpressions != null)
             {
                 sql.Append(" HAVING ");
                 parser.Visit(context.HavingExpressions, sql, parameterBuilder);
             }
+        }
 
-            if(context.OrderByMetedata != null)
+        protected void AppendSort(MySqlExpressionParser parser, QueryContext context, StringBuilder sql, ParameterBuilder parameterBuilder)
+        {
+            if (context.OrderByMetedata != null)
             {
                 sql.Append(" ORDER BY ");
                 parser.VisitFields(context.OrderByMetedata.Expression, sql, parameterBuilder, hasAlias: false);
@@ -170,75 +163,140 @@ namespace Dapper.Easies.MySql
                         sql.Append(" DESC");
                 }
             }
+        }
+
+        public virtual string SelectFormat(DbObject dbObject, object[] ids, ParameterBuilder parameterBuilder)
+        {
+            var primaryKeys = dbObject.Properties.Where(o => o.PrimaryKey).ToArray();
+            if (primaryKeys.Length == 0)
+                throw new ArgumentException("实体类没有主键");
+
+            if (ids.Length < primaryKeys.Length)
+                throw new ArgumentException("参数与主键数不一致");
+
+            var sql = new StringBuilder("SELECT ", 0x80);
+            var i = 0;
+            foreach (var item in dbObject.Properties)
+            {
+                if (i > 0)
+                    sql.Append(", ");
+                sql.Append(item.EscapeNameAsAlias);
+                i++;
+            }
+            sql.Append($" FROM {dbObject.EscapeName} WHERE ");
+            i = 0;
+            foreach (var item in primaryKeys)
+            {
+                if (i > 0)
+                    sql.Append(" AND ");
+                sql.Append($"{item.EscapeName} = {parameterBuilder.Add(ids[i])}");
+                i++;
+            }
+            sql.Append($" LIMIT 0,1");
             return sql.ToString();
         }
 
-        //string GetOrderBy(QueryContext context, ParameterBuilder builder)
-        //{
-        //    if (context.OrderByMetedata == null)
-        //        return null;
-
-        //    var orderBy = GetOrderByFields(sqlSyntax, context, builder, context.OrderByMetedata);
-        //    if (context.ThenByMetedata == null)
-        //        return sqlSyntax.OrderBy(orderBy, context.OrderByMetedata.SortType, null, null);
-
-        //    var thenBy = GetOrderByFields(sqlSyntax, context, builder, context.ThenByMetedata);
-        //    return sqlSyntax.OrderBy(orderBy, context.OrderByMetedata.SortType, thenBy, context.ThenByMetedata.SortType);
-        //}
-
-        public virtual string InsertFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> paramNames, bool hasIdentityKey)
+        public virtual string InsertFormat(DbObject dbObject, bool hasIdentityKey)
         {
-            return $"INSERT INTO {tableName}({string.Join(", ", fields)}) VALUES({string.Join(", ", paramNames)})";
-        }
+            var sql = new StringBuilder($"INSERT INTO {dbObject.EscapeName}(", 0x80);
+            var properties = dbObject.Properties.Where(o => !o.IdentityKey);
+            var i = 0;
+            foreach (var item in properties)
+            {
+                if (i > 0)
+                    sql.Append(", ");
+                sql.Append(item.EscapeName);
+                i++;
+            }
+            sql.Append(") VALUES(");
+            i = 0;
+            foreach (var item in properties)
+            {
+                if (i > 0)
+                    sql.Append(", ");
+                sql.Append($"@{item.PropertyInfo.Name}");
+                i++;
+            }
+            sql.Append(")");
 
-        public virtual string DeleteFormat(string tableName, string tableAlias, IEnumerable<string> joins, string where)
-        {
-            var sql = new StringBuilder("DELETE");
-            if (tableAlias != null)
-                sql.Append($" {tableAlias}");
-
-            sql.Append($" FROM {tableName} {tableAlias}");
-
-            if (joins != null)
-                sql.AppendFormat(" {0}", string.Join(" ", joins));
-
-            if (where != null)
-                sql.AppendFormat(" WHERE {0}", where);
+            if (hasIdentityKey)
+                sql.Append("; SELECT LAST_INSERT_ID()");
 
             return sql.ToString();
         }
 
-        public virtual string UpdateFormat(string tableName, string tableAlias, IEnumerable<string> updateFields, string where)
+        public virtual string DeleteFormat(QueryContext context, ParameterBuilder parameterBuilder)
         {
-            var sql = new StringBuilder($"UPDATE {tableName}");
-            if (tableAlias != null)
-                sql.Append($" {tableAlias}");
+            var parser = new MySqlExpressionParser(context);
+            var alias = context.Alias[0];
+            var sql = new StringBuilder($"DELETE {alias.Alias} FROM {AliasTableName(alias.Name, alias.Alias)}", 0x80);
 
-            sql.Append($" SET {string.Join(", ", updateFields)}");
-            if (where != null)
-                sql.AppendFormat(" WHERE {0}", where);
+            AppendWhere(parser, context, sql, parameterBuilder);
 
             return sql.ToString();
         }
 
-        //public virtual string Join(string tableName, JoinType joinType, string on)
-        //{
-        //    string joinWay = null;
-        //    switch (joinType)
-        //    {
-        //        case JoinType.Left:
-        //            joinWay = "LEFT ";
-        //            break;
-        //        case JoinType.Right:
-        //            joinWay = "RIGHT ";
-        //            break;
-        //    }
+        public virtual string DeleteFormat(DbObject dbObject)
+        {
+            var primaryKeys = dbObject.Properties.Where(o => o.PrimaryKey).ToArray();
+            if (primaryKeys.Length == 0)
+                throw new ArgumentException("实体类没有主键");
 
-        //    if (on == null)
-        //        return $"{joinWay}JOIN {tableName}";
-        //    else
-        //        return $"{joinWay}JOIN {tableName} ON {on}";
-        //}
+            var sql = new StringBuilder($"DELETE FROM {dbObject.EscapeName}", 0x40);
+
+            sql.Append(" WHERE ");
+            var i = 0;
+            foreach (var item in primaryKeys)
+            {
+                if (i > 0)
+                    sql.Append(" AND ");
+                sql.Append($"{item.EscapeName} = @{item.PropertyInfo.Name}");
+                i++;
+            }
+            return sql.ToString();
+        }
+
+        public virtual string UpdateFormat(Expression fields, QueryContext context, ParameterBuilder parameterBuilder)
+        {
+            var parser = new MySqlExpressionParser(context);
+            var alias = context.Alias[0];
+            var sql = new StringBuilder($"UPDATE {AliasTableName(alias.Name, alias.Alias)} SET ", 0x80);
+
+            parser.VisitFields(fields, sql, parameterBuilder, updateMode: true);
+
+            AppendWhere(parser, context, sql, parameterBuilder);
+
+            return sql.ToString();
+        }
+
+        public virtual string UpdateFormat(DbObject dbObject)
+        {
+            var primaryKeys = dbObject.Properties.Where(o => o.PrimaryKey).ToArray();
+            if (primaryKeys.Length == 0)
+                throw new ArgumentException("实体类没有主键");
+
+            var sql = new StringBuilder($"UPDATE {dbObject.EscapeName} SET ", 0x80);
+
+            var i = 0;
+            foreach (var item in dbObject.Properties.Where(o => !o.PrimaryKey))
+            {
+                if (i > 0)
+                    sql.Append(", ");
+                sql.Append($"{item.EscapeName} = @{item.PropertyInfo.Name}");
+                i++;
+            }
+
+            sql.Append(" WHERE ");
+            i = 0;
+            foreach (var item in primaryKeys)
+            {
+                if (i > 0)
+                    sql.Append(" AND ");
+                sql.Append($"{item.EscapeName} = @{item.PropertyInfo.Name}");
+                i++;
+            }
+            return sql.ToString();
+        }
 
         public virtual string EscapeTableName(string name)
         {
@@ -257,20 +315,7 @@ namespace Dapper.Easies.MySql
 
         public virtual string AliasPropertyName(string name, string alias)
         {
-            return $"{name} {alias}";
+            return $"{name} AS {alias}";
         }
-
-        //public virtual string OrderBy(IEnumerable<string> orderBy, SortType orderBySortType, IEnumerable<string> thenBy, SortType? thenBySortType)
-        //{
-        //    if (thenBy == null)
-        //        return $"ORDER BY {string.Join(", ", orderBy)} {orderBySortType}";
-
-        //    return $"ORDER BY {string.Join(", ", orderBy)} {orderBySortType}, {string.Join(", ", thenBy)} {thenBySortType}";
-        //}
-
-        //public string GroupBy(IEnumerable<string> groupBy)
-        //{
-        //    return $"GROUP BY {string.Join(", ", groupBy)}";
-        //}
     }
 }

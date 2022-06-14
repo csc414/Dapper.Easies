@@ -50,11 +50,12 @@ namespace Dapper.Easies
                 case ExpressionType.ArrayLength:
                 case ExpressionType.Convert:
                 case ExpressionType.Not:
+                case ExpressionType.Quote:
                     return VisitUnary((UnaryExpression)node);
                 case ExpressionType.MemberAccess:
                     return VisitMemberAccess((MemberExpression)node);
                 case ExpressionType.Parameter:
-                    return this.VisitParameter((ParameterExpression)node);
+                    return VisitParameter((ParameterExpression)node);
                 case ExpressionType.Constant:
                     return VisitConstant((ConstantExpression)node);
                 case ExpressionType.Call:
@@ -79,17 +80,17 @@ namespace Dapper.Easies
         {
             _lambda = node;
             var body = Visit(node.Body);
-            if (body is SqlExpression sql)
-                AppendSql(sql.Sql);
-            else if (body is ConstantExpression constant)
+            if (body is ConstantExpression constant)
                 AppendSql(GetParameterName(constant.Value));
             else if (body is MemberExpression member)
             {
-                if (body.Type == s_booleanType)
+                if (node.Type == s_booleanType)
                     AppendPredicate(member, Expression.Constant(true), ExpressionType.Equal);
                 else
                     AppendSql(GetPropertyName(member));
             }
+            else if (body is SqlExpression sql)
+                AppendSql(sql.Sql);
             _lambda = null;
             return node;
         }
@@ -275,6 +276,9 @@ namespace Dapper.Easies
 
         protected virtual Expression VisitUnary(UnaryExpression node)
         {
+            if (node.NodeType == ExpressionType.Quote)
+                return Expression.Constant(node.Operand);
+
             Expression operand = Visit(node.Operand);
             if (node.NodeType == ExpressionType.Convert)
                 return operand;

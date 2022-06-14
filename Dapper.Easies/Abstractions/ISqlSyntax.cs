@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace Dapper.Easies
 {
@@ -6,11 +7,17 @@ namespace Dapper.Easies
     {
         string SelectFormat(QueryContext context, ParameterBuilder parameterBuilder, int? skip = null, int? take = null, AggregateInfo aggregateInfo = null);
 
-        string InsertFormat(string tableName, IEnumerable<string> fields, IEnumerable<string> paramNames, bool hasIdentityKey);
+        string SelectFormat(DbObject dbObject, object[] ids, ParameterBuilder parameterBuilder);
 
-        string DeleteFormat(string tableName, string tableAlias, IEnumerable<string> joins, string where);
+        string InsertFormat(DbObject dbObject, bool hasIdentityKey);
 
-        string UpdateFormat(string tableName, string tableAlias, IEnumerable<string> updateFields, string where);
+        string DeleteFormat(QueryContext context, ParameterBuilder parameterBuilder);
+
+        string DeleteFormat(DbObject dbObject);
+
+        string UpdateFormat(Expression fields, QueryContext context, ParameterBuilder parameterBuilder);
+
+        string UpdateFormat(DbObject dbObject);
 
         string EscapeTableName(string name);
 

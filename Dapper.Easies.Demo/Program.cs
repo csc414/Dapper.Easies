@@ -31,6 +31,8 @@ namespace Dapper.Easies.Demo
 
             var easiesProvider = serviceProvider.GetRequiredService<IEasiesProvider>();
 
+            await easiesProvider.From<Class>().Where(o => o.Id == Guid.NewGuid()).UpdateAsync(o => new Class { Name = o.Name + "asdasd" });
+
             //var subQuery = easiesProvider.From<Student>().Where(c => c.ClassId == Guid.NewGuid()).Select(o => new { o.ClassId, o.StudentName });
 
             //await easiesProvider.From<Class>()
@@ -41,9 +43,9 @@ namespace Dapper.Easies.Demo
             //    .Select((a, b) => a)
             //    .QueryAsync();
 
-            //await easiesProvider.From<Class>()
-            //    .Where(o => DbFunc.In(o.Id, easiesProvider.From<Class>().Select(o => o.Id).SubQuery()))
-            //    .QueryAsync();
+            await easiesProvider.From<Class>()
+                .Where(o => DbFunc.In(o.Id, easiesProvider.From<Class>().Where(x => x.Id == o.Id).Select(o => o.Id).SubQuery()))
+                .GetPagerAsync(1, 10);
 
             //var result = await easiesProvider.From<Class>()
             //    .Select((o) => new
@@ -56,15 +58,15 @@ namespace Dapper.Easies.Demo
             //    })
             //    .QueryAsync();
 
-            var result = await easiesProvider.From<Student>()
-               .Join<Class>((a, b) => a.ClassId == b.Id)
-               .Where((o ,_) => o.IsOk)
-               .GroupBy((o, _) => new { o.IsOk, o.ClassId })
-               .Having((o, _) => o.ClassName.Contains("阿萨"))
-               .Select((o, _) => new { o.IsOk, o.ClassId })
-               .OrderBy(o => o.IsOk)
-               .ThenByDescending(o => o.ClassId)
-               .QueryAsync();
+            //var result = await easiesProvider.From<Student>()
+            //   .Join<Class>((a, b) => a.ClassId == b.Id)
+            //   .Where((o ,_) => o.IsOk)
+            //   .GroupBy((o, _) => new { o.IsOk, o.ClassId })
+            //   .Having((o, _) => o.ClassName.Contains("阿萨"))
+            //   .Select((o, _) => new { o.IsOk, o.ClassId })
+            //   .OrderBy(o => o.IsOk)
+            //   .ThenByDescending(o => o.ClassId)
+            //   .QueryAsync();
 
             var pager = await easiesProvider.From<Student>()
                 .Join<Class>((a, b) => a.ClassId == b.Id)

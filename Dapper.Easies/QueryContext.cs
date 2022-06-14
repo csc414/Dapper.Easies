@@ -76,7 +76,7 @@ namespace Dapper.Easies
 
             var alias = new DbAlias(dbObject?.EscapeName, $"t{Alias.Count}");
             Alias.Add(alias);
-            _joinMetedatas.Add(new JoinMetedata { DbObject = dbObject, JoinExpression = joinExpression, Type = type, Query = query });
+            _joinMetedatas.Add(new JoinMetedata(dbObject, type, joinExpression, query));
         }
 
         public void AddWhere(Expression whereExpression)
