@@ -13,9 +13,6 @@ namespace Dapper.Easies.MySql
         {
             var parser = new MySqlExpressionParser(context);
             var sql = new StringBuilder("SELECT", 0x100);
-            if (context.Distinct)
-                sql.AppendFormat(" DISTINCT");
-
             var alias = context.Alias[0];
 
             if (aggregateInfo != null)
@@ -46,11 +43,17 @@ namespace Dapper.Easies.MySql
             }
             else if (context.SelectorExpression != null)
             {
+                if (context.Distinct)
+                    sql.AppendFormat(" DISTINCT");
+
                 sql.Append(' ');
                 parser.VisitFields(context.SelectorExpression, sql, parameterBuilder);
             }
             else
             {
+                if (context.Distinct)
+                    sql.AppendFormat(" DISTINCT");
+
                 sql.Append(' ');
                 parser.VisitFields(context.DbObject, alias, sql);
             }
