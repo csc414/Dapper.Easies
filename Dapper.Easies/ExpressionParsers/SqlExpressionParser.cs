@@ -17,11 +17,19 @@ namespace Dapper.Easies
 
         protected ParameterBuilder Parameters => _parameters;
 
-        private readonly QueryContext _context;
+        protected QueryContext Context { get; }
+
+        protected ISqlSyntax SqlSyntax { get; }
 
         public SqlExpressionParser(QueryContext context)
         {
-            _context = context;
+            Context = context;
+            SqlSyntax = context.DbObject.SqlSyntax;
+        }
+
+        public SqlExpressionParser(ISqlSyntax sqlSyntax)
+        {
+            SqlSyntax = sqlSyntax;
         }
 
         public virtual void Visit(Expression node, StringBuilder sb, ParameterBuilder parameters)
@@ -67,6 +75,8 @@ namespace Dapper.Easies
                 node = Visit(node);
                 if(node is MemberExpression memberExp)
                     Builder.Append(GetPropertyName(memberExp));
+                else if(node is SqlExpression sql)
+                    Builder.Append(sql.Sql);
             }
             _sb = null;
             _parameters = null;
@@ -75,7 +85,6 @@ namespace Dapper.Easies
 
         protected Expression VisitMemberInit(MemberInitExpression node, string separator, bool hasAlias = true)
         {
-            var sqlSyntax = _context.DbObject.SqlSyntax;
             for (int i = 0; i < node.Bindings.Count; i++)
             {
                 if (i > 0)
@@ -86,13 +95,13 @@ namespace Dapper.Easies
                     var arg = Visit(assignment.Expression);
                     if (arg is MemberExpression member)
                     {
-                        if(hasAlias)
-                            Builder.Append(sqlSyntax.AliasPropertyName(GetPropertyName(member), assignment.Member.Name));
+                        if (hasAlias)
+                            Builder.Append(SqlSyntax.AliasPropertyName(GetPropertyName(member), SqlSyntax.EscapePropertyName(assignment.Member.Name)));
                         else
                             Builder.Append(GetPropertyName(member));
                     }
                     else if (hasAlias && arg is SqlExpression sql)
-                        Builder.Append(sqlSyntax.AliasPropertyName($"({sql.Sql})", assignment.Member.Name));
+                        Builder.Append(SqlSyntax.AliasPropertyName($"({sql.Sql})", SqlSyntax.EscapePropertyName(assignment.Member.Name)));
                 }
             }
             return node;
@@ -100,7 +109,6 @@ namespace Dapper.Easies
 
         protected NewExpression VisitNew(NewExpression node, string separator, bool hasAlias = true)
         {
-            var sqlSyntax = _context.DbObject.SqlSyntax;
             for (int i = 0; i < node.Members.Count; i++)
             {
                 if (i > 0)
@@ -110,14 +118,14 @@ namespace Dapper.Easies
                 if (arg is MemberExpression memberExp)
                 {
                     if (hasAlias)
-                        Builder.Append(sqlSyntax.AliasPropertyName(GetPropertyName(memberExp), member.Name));
+                        Builder.Append(SqlSyntax.AliasPropertyName(GetPropertyName(memberExp), SqlSyntax.EscapePropertyName(member.Name)));
                     else
                         Builder.Append(GetPropertyName(memberExp));
 
-                    
+
                 }
                 else if (hasAlias && arg is SqlExpression sql)
-                    Builder.Append(sqlSyntax.AliasPropertyName($"({sql.Sql})", member.Name));
+                    Builder.Append(SqlSyntax.AliasPropertyName($"({sql.Sql})", SqlSyntax.EscapePropertyName(member.Name)));
             }
             return node;
         }
@@ -128,12 +136,12 @@ namespace Dapper.Easies
             {
                 var parameter = (ParameterExpression)member.Expression;
                 var table = DbObject.Get(parameter.Type);
-                var aliasIndex = Lambda.Parameters.IndexOf(parameter);
-                var alias = _context.Alias[aliasIndex].Alias;
-                if (table == null)
-                    return $"{alias}.{table.SqlSyntax.EscapePropertyName(member.Member.Name)}";
+                var propertyName = table == null ? SqlSyntax.EscapePropertyName(member.Member.Name) : table[member.Member.Name].EscapeName;
+                if (Context == null || table == null || Context.JoinMetedatas == null)
+                    return propertyName;
 
-                return $"{alias}.{table[member.Member.Name].EscapeName}";
+                var aliasIndex = Lambda.Parameters.IndexOf(parameter);
+                return $"{Context.Alias[aliasIndex].Alias}.{propertyName}";
             }
             else if (exp is SqlExpression sql)
                 return sql.ToString();

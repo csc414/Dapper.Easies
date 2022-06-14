@@ -154,32 +154,22 @@ namespace Dapper.Easies.MySql
             {
                 sql.Append(" ORDER BY ");
                 parser.VisitFields(context.OrderByMetedata.Expression, sql, parameterBuilder, hasAlias: false);
-                
+
+                if (context.OrderByMetedata.SortType == SortType.Asc)
+                    sql.Append(" ASC");
+                else
+                    sql.Append(" DESC");
+
                 if (context.ThenByMetedata != null)
                 {
-
+                    sql.Append(", ");
+                    parser.VisitFields(context.ThenByMetedata.Expression, sql, parameterBuilder, hasAlias: false);
+                    if (context.ThenByMetedata.SortType == SortType.Asc)
+                        sql.Append(" ASC");
+                    else
+                        sql.Append(" DESC");
                 }
             }
-            //if (orderBy != null)
-            //    sql.AppendFormat(" {0}", orderBy);
-
-            //return sql.ToString();
-
-
-
-
-            //var sql = sqlSyntax.SelectFormat(
-            //    sqlSyntax.TableNameAlias(context.Alias[0]),
-            //    GetFields(sqlSyntax, context, null, parameterBuilder),
-            //    GetJoins(sqlSyntax, context, parser),
-            //    GetPredicate(sqlSyntax, context.WhereExpressions, context, parser),
-            //    GetGroupBy(sqlSyntax, context, parameterBuilder),
-            //    GetPredicate(sqlSyntax, context.HavingExpressions, context, parser),
-            //    GetOrderBy(sqlSyntax, context, parameterBuilder),
-            //    context.Skip,
-            //    context.Take,
-            //    context.Distinct);
-            //return sql;
             return sql.ToString();
         }
 

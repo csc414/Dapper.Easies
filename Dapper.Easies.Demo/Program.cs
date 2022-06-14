@@ -57,12 +57,13 @@ namespace Dapper.Easies.Demo
             //    .QueryAsync();
 
             var result = await easiesProvider.From<Student>()
-               .Join<Class>()
+               .Join<Class>((a, b) => a.ClassId == b.Id)
                .Where((o ,_) => o.IsOk)
                .GroupBy((o, _) => new { o.IsOk, o.ClassId })
                .Having((o, _) => o.ClassName.Contains("阿萨"))
                .Select((o, _) => new { o.IsOk, o.ClassId })
                .OrderBy(o => o.IsOk)
+               .ThenByDescending(o => o.ClassId)
                .QueryAsync();
 
             var pager = await easiesProvider.From<Student>()
