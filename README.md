@@ -306,7 +306,7 @@ using (new DynamicDbMappingScope(map => map.SetTableName<Class>("tb_class1")))
 异步执行
 ------------------------------------------------------------
 ```csharp
-//IEasiesProvider 服务默认注册为Scoped，在每个请求生命周期中将共用一个 DbConnection，若需要异步执行请使用 AsyncExecutionScope
+//IEasiesProvider 服务从 2.1.0 开始生命周期默认注册为Scoped，在每个请求生命周期中将共用一个 DbConnection，并自动释放，若需要异步执行请使用 AsyncExecutionScope
 
 using (AsyncExecutionScope.Create())
 {
