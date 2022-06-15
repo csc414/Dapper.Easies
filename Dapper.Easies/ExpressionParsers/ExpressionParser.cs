@@ -4,450 +4,413 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
 
 namespace Dapper.Easies
 {
-    internal abstract class ExpressionParser
+    public abstract class ExpressionParser
     {
-        protected static Type _dbFuncType = typeof(DbFunc);
+        private static Type s_booleanType = typeof(bool);
 
-        protected static Type _dbObjectExtensions = typeof(DbObjectExtensions);
+        private static Type s_stringType = typeof(string);
 
-        protected static Type _dbQueryExtensions = typeof(DbQueryExtensions);
+        private static Type s_dateTimeType = typeof(DateTime);
 
-        private ReadOnlyCollection<ParameterExpression> _parameters;
+        private static Type s_dbFuncType = typeof(DbFunc);
 
-        protected void SetParameters(ReadOnlyCollection<ParameterExpression> parameters)
+        private static Type s_dbObjectExtensionType = typeof(DbObjectExtensions);
+
+        protected Expression Visit(Expression node)
         {
-            _parameters = parameters;
-        }
+            if (node == null)
+                return node;
 
-        protected ReadOnlyCollection<ParameterExpression> Parameters => _parameters ?? _lambda?.Parameters;
-
-        private LambdaExpression _lambda;
-
-        private int _deep = 0;
-
-        internal ParserData Visit(Expression exp)
-        {
-            ParserData data;
-            _deep++;
-            switch (exp.NodeType)
+            switch (node.NodeType)
             {
                 case ExpressionType.Lambda:
-                    data = VisitLambda(_lambda = (LambdaExpression)exp);
-                    break;
+                    return VisitLambda((LambdaExpression)node);
                 case ExpressionType.Add:
-                case ExpressionType.AddChecked:
                 case ExpressionType.Subtract:
-                case ExpressionType.SubtractChecked:
                 case ExpressionType.Multiply:
-                case ExpressionType.MultiplyChecked:
                 case ExpressionType.Divide:
-                case ExpressionType.Modulo:
-                case ExpressionType.Power:
-                case ExpressionType.And:
+                    return VisitCalculate((BinaryExpression)node);
                 case ExpressionType.AndAlso:
-                case ExpressionType.Or:
                 case ExpressionType.OrElse:
+                    return VisitLogical((BinaryExpression)node);
                 case ExpressionType.LessThan:
                 case ExpressionType.LessThanOrEqual:
                 case ExpressionType.GreaterThan:
                 case ExpressionType.GreaterThanOrEqual:
                 case ExpressionType.Equal:
                 case ExpressionType.NotEqual:
+                    return VisitPredicate((BinaryExpression)node);
                 case ExpressionType.Coalesce:
                 case ExpressionType.ArrayIndex:
-                    data = VisitBinary((BinaryExpression)exp);
-                    break;
+                    return VisitBinary((BinaryExpression)node);
                 case ExpressionType.ArrayLength:
                 case ExpressionType.Convert:
                 case ExpressionType.Not:
-                    data = VisitUnary((UnaryExpression)exp);
-                    break;
+                case ExpressionType.Quote:
+                    return VisitUnary((UnaryExpression)node);
                 case ExpressionType.MemberAccess:
-                    data = VisitMemberAccess((MemberExpression)exp);
-                    break;
-                case ExpressionType.Constant:
-                    data = VisitConstant((ConstantExpression)exp);
-                    break;
-                case ExpressionType.Call:
-                    data = VisitMethodCall((MethodCallExpression)exp);
-                    break;
-                default:
-                    throw new NotImplementedException($"{exp.NodeType}");
-            }
-            _deep--;
-            return data;
-        }
-
-        internal virtual ParserData VisitLambda(LambdaExpression lambda)
-        {
-            Visit(lambda.Body);
-            return ParserData.Empty;
-        }
-
-        internal virtual ParserData VisitBinary(BinaryExpression b)
-        {
-            return ParserData.Empty;
-        }
-
-        internal virtual ParserData VisitUnary(UnaryExpression u)
-        {
-            return ParserData.Empty;
-        }
-
-        internal virtual ParserData VisitMethodCall(MethodCallExpression m)
-        {
-            return ParserData.Empty;
-        }
-
-        internal virtual ParserData VisitMemberAccess(MemberExpression m)
-        {
-            return ParserData.Empty;
-        }
-
-        internal virtual ParserData VisitConstant(ConstantExpression c)
-        {
-            return ParserData.Empty;
-        }
-
-        protected ParserData CreateSql(string sql)
-        {
-            return CreateSql(sql, null);
-        }
-
-        protected ParserData CreateSql(string sql, Expression expression)
-        {
-            return CreateParserData(ParserDataType.Sql, sql, expression);
-        }
-
-        protected ParserData CreateConstant(object value)
-        {
-            return CreateConstant(value, null);
-        }
-
-        protected ParserData CreateConstant(object value, Expression expression)
-        {
-            return CreateParserData(ParserDataType.Constant, value, expression);
-        }
-
-        protected ParserData CreateParserData(ParserDataType type, object value)
-        {
-            return CreateParserData(type, value, null);
-        }
-
-        protected ParserData CreateParserData(ParserDataType type, object value, Expression expression)
-        {
-            return new ParserData(type, value, expression) { Deep = _deep };
-        }
-
-        protected ParserData CreateProperty(MemberExpression memberExpression, ParameterExpression parameterExpression)
-        {
-            object obj;
-            var dbObject = DbObject.Get(parameterExpression.Type);
-            if (dbObject == null)
-                obj = memberExpression;
-            else
-                obj = dbObject[memberExpression.Member.Name];
-
-            return new ParserData(ParserDataType.Property, obj, parameterExpression) { Deep = _deep };
-        }
-
-        protected int GetDeep() => _deep;
-
-        internal static string GetExpression(Expression expression, ParameterBuilder builder, ISqlSyntax sqlSyntax, QueryContext context, ReadOnlyCollection<ParameterExpression> parameters)
-        {
-            if (expression == null)
-                return null;
-
-            if (expression.NodeType == ExpressionType.Lambda)
-                return GetExpression(((LambdaExpression)expression).Body, builder, sqlSyntax, context, parameters);
-
-            if (expression.NodeType == ExpressionType.Convert)
-                return GetExpression(((UnaryExpression)expression).Operand, builder, sqlSyntax, context, parameters);
-
-            if (expression.NodeType == ExpressionType.Call)
-            {
-                var m = (MethodCallExpression)expression;
-                if (m.Method.IsStatic)
-                {
-                    if (_dbObjectExtensions == m.Method.ReflectedType)
-                    {
-                        if (m.Method.Name.Equals("Property", StringComparison.Ordinal))
-                        {
-                            var parameterExpression = m.Arguments[0];
-                            if (parameterExpression.NodeType == ExpressionType.Convert)
-                                parameterExpression = ((UnaryExpression)parameterExpression).Operand;
-
-                            if (parameterExpression is ParameterExpression parameter)
-                            {
-                                var name = GetValue(m.Arguments[1])?.ToString();
-
-                                var table = DbObject.Get(parameter.Type);
-                                if (table == null)
-                                    return name;
-
-                                string alias = null;
-                                if (context != null)
-                                    alias = $"{context.Alias[parameters.IndexOf(parameter)].Alias}.";
-
-                                return $"{alias}{table[name].EscapeName}";
-                            }
-                        }
-                    }
-                    if (_dbQueryExtensions == m.Method.ReflectedType)
-                    {
-                        if (m.Method.Name.StartsWith("SubQuery", StringComparison.Ordinal))
-                        {
-                            var query = GetSubQuery(m.Arguments[0]);
-                            return $"({query.Context.Converter.ToQuerySql(query.Context, builder)})";
-                        }
-
-                        IDbQuery GetSubQuery(Expression exp)
-                        {
-                            var args = new object[parameters.Count];
-                            var subQuery = (IDbQuery)Expression.Lambda(exp, parameters).Compile().DynamicInvoke(args);
-                            for (int i = 0; i < subQuery.Context.Alias.Count; i++)
-                            {
-                                var alias = subQuery.Context.Alias[i];
-                                subQuery.Context.Alias[i] = new DbAlias(alias.Name, "t" + alias.Alias, alias.IsExpr);
-                            }
-                            subQuery.Context.Alias.AddRange(context.Alias);
-                            var j = 1;
-                            while (exp is MethodCallExpression methodExp)
-                            {
-                                if (methodExp.Method.Name.Equals("Where", StringComparison.Ordinal))
-                                {
-                                    var lambda = (LambdaExpression)((UnaryExpression)methodExp.Arguments[0]).Operand;
-                                    var ls = new List<ParameterExpression>(lambda.Parameters);
-                                    ls.AddRange(parameters);
-                                    subQuery.Context.SetWhere(^j++, Expression.Lambda(lambda.Body, ls.ToArray()));
-                                }
-                                exp = methodExp.Object;
-                            }
-                            return subQuery;
-                        }
-                    }
-                    else if (_dbFuncType.IsAssignableFrom(m.Method.ReflectedType))
-                    {
-                        if (m.Method.Name.Equals("Expr", StringComparison.Ordinal))
-                        {
-                            var arg = m.Arguments[0];
-                            if (arg.NodeType == ExpressionType.Call && arg is MethodCallExpression mm && mm.Method.Name.Equals("Format", StringComparison.Ordinal))
-                            {
-                                var args = mm.Arguments.Select((o, j) =>
-                                {
-                                    if (j == 0)
-                                        return GetValue(o);
-
-                                    if (o.NodeType == ExpressionType.NewArrayInit)
-                                    {
-                                        var newArrayExpression = (NewArrayExpression)o;
-                                        var args = newArrayExpression.Expressions.Select(e => GetExpression(e, builder, sqlSyntax, context, parameters)).ToArray();
-                                        var ary = (object[])Activator.CreateInstance(newArrayExpression.Type, args.Length);
-                                        for (int i = 0; i < ary.Length; ++i)
-                                            ary[i] = args[i];
-                                        return ary;
-                                    }
-
-                                    return GetExpression(o, builder, sqlSyntax, context, parameters);
-                                }).ToArray();
-
-                                return mm.Method.Invoke(null, args).ToString();
-                            }
-                            else
-                                return GetValue(arg).ToString();
-                        }
-                        else
-                        {
-                            var result = sqlSyntax.Method(m.Method.Name, m.Arguments.ToArray(), builder, GetExpr, GetValue);
-                            if (result == null)
-                                throw new NotImplementedException($"MethodName：{m.Method.Name}");
-
-                            return result;
-
-                            string GetExpr(Expression exp)
-                            {
-                                if(exp == null)
-                                    return null;
-
-                                return GetExpression(exp, builder, sqlSyntax, context, parameters);
-                            }
-
-                            object GetValue(Expression exp)
-                            {
-                                if (exp == null)
-                                    return null;
-
-                                return GetValue(exp);
-                            }
-                        }
-                    }
-                }
-
-                return builder.AddParameter(GetValue(expression));
-            }
-
-            if (expression is MemberExpression memberExpression)
-            {
-                if (memberExpression.Expression is ParameterExpression parameter)
-                {
-                    var i = parameters.IndexOf(parameter);
-                    var table = DbObject.Get(parameter.Type);
-                    string alias = null;
-                    if (context != null && (i > 0 || table != null))
-                        alias = $"{context.Alias[i].Alias}.";
-
-                    if (table == null)
-                        return alias + sqlSyntax.EscapePropertyName(memberExpression.Member.Name);
-
-                    return alias + table[memberExpression.Member.Name].EscapeName;
-                }
-                else if (memberExpression.Expression is MemberExpression m && HasParameter(m.Expression))
-                {
-                    if (memberExpression.Member.Name != "Value" && memberExpression.Member.ReflectedType.Name != "Nullable`1")
-                    {
-                        if (m.Member.Name == "Value" && m.Member.ReflectedType.Name == "Nullable`1")
-                            m = (MemberExpression)m.Expression;
-
-                        if (m.Type == typeof(DateTime) || m.Type == typeof(DateTime?))
-                        {
-                            var dateTimeMethod = sqlSyntax.DateTimeMethod(memberExpression.Member.Name, () => GetExpression(m, builder, sqlSyntax, context, parameters));
-                            if (dateTimeMethod == null)
-                                throw new NotImplementedException($"DateTime Method：{memberExpression.Member.Name}");
-
-                            return dateTimeMethod;
-                        }
-                    }
-
-                    return GetExpression(m, builder, sqlSyntax, context, parameters);
-                }
-            }
-
-            if (HasParameter(expression))
-            {
-                var parser = new PredicateExpressionParser(sqlSyntax, builder, parameters);
-                return parser.ToSql(expression, context);
-            }
-
-            return builder.AddParameter(GetValue(expression));
-        }
-
-        internal static bool HasParameter(Expression exp)
-        {
-            if (exp == null)
-                return false;
-
-            switch (exp.NodeType)
-            {
-                case ExpressionType.Lambda:
-                    return HasParameter(((LambdaExpression)exp).Body);
+                    return VisitMemberAccess((MemberExpression)node);
                 case ExpressionType.Parameter:
-                    return true;
-                case ExpressionType.Add:
-                case ExpressionType.AddChecked:
-                case ExpressionType.Subtract:
-                case ExpressionType.SubtractChecked:
-                case ExpressionType.Multiply:
-                case ExpressionType.MultiplyChecked:
-                case ExpressionType.Divide:
-                case ExpressionType.Modulo:
-                case ExpressionType.Power:
-                case ExpressionType.And:
-                case ExpressionType.AndAlso:
-                case ExpressionType.Or:
-                case ExpressionType.OrElse:
-                case ExpressionType.LessThan:
-                case ExpressionType.LessThanOrEqual:
-                case ExpressionType.GreaterThan:
-                case ExpressionType.GreaterThanOrEqual:
-                case ExpressionType.Equal:
-                case ExpressionType.NotEqual:
-                case ExpressionType.Coalesce:
-                case ExpressionType.ArrayIndex:
-                    var binary = (BinaryExpression)exp;
-                    if (HasParameter(binary.Left))
-                        return true;
-
-                    if (HasParameter(binary.Right))
-                        return true;
-                    break;
-                case ExpressionType.ArrayLength:
-                case ExpressionType.Convert:
-                case ExpressionType.Not:
-                    var unary = (UnaryExpression)exp;
-                    if (HasParameter(unary.Operand))
-                        return true;
-                    break;
-                case ExpressionType.MemberAccess:
-                    var member = (MemberExpression)exp;
-                    if (member.Expression != null && HasParameter(member.Expression))
-                        return true;
-                    break;
+                    return VisitParameter((ParameterExpression)node);
+                case ExpressionType.Constant:
+                    return VisitConstant((ConstantExpression)node);
                 case ExpressionType.Call:
-                    var methodCall = (MethodCallExpression)exp;
-                    if (_dbFuncType.IsAssignableFrom(methodCall.Method.ReflectedType))
-                        return true;
+                    return VisitMethodCall((MethodCallExpression)node);
+                case ExpressionType.NewArrayInit:
+                    return VisitNewArray((NewArrayExpression)node);
+                default:
+                    throw new NotImplementedException($"{node.NodeType}");
+            }
+        }
 
-                    if (methodCall.Object != null && HasParameter(methodCall.Object))
-                        return true;
+        private LambdaExpression _lambda = null;
 
-                    foreach (var arg in methodCall.Arguments)
-                    {
-                        if (HasParameter(arg))
-                            return true;
-                    }
-                    break;
+        protected LambdaExpression Lambda => _lambda;
+
+        protected void SetLambdaExpression(LambdaExpression lambda)
+        {
+            _lambda = lambda;
+        }
+
+        protected virtual Expression VisitLambda(LambdaExpression node)
+        {
+            _lambda = node;
+            var body = Visit(node.Body);
+            if (body is ConstantExpression constant)
+                AppendSql(GetParameterName(constant.Value));
+            else if (body is MemberExpression member)
+            {
+                if (node.Type == s_booleanType)
+                    AppendPredicate(member, Expression.Constant(true), ExpressionType.Equal);
+                else
+                    AppendSql(GetPropertyName(member));
+            }
+            else if (body is SqlExpression sql)
+                AppendSql(sql.Sql);
+            _lambda = null;
+            return node;
+        }
+
+        private int _calcDeep = 0;
+
+        protected int CalcDeep => _calcDeep;
+
+        protected virtual Expression VisitCalculate(BinaryExpression node)
+        {
+            _calcDeep++;
+            var left = Visit(node.Left);
+            var right = Visit(node.Right);
+            if (left.NodeType == ExpressionType.Constant && right.NodeType == ExpressionType.Constant)
+            {
+                dynamic number1 = GetConstantValue(left);
+                dynamic number2 = GetConstantValue(right);
+                switch (node.NodeType)
+                {
+                    case ExpressionType.Add:
+                        return Expression.Constant(number1 + number2);
+                    case ExpressionType.Subtract:
+                        return Expression.Constant(number1 - number2);
+                    case ExpressionType.Multiply:
+                        return Expression.Constant(number1 * number2);
+                    case ExpressionType.Divide:
+                        return Expression.Constant(number1 / number2);
+                }
+
+                throw new NotSupportedException($"{node.NodeType} not supported");
+            }
+            _calcDeep--;
+            return AppendCalculate(left, right, node.NodeType);
+        }
+
+        protected virtual Expression VisitPredicate(BinaryExpression node)
+        {
+            var left = Visit(HandleNull(node.Left));
+            var right = Visit(HandleNull(node.Right));
+
+            if (left == null)
+            {
+                var temp = left;
+                left = right;
+                right = temp;
             }
 
-            return false;
+            AppendPredicate(left, right, node.NodeType);
+
+            Expression HandleNull(Expression exp)
+            {
+                if (exp is ConstantExpression constant && constant.Value == null)
+                    return null;
+
+                return exp;
+            }
+            return node;
         }
 
-        internal static object GetValue(Expression expression)
+        protected virtual Expression VisitBinary(BinaryExpression node)
         {
-            if (expression == null)
-                return null;
+            var left = Visit(node.Left);
+            var right = Visit(node.Right);
+            if (left is ConstantExpression leftConstant && right is ConstantExpression rightConstant)
+            {
+                if (node.NodeType == ExpressionType.Coalesce)
+                    return Expression.Constant(leftConstant.Value ?? rightConstant.Value);
+                else if (node.NodeType == ExpressionType.ArrayIndex)
+                {
+                    dynamic array = leftConstant.Value;
+                    dynamic index = rightConstant.Value;
+                    return Expression.Constant(array[index]);
+                }
+            }
 
-            if (expression.NodeType == ExpressionType.Constant)
-                return ((ConstantExpression)expression).Value;
-
-            if (expression.NodeType == ExpressionType.Convert)
-                return GetValue(((UnaryExpression)expression).Operand);
-
-            return Expression.Lambda(expression).Compile().DynamicInvoke();
+            throw new NotSupportedException($"{node.NodeType} not supported");
         }
-    }
 
-    public enum ParserDataType
-    {
-        Empty,
-        Property,
-        Constant,
-        Sql
-    }
-
-    public class ParserData
-    {
-        public static ParserData Empty = new ParserData(ParserDataType.Empty, null);
-
-        public ParserData(ParserDataType type, object value)
+        protected virtual Expression VisitParameter(ParameterExpression node)
         {
-            Type = type;
-            Value = value;
+            return node;
         }
 
-        public ParserData(ParserDataType type, object value, Expression expression) : this(type, value)
+        protected virtual Expression VisitConstant(ConstantExpression node)
         {
-            Expression = expression;
+            return node;
         }
 
-        public int Deep { get; internal set; }
+        protected virtual Expression VisitMemberAccess(MemberExpression node)
+        {
+            var exp = Visit(node.Expression);
+            if (exp == null || exp.NodeType == ExpressionType.Constant)
+            {
+                object val = null;
+                if (exp != null)
+                    val = ((ConstantExpression)exp).Value;
 
-        public Expression Expression { get; }
+                if (node.Member is PropertyInfo propertyInfo)
+                    return Expression.Constant(propertyInfo.GetValue(val), propertyInfo.PropertyType);
 
-        public ParserDataType Type { get; }
+                if (node.Member is FieldInfo fieldInfo)
+                    return Expression.Constant(fieldInfo.GetValue(val), fieldInfo.FieldType);
+            }
+            else if (Nullable.GetUnderlyingType(node.Member.DeclaringType) != null)
+                return exp;
 
-        public object Value { get; }
+            if (node.Member.DeclaringType == s_dateTimeType)
+                return AppendDateTimeMember(exp, node.Member);
+
+            return node;
+        }
+
+        protected virtual Expression VisitMethodCall(MethodCallExpression node, bool isExpr = false)
+        {
+            Expression obj = Visit(node.Object);
+            if (node.Object != null)
+            {
+                if (obj == null)
+                    throw new NullReferenceException();
+
+                if (obj is ConstantExpression constant)
+                    return Expression.Constant(node.Method.Invoke(constant.Value, VisitConstantExpressions(node.Arguments)));
+                else if (obj.NodeType == ExpressionType.MemberAccess)
+                {
+                    var result = AppendMethod(obj, node.Method, node.Arguments.Select(o => Visit(o)).ToArray());
+                    if (result != null)
+                        return result;
+                }
+                else
+                    throw new NotSupportedException($"{obj} {node.Method.Name}");
+            }
+            else if (s_dbObjectExtensionType == node.Method.ReflectedType || s_dbFuncType == node.Method.ReflectedType)
+            {
+                Expression[] args;
+                if (s_dbFuncType == node.Method.ReflectedType && node.Method.Name.Equals("Expr", StringComparison.Ordinal))
+                {
+                    var arg = node.Arguments[0];
+                    if (arg is MethodCallExpression method && method.Method.Name.Equals("Format", StringComparison.Ordinal))
+                        arg = VisitMethodCall(method, true);
+                    else
+                        arg = Visit(arg);
+                    args = new Expression[] { arg };
+                }
+                else
+                    args = node.Arguments.Select(o => Visit(o)).ToArray();
+
+                var result = AppendMethod(null, node.Method, args);
+                if (result != null)
+                    return result;
+            }
+            else
+            {
+                if (isExpr)
+                {
+                    IEnumerable<Expression> arguments;
+                    if (node.Arguments.Count == 2 && node.Arguments[1] is NewArrayExpression newArray)
+                        arguments = newArray.Expressions.Select(o => Visit(o));
+                    else
+                        arguments = node.Arguments.Skip(1).Select(o => Visit(o));
+
+                    var vals = arguments.Select((o, i) =>
+                    {
+                        if (o is MemberExpression parameter)
+                            return GetPropertyName(parameter);
+                        else if (o is ConstantExpression constant)
+                            return GetParameterName(constant.Value);
+                        else
+                            throw new NotSupportedException($"{o}");
+                    }).ToArray();
+
+                    return new SqlExpression(string.Format(GetConstantValue<string>(node.Arguments[0]), vals));
+                }
+                
+                return Expression.Constant(node.Method.Invoke(null, VisitConstantExpressions(node.Arguments)));
+            }
+
+            return node;
+        }
+
+        protected virtual Expression VisitLogical(BinaryExpression node)
+        {
+            var left = Visit(node.Left);
+            Handle(left);
+            AppendLogicalOperator(node.NodeType);
+            var right = Visit(node.Right);
+            Handle(right);
+
+            void Handle(Expression exp)
+            {
+                if (exp.NodeType == ExpressionType.MemberAccess)
+                    AppendPredicate(exp, Expression.Constant(true, node.Type), ExpressionType.Equal);
+                else if (exp is SqlExpression sql)
+                    AppendSql(sql.Sql);
+                else if (exp.NodeType == ExpressionType.Constant)
+                    throw new NotSupportedException($"{exp} constant should't be logical");
+            }
+
+            return node;
+        }
+
+        protected virtual Expression VisitUnary(UnaryExpression node)
+        {
+            if (node.NodeType == ExpressionType.Quote)
+                return Expression.Constant(node.Operand);
+
+            if (node.NodeType == ExpressionType.Not)
+            {
+                if (node.Operand is MemberExpression member)
+                {
+                    AppendPredicate(member, Expression.Constant(false, node.Type), ExpressionType.Equal);
+                }
+                else
+                {
+                    AppendNot(() =>
+                    {
+                        var exp = Visit(node.Operand);
+                        if (exp is SqlExpression sql)
+                            AppendSql(sql.Sql);
+                    });
+                }
+                return node;
+            }
+
+            Expression operand = Visit(node.Operand);
+            if (node.NodeType == ExpressionType.Convert)
+                return operand;
+            else if (node.NodeType == ExpressionType.ArrayLength && operand is ConstantExpression constant)
+            {
+                if (constant.Value == null)
+                    throw new NullReferenceException();
+
+                var array = (Array)constant.Value;
+                return Expression.Constant(array.Length);
+            }
+
+            return node;
+        }
+
+        protected virtual Expression VisitNewArray(NewArrayExpression node)
+        {
+            var args = VisitConstantExpressions(node.Expressions);
+            return Expression.Constant(args);
+        }
+
+        protected virtual object GetConstantValue(Expression exp)
+        {
+            if (exp is ConstantExpression constant)
+                return constant.Value;
+
+            throw new NotSupportedException($"{exp}");
+        }
+
+        protected virtual T GetConstantValue<T>(Expression exp)
+        {
+            return (T)GetConstantValue(exp);
+        }
+
+        protected virtual object[] GetConstantValue(IEnumerable<Expression> exps)
+        {
+            return exps.Select(o => GetConstantValue(o)).ToArray();
+        }
+
+        protected virtual object[] VisitConstantExpressions(IEnumerable<Expression> exps)
+        {
+            var args = exps.Select(o =>
+            {
+                var exp = Visit(o);
+                if (exp is ConstantExpression constant)
+                    return constant.Value;
+
+                throw new NotSupportedException(o.ToString());
+            }).ToArray();
+
+            return args;
+        }
+
+        protected virtual string GetPropertyName(Expression exp)
+        {
+            return exp.ToString();
+        }
+
+        protected virtual string GetParameterName(object value)
+        {
+            return value.ToString();
+        }
+
+        protected virtual void AppendLogicalOperator(ExpressionType type)
+        {
+        }
+
+        protected virtual void AppendPredicate(Expression left, Expression right, ExpressionType type)
+        {
+        }
+
+        protected virtual Expression AppendCalculate(Expression left, Expression right, ExpressionType type)
+        {
+            return null;
+        }
+
+        protected virtual Expression AppendMethod(Expression instance, MethodInfo method, Expression[] args)
+        {
+            return null;
+        }
+
+        protected virtual Expression AppendDateTimeMember(Expression instance, MemberInfo member)
+        {
+            return null;
+        }
+
+        protected virtual void AppendSql(string sql)
+        {
+        }
+
+        protected virtual void AppendNot(Action exec)
+        {
+        }
+
+        protected SqlExpression CreateSql(string sql)
+        {
+            return new SqlExpression(sql);
+        }
     }
 }

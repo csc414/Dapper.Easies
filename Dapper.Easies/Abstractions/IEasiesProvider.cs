@@ -23,6 +23,19 @@ namespace Dapper.Easies
         IDbConnection GetConnection(string connectionStringName);
 
         /// <summary>
+        /// 根据 Default 配置创建一个新的 DbConnection
+        /// </summary>
+        /// <returns></returns>
+        IDbConnection CreateConnection();
+
+        /// <summary>
+        /// 根据配置名创建一个新的 DbConnection
+        /// </summary>
+        /// <param name="connectionStringName"></param>
+        /// <returns></returns>
+        IDbConnection CreateConnection(string connectionStringName);
+
+        /// <summary>
         /// 强类型实体
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -91,36 +104,5 @@ namespace Dapper.Easies
         /// <param name="entities"></param>
         /// <returns></returns>
         Task<int> UpdateAsync<T>(IEnumerable<T> entities) where T : IDbTable;
-
-        /// <summary>
-        /// 执行原生Sql，根据生命周期自动释放 Connection
-        /// </summary>
-        /// <param name="func"></param>
-        /// <returns></returns>
-        public Task ExecuteAsync(Func<IDbConnection, Task> func);
-
-        /// <summary>
-        /// 执行原生Sql，根据生命周期自动释放 Connection
-        /// </summary>
-        /// <param name="func"></param>
-        /// <returns></returns>
-        public Task<T> ExecuteAsync<T>(Func<IDbConnection, Task<T>> func);
-
-        /// <summary>
-        /// 执行原生Sql，根据生命周期自动释放 Connection
-        /// </summary>
-        /// <param name="connectionStringName"></param>
-        /// <param name="func"></param>
-        /// <returns></returns>
-        public Task ExecuteAsync(string connectionStringName, Func<IDbConnection, Task> func);
-
-        /// <summary>
-        /// 执行原生Sql，根据生命周期自动释放 Connection
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="connectionStringName"></param>
-        /// <param name="func"></param>
-        /// <returns></returns>
-        public Task<T> ExecuteAsync<T>(string connectionStringName, Func<IDbConnection, Task<T>> func);
     }
 }

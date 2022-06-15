@@ -35,11 +35,11 @@ namespace Dapper.Easies
 
         public IDbConnectionCache Connection { get; }
 
-        public IEnumerable<JoinMetedata> JoinMetedatas => _joinMetedatas;
+        public IReadOnlyCollection<JoinMetedata> JoinMetedatas => _joinMetedatas;
 
-        public IEnumerable<Expression> WhereExpressions => _whereExpressions;
+        public IReadOnlyCollection<Expression> WhereExpressions => _whereExpressions;
 
-        public IEnumerable<Expression> HavingExpressions => _havingExpressions;
+        public IReadOnlyCollection<Expression> HavingExpressions => _havingExpressions;
 
         public OrderByMetedata OrderByMetedata { get; internal set; }
 
@@ -76,7 +76,7 @@ namespace Dapper.Easies
 
             var alias = new DbAlias(dbObject?.EscapeName, $"t{Alias.Count}");
             Alias.Add(alias);
-            _joinMetedatas.Add(new JoinMetedata { DbObject = dbObject, JoinExpression = joinExpression, Type = type, Query = query });
+            _joinMetedatas.Add(new JoinMetedata(dbObject, type, joinExpression, query));
         }
 
         public void AddWhere(Expression whereExpression)

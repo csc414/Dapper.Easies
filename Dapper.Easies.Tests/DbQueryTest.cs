@@ -146,22 +146,22 @@ namespace Dapper.Easies.Tests
                 .Select(o => new { o.Id, o.Name });
 
             result = EasiesProvider.From<Student>()
-                .OrderBy(o => o.Id, o => o.Name)
-                .ThenByDescending(o => o.Id, o => o.Name)
+                .OrderBy(o => new { o.Id, o.Name })
+                .ThenByDescending(o => new { o.Id, o.Name })
                 .GetSql();
             OrderByTest(result.sql);
 
             result = EasiesProvider.From<Student>()
                 .Join<Class>()
-                .OrderBy((a, b) => a.Id, (a, b) => b.Name)
-                .ThenByDescending((a, b) => a.Id, (a, b) => b.Name)
+                .OrderBy((a, b) => new { a.Id, b.Name })
+                .ThenByDescending((a, b) => new { a.Id, b.Name })
                 .GetSql();
             OrderByJoinTableTest(result.sql);
 
             result = EasiesProvider.From<Student>()
                 .Join(query)
-                .OrderBy((a, b) => a.Id, (a, b) => b.Name)
-                .ThenByDescending((a, b) => a.Id, (a, b) => b.Name)
+                .OrderBy((a, b) => new { a.Id, b.Name })
+                .ThenByDescending((a, b) => new { a.Id, b.Name })
                 .GetSql();
             OrderByJoinQueryTest(result.sql);
         }

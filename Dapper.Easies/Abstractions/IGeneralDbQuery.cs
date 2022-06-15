@@ -9,6 +9,8 @@ namespace Dapper.Easies
     {
         ISelectedDbQuery<TResult> Select<TResult>(Expression<Func<T, TResult>> selector);
 
+        ISelectedDbQuery<TResult> Select<TResult>();
+
         IDbQuery<T> Where(Expression<Func<T, bool>> predicate);
 
         IDbQuery<T> Where(Expression<Func<T, string>> expression);
@@ -25,9 +27,9 @@ namespace Dapper.Easies
 
         IDbQuery<T, TJoin> Join<TJoin>(Expression<Func<T, TJoin, string>> on, JoinType type = JoinType.Inner) where TJoin : IDbObject;
 
-        IOrderedDbQuery<T> OrderBy(params Expression<Func<T, object>>[] orderFields);
+        IOrderedDbQuery<T> OrderBy(Expression<Func<T, object>> orderFields);
 
-        IOrderedDbQuery<T> OrderByDescending(params Expression<Func<T, object>>[] orderFields);
+        IOrderedDbQuery<T> OrderByDescending(Expression<Func<T, object>> orderFields);
 
         IGroupingDbQuery<T> GroupBy<TFields>(Expression<Func<T, TFields>> fields);
     }
@@ -52,9 +54,9 @@ namespace Dapper.Easies
 
         IDbQuery<T1, T2, TJoin> Join<TJoin>(Expression<Func<T1, T2, TJoin, string>> on, JoinType type = JoinType.Inner) where TJoin : IDbObject;
 
-        IOrderedDbQuery<T1, T2> OrderBy(params Expression<Func<T1, T2, object>>[] orderFields);
+        IOrderedDbQuery<T1, T2> OrderBy(Expression<Func<T1, T2, object>> orderFields);
 
-        IOrderedDbQuery<T1, T2> OrderByDescending(params Expression<Func<T1, T2, object>>[] orderFields);
+        IOrderedDbQuery<T1, T2> OrderByDescending(Expression<Func<T1, T2, object>> orderFields);
 
         IGroupingDbQuery<T1, T2> GroupBy<TFields>(Expression<Func<T1, T2, TFields>> fields);
     }
@@ -79,9 +81,9 @@ namespace Dapper.Easies
 
         IDbQuery<T1, T2, T3, TJoin> Join<TJoin>(Expression<Func<T1, T2, T3, TJoin, string>> on, JoinType type = JoinType.Inner) where TJoin : IDbObject;
 
-        IOrderedDbQuery<T1, T2, T3> OrderBy(params Expression<Func<T1, T2, T3, object>>[] orderFields);
+        IOrderedDbQuery<T1, T2, T3> OrderBy(Expression<Func<T1, T2, T3, object>> orderFields);
 
-        IOrderedDbQuery<T1, T2, T3> OrderByDescending(params Expression<Func<T1, T2, T3, object>>[] orderFields);
+        IOrderedDbQuery<T1, T2, T3> OrderByDescending(Expression<Func<T1, T2, T3, object>> orderFields);
 
         IGroupingDbQuery<T1, T2, T3> GroupBy<TFields>(Expression<Func<T1, T2, T3, TFields>> fields);
     }
@@ -106,9 +108,9 @@ namespace Dapper.Easies
 
         IDbQuery<T1, T2, T3, T4, TJoin> Join<TJoin>(Expression<Func<T1, T2, T3, T4, TJoin, string>> on, JoinType type = JoinType.Inner) where TJoin : IDbObject;
 
-        IOrderedDbQuery<T1, T2, T3, T4> OrderBy(params Expression<Func<T1, T2, T3, T4, object>>[] orderFields);
+        IOrderedDbQuery<T1, T2, T3, T4> OrderBy(Expression<Func<T1, T2, T3, T4, object>> orderFields);
 
-        IOrderedDbQuery<T1, T2, T3, T4> OrderByDescending(params Expression<Func<T1, T2, T3, T4, object>>[] orderFields);
+        IOrderedDbQuery<T1, T2, T3, T4> OrderByDescending(Expression<Func<T1, T2, T3, T4, object>> orderFields);
 
         IGroupingDbQuery<T1, T2, T3, T4> GroupBy<TFields>(Expression<Func<T1, T2, T3, T4, TFields>> fields);
     }
@@ -121,9 +123,9 @@ namespace Dapper.Easies
 
         IDbQuery<T1, T2, T3, T4, T5> Where(Expression<Func<T1, T2, T3, T4, T5, string>> expression);
 
-        IOrderedDbQuery<T1, T2, T3, T4, T5> OrderBy(params Expression<Func<T1, T2, T3, T4, T5, object>>[] orderFields);
+        IOrderedDbQuery<T1, T2, T3, T4, T5> OrderBy(Expression<Func<T1, T2, T3, T4, T5, object>> orderFields);
 
-        IOrderedDbQuery<T1, T2, T3, T4, T5> OrderByDescending(params Expression<Func<T1, T2, T3, T4, T5, object>>[] orderFields);
+        IOrderedDbQuery<T1, T2, T3, T4, T5> OrderByDescending(Expression<Func<T1, T2, T3, T4, T5, object>> orderFields);
 
         IGroupingDbQuery<T1, T2, T3, T4, T5> GroupBy<TFields>(Expression<Func<T1, T2, T3, T4, T5, TFields>> fields);
     }

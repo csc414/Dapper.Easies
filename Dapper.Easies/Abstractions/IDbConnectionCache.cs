@@ -25,12 +25,20 @@ namespace Dapper.Easies
         /// <returns></returns>
         IDbConnection GetConnection(string connectionStringName);
 
-        Task ExecuteAsync(string connectionStringName, Func<IDbConnection, Task> func);
+        /// <summary>
+        /// 根据配置名创建新的 DbConnection
+        /// </summary>
+        /// <param name="connectionStringName"></param>
+        /// <returns></returns>
+        IDbConnection CreateConnection(string connectionStringName);
 
-        Task<T> ExecuteAsync<T>(string connectionStringName, Func<IDbConnection, Task<T>> func);
-
-        Task ExecuteAsync(IDbConnectionFactory factory, Func<IDbConnection, Task> func);
-
+        /// <summary>
+        /// 执行上下文，自动判断异步环境
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="factory"></param>
+        /// <param name="func"></param>
+        /// <returns></returns>
         Task<T> ExecuteAsync<T>(IDbConnectionFactory factory, Func<IDbConnection, Task<T>> func);
     }
 }

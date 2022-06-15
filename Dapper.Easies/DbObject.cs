@@ -68,7 +68,14 @@ namespace Dapper.Easies
 
         public DbProperty IdentityKey { get; set; }
 
-        public DbProperty this[string name] => _properties[name];
+        public DbProperty this[string name]
+        {
+            get
+            {
+                _properties.TryGetValue(name, out var property);
+                return property;
+            }
+        }
 
         internal bool Add(string name, DbProperty property) => _properties.TryAdd(name, property);
 
@@ -125,7 +132,7 @@ namespace Dapper.Easies
                     var objAttr = t.GetCustomAttribute<DbObjectAttribute>();
                     var obj = new DbObject(objAttr?.TableName ?? t.Name, t);
                     obj.ConnectionStringName = objAttr?.ConnectionStringName;
-                    obj.ConnectionFactory = options.GetConnectionFactory(obj.ConnectionStringName);
+                    obj.ConnectionFactory = options.GetConnectionFactory(obj.ConnectionStringName ?? EasiesOptions.DefaultName);
                     obj.SqlSyntax = options.GetSqlSyntax(obj.ConnectionStringName);
                     obj.EscapeName = obj.SqlSyntax.EscapeTableName(obj.DbName);
                     foreach (var p in t.GetTypeInfo().GetProperties(BindingFlags.Instance | BindingFlags.Public))
@@ -135,7 +142,7 @@ namespace Dapper.Easies
                         property.PrimaryKey = attr?.PrimaryKey ?? false;
                         property.Ignore = attr?.Ignore ?? false;
                         property.EscapeName = obj.SqlSyntax.EscapePropertyName(property.DbName);
-                        property.EscapeNameAsAlias = obj.SqlSyntax.PropertyNameAlias(new DbAlias(property.DbName, property.PropertyInfo.Name));
+                        property.EscapeNameAsAlias = obj.SqlSyntax.AliasPropertyName(property.EscapeName, obj.SqlSyntax.EscapePropertyName(property.PropertyInfo.Name));
                         obj.Add(p.Name, property);
                         if (attr != null && attr.PrimaryKey && attr.Identity && obj.IdentityKey == null)
                         {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -66,6 +67,8 @@ namespace Dapper.Easies
 
         public ISelectedDbQuery<TResult> Select<TResult>(Expression<Func<T, TResult>> selector) => _provider.From<T>().Select(selector);
 
+        public ISelectedDbQuery<TResult> Select<TResult>() => _provider.From<T>().Select<TResult>();
+
         public IDbQuery<T> Where(Expression<Func<T, bool>> predicate) => _provider.From<T>().Where(predicate);
 
         public IDbQuery<T> Where(Expression<Func<T, string>> expression) => _provider.From<T>().Where(expression);
@@ -74,17 +77,24 @@ namespace Dapper.Easies
 
         public IDbQuery<T, TJoin> Join<TJoin>(Expression<Func<T, TJoin, string>> on = null, JoinType type = JoinType.Inner) where TJoin : IDbObject => _provider.From<T>().Join(on, type);
 
-        public IOrderedDbQuery<T> OrderBy(params Expression<Func<T, object>>[] orderFields) => _provider.From<T>().OrderBy(orderFields);
+        public IOrderedDbQuery<T> OrderBy(Expression<Func<T, object>> orderFields) => _provider.From<T>().OrderBy(orderFields);
 
-        public IOrderedDbQuery<T> OrderByDescending<TField>(params Expression<Func<T, object>>[] orderFields) => _provider.From<T>().OrderByDescending(orderFields);
+        public IOrderedDbQuery<T> OrderByDescending<TField>(Expression<Func<T, object>> orderFields) => _provider.From<T>().OrderByDescending(orderFields);
 
         public IGroupingDbQuery<T> GroupBy<TFields>(Expression<Func<T, TFields>> fields) => _provider.From<T>().GroupBy(fields);
 
         public Task<T> FirstAsync() => _provider.From<T>().FirstAsync();
 
+        public Task<TResult> FirstAsync<TResult>() where TResult : ITuple
+            => _provider.From<T>().FirstAsync<TResult>();
+
         public Task<T> FirstOrDefaultAsync() => _provider.From<T>().FirstOrDefaultAsync();
 
+        public Task<TResult> FirstOrDefaultAsync<TResult>() where TResult : ITuple => _provider.From<T>().FirstOrDefaultAsync<TResult>();
+
         public Task<IEnumerable<T>> QueryAsync() => _provider.From<T>().QueryAsync();
+
+        public Task<IEnumerable<TResult>> QueryAsync<TResult>() where TResult : ITuple => _provider.From<T>().QueryAsync<TResult>();
 
         public Task<bool> ExistAsync() => _provider.From<T>().ExistAsync();
 
@@ -112,6 +122,10 @@ namespace Dapper.Easies
 
         public Task<(IEnumerable<T> data, long total, int max_page)> GetPagerAsync(int page, int size) => _provider.From<T>().GetPagerAsync(page, size);
 
+        public Task<(IEnumerable<TResult> data, long total, int max_page)> GetPagerAsync<TResult>(int page, int size) where TResult : ITuple => _provider.From<T>().GetPagerAsync<TResult>(page, size);
+
         public Task<(IEnumerable<T> data, long total)> GetLimitAsync(int skip, int take) => _provider.From<T>().GetLimitAsync(skip, take);
+
+        public Task<(IEnumerable<TResult> data, long total)> GetLimitAsync<TResult>(int skip, int take) where TResult : ITuple => _provider.From<T>().GetLimitAsync<TResult>(skip, take);
     }
 }
