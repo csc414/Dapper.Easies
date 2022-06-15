@@ -12,7 +12,7 @@ namespace Dapper.Easies
 			SelectType = type;
 		}
 
-		public override ExpressionType NodeType { get; } = (ExpressionType)997;
+		public override ExpressionType NodeType { get; } = (ExpressionType)998;
 
 		public Type SelectType { get; }
 	}

@@ -13,8 +13,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dapper.Easies.Tests", "Dapp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dapper.Easies.SqlServer", "Dapper.Easies.SqlServer\Dapper.Easies.SqlServer.csproj", "{E67B46D0-087C-4502-A07F-D063F6F845CB}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dapper.Easies.Sqlite", "Dapper.Easies.Sqlite\Dapper.Easies.Sqlite.csproj", "{C600F892-2F4E-42E1-908F-D877AB73072B}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{07F1D672-D163-4676-9701-6E8A1211C84E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dapper.Easies.MySql.Tests", "Dapper.Easies.MySql.Tests\Dapper.Easies.MySql.Tests.csproj", "{595E02D8-7448-42F5-9DF6-C91C2BB3EA6F}"
@@ -45,10 +43,6 @@ Global
 		{E67B46D0-087C-4502-A07F-D063F6F845CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E67B46D0-087C-4502-A07F-D063F6F845CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E67B46D0-087C-4502-A07F-D063F6F845CB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C600F892-2F4E-42E1-908F-D877AB73072B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C600F892-2F4E-42E1-908F-D877AB73072B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C600F892-2F4E-42E1-908F-D877AB73072B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C600F892-2F4E-42E1-908F-D877AB73072B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{595E02D8-7448-42F5-9DF6-C91C2BB3EA6F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{595E02D8-7448-42F5-9DF6-C91C2BB3EA6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{595E02D8-7448-42F5-9DF6-C91C2BB3EA6F}.Release|Any CPU.ActiveCfg = Release|Any CPU

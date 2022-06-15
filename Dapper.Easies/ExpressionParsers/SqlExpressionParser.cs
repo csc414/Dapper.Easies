@@ -206,7 +206,7 @@ namespace Dapper.Easies
             return node;
         }
 
-        protected override Expression VisitMethodCall(MethodCallExpression node)
+        protected override Expression VisitMethodCall(MethodCallExpression node, bool isExpr)
         {
             if (node.Method.ReflectedType == s_dbQueryExtensionType)
             {
@@ -217,7 +217,7 @@ namespace Dapper.Easies
                 }
             }
 
-            return base.VisitMethodCall(node);
+            return base.VisitMethodCall(node, isExpr);
         }
 
         private IDbQuery GetSubQuery(Expression exp)
@@ -285,7 +285,7 @@ namespace Dapper.Easies
                         }
                     case "Expr":
                         {
-                            if (args[0] is ExprExpression sql)
+                            if (args[0] is SqlExpression sql)
                                 return CreateSql(sql.Sql);
                             else if (args[0] is ConstantExpression constant)
                                 return CreateSql(constant.Value?.ToString());
@@ -361,11 +361,11 @@ namespace Dapper.Easies
             switch (member.Name)
             {
                 case "Year":
-                    return new SqlExpression($"YEAR({GetPropertyName(instance)}))");
+                    return new SqlExpression($"YEAR({GetPropertyName(instance)})");
                 case "Month":
-                    return new SqlExpression($"MONTH({GetPropertyName(instance)}))");
+                    return new SqlExpression($"MONTH({GetPropertyName(instance)})");
                 case "Day":
-                    return new SqlExpression($"DAY({GetPropertyName(instance)}))");
+                    return new SqlExpression($"DAY({GetPropertyName(instance)})");
                 default:
                     throw new NotSupportedException($"{GetPropertyName(instance)}.{member.Name} not supported");
             }

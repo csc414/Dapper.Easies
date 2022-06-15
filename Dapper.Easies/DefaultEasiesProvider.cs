@@ -21,6 +21,16 @@ namespace Dapper.Easies
             _sqlConverter = sqlConverter;
         }
 
+        public IDbConnection Connection => _connection.Connection;
+
+        public IDbConnection GetConnection(string connectionStringName) => _connection.GetConnection(connectionStringName);
+
+        public IDbConnection CreateConnection() => _connection.CreateConnection(EasiesOptions.DefaultName);
+
+        public IDbConnection CreateConnection(string connectionStringName) => _connection.CreateConnection(connectionStringName);
+
+        Task<TResult> InternalExecuteAsync<T, TResult>(Func<IDbConnection, Task<TResult>> func) => _connection.ExecuteAsync(DbObject.Get<T>().ConnectionFactory, func);
+
         public DbEntity<T> Entity<T>() where T : IDbTable => new DbEntity<T>(this);
 
         public IDbQuery<T> From<T>() where T : IDbObject => new DbQuery<T>(new QueryContext(_connection, _sqlConverter, DbObject.Get(typeof(T))));
@@ -97,19 +107,5 @@ namespace Dapper.Easies
             var sql = _sqlConverter.ToUpdateSql<T>();
             return InternalExecuteAsync<T, int>(conn => conn.ExecuteAsync(sql, entities));
         }
-
-        public IDbConnection Connection => _connection.Connection;
-
-        public IDbConnection GetConnection(string connectionStringName) => _connection.GetConnection(connectionStringName);
-
-        Task<TResult> InternalExecuteAsync<T, TResult>(Func<IDbConnection, Task<TResult>> func) => _connection.ExecuteAsync(DbObject.Get<T>()?.ConnectionFactory, func);
-
-        public Task ExecuteAsync(Func<IDbConnection, Task> func) => _connection.ExecuteAsync(EasiesOptions.DefaultName, func);
-
-        public Task<T> ExecuteAsync<T>(Func<IDbConnection, Task<T>> func) => _connection.ExecuteAsync(EasiesOptions.DefaultName, func);
-
-        public Task ExecuteAsync(string connectionStringName, Func<IDbConnection, Task> func) => _connection.ExecuteAsync(connectionStringName, func);
-
-        public Task<T> ExecuteAsync<T>(string connectionStringName, Func<IDbConnection, Task<T>> func) => _connection.ExecuteAsync(connectionStringName, func);
     }
 }

@@ -15,6 +15,9 @@ namespace Dapper.Easies.MySql
             var sql = new StringBuilder("SELECT", 0x100);
             var alias = context.Alias[0];
 
+            if (context.Distinct)
+                sql.AppendFormat(" DISTINCT");
+
             if (aggregateInfo != null)
             {
                 switch (aggregateInfo.Type)
@@ -43,17 +46,11 @@ namespace Dapper.Easies.MySql
             }
             else if (context.SelectorExpression != null)
             {
-                if (context.Distinct)
-                    sql.AppendFormat(" DISTINCT");
-
                 sql.Append(' ');
                 parser.VisitFields(context.SelectorExpression, sql, parameterBuilder);
             }
             else
             {
-                if (context.Distinct)
-                    sql.AppendFormat(" DISTINCT");
-
                 sql.Append(' ');
                 parser.VisitFields(context.DbObject, alias, sql);
             }
@@ -68,7 +65,8 @@ namespace Dapper.Easies.MySql
 
             AppendHaving(parser, context, sql, parameterBuilder);
 
-            AppendSort(parser, context, sql, parameterBuilder);
+            if (aggregateInfo == null)
+                AppendSort(parser, context, sql, parameterBuilder);
 
             var takeCount = take ?? context.Take;
             if (takeCount > 0)
@@ -195,7 +193,7 @@ namespace Dapper.Easies.MySql
                 sql.Append($"{item.EscapeName} = {parameterBuilder.Add(ids[i])}");
                 i++;
             }
-            sql.Append($" LIMIT 0,1");
+            sql.Append(" LIMIT 0,1");
             return sql.ToString();
         }
 

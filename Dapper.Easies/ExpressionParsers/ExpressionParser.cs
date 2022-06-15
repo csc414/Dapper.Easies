@@ -203,7 +203,7 @@ namespace Dapper.Easies
             return node;
         }
 
-        protected virtual Expression VisitMethodCall(MethodCallExpression node)
+        protected virtual Expression VisitMethodCall(MethodCallExpression node, bool isExpr = false)
         {
             Expression obj = Visit(node.Object);
             if (node.Object != null)
@@ -224,45 +224,47 @@ namespace Dapper.Easies
             }
             else if (s_dbObjectExtensionType == node.Method.ReflectedType || s_dbFuncType == node.Method.ReflectedType)
             {
-                var result = AppendMethod(null, node.Method, node.Arguments.Select(o => Visit(o)).ToArray());
+                Expression[] args;
+                if (s_dbFuncType == node.Method.ReflectedType && node.Method.Name.Equals("Expr", StringComparison.Ordinal))
+                {
+                    var arg = node.Arguments[0];
+                    if (arg is MethodCallExpression method && method.Method.Name.Equals("Format", StringComparison.Ordinal))
+                        arg = VisitMethodCall(method, true);
+                    else
+                        arg = Visit(arg);
+                    args = new Expression[] { arg };
+                }
+                else
+                    args = node.Arguments.Select(o => Visit(o)).ToArray();
+
+                var result = AppendMethod(null, node.Method, args);
                 if (result != null)
                     return result;
             }
             else
             {
-                IEnumerable<Expression> arguments;
-                if (node.Method.Name.Equals("Format", StringComparison.Ordinal))
+                if (isExpr)
                 {
-                    var skip = 0;
+                    IEnumerable<Expression> arguments;
                     if (node.Arguments.Count == 2 && node.Arguments[1] is NewArrayExpression newArray)
                         arguments = newArray.Expressions.Select(o => Visit(o));
                     else
-                    {
-                        arguments = node.Arguments.Select(o => Visit(o));
-                        skip = 1;
-                    }
+                        arguments = node.Arguments.Skip(1).Select(o => Visit(o));
 
-                    if (arguments.Any(o => o.NodeType == ExpressionType.MemberAccess))
+                    var vals = arguments.Select((o, i) =>
                     {
-                        if (skip > 0)
-                            arguments = arguments.Skip(skip);
-                        var vals = arguments.Select((o, i) =>
-                        {
-                            if (o is MemberExpression parameter)
-                                return GetPropertyName(parameter);
-                            else if (o is ConstantExpression constant)
-                                return GetParameterName(constant.Value);
-                            else
-                                throw new NotSupportedException($"{o}");
-                        }).ToArray();
+                        if (o is MemberExpression parameter)
+                            return GetPropertyName(parameter);
+                        else if (o is ConstantExpression constant)
+                            return GetParameterName(constant.Value);
+                        else
+                            throw new NotSupportedException($"{o}");
+                    }).ToArray();
 
-                        return new ExprExpression(string.Format(GetConstantValue<string>(node.Arguments[0]), vals));
-                    }
+                    return new SqlExpression(string.Format(GetConstantValue<string>(node.Arguments[0]), vals));
                 }
-                else
-                    arguments = node.Arguments.Select(o => Visit(o));
-
-                return Expression.Constant(node.Method.Invoke(null, GetConstantValue(arguments)));
+                
+                return Expression.Constant(node.Method.Invoke(null, VisitConstantExpressions(node.Arguments)));
             }
 
             return node;

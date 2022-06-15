@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Dapper.Easies.MySql\Dapper.Easies.MySql.csproj" />
+    <ProjectReference Include="..\Dapper.Easies.SqlServer\Dapper.Easies.SqlServer.csproj" />
   </ItemGroup>
 
 </Project>

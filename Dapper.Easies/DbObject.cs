@@ -132,7 +132,7 @@ namespace Dapper.Easies
                     var objAttr = t.GetCustomAttribute<DbObjectAttribute>();
                     var obj = new DbObject(objAttr?.TableName ?? t.Name, t);
                     obj.ConnectionStringName = objAttr?.ConnectionStringName;
-                    obj.ConnectionFactory = options.GetConnectionFactory(obj.ConnectionStringName);
+                    obj.ConnectionFactory = options.GetConnectionFactory(obj.ConnectionStringName ?? EasiesOptions.DefaultName);
                     obj.SqlSyntax = options.GetSqlSyntax(obj.ConnectionStringName);
                     obj.EscapeName = obj.SqlSyntax.EscapeTableName(obj.DbName);
                     foreach (var p in t.GetTypeInfo().GetProperties(BindingFlags.Instance | BindingFlags.Public))

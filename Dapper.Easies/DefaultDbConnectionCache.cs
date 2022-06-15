@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 
 namespace Dapper.Easies
 {
-    public class DbConnectionLifetimeCache : IDbConnectionCache, IDisposable
+    public class DefaultDbConnectionCache : IDbConnectionCache, IDisposable
     {
         private readonly EasiesOptions _options;
 
         private IDbConnection _connection;
 
-        public DbConnectionLifetimeCache(EasiesOptions options)
+        public DefaultDbConnectionCache(EasiesOptions options)
         {
             _options = options;
         }
@@ -23,22 +23,21 @@ namespace Dapper.Easies
 
         public IDbConnection GetConnection(string connectionStringName)
         {
-            if (connectionStringName == null)
-                connectionStringName = EasiesOptions.DefaultName;
-
             return GetConnection(_options.GetConnectionFactory(connectionStringName));
         }
 
         public IDbConnection GetConnection(IDbConnectionFactory factory)
         {
-            if (factory == null)
-                throw new ArgumentNullException(nameof(factory));
-
             if (_connections.TryGetValue(factory, out var connection))
                 return connection;
             
             _connections.Add(factory, connection = factory.Create());
             return connection ;
+        }
+
+        public IDbConnection CreateConnection(string connectionStringName)
+        {
+            return _options.GetConnectionFactory(connectionStringName).Create();
         }
 
         public void Dispose()
@@ -54,24 +53,15 @@ namespace Dapper.Easies
             }
         }
 
-        public Task ExecuteAsync(string connectionStringName, Func<IDbConnection, Task> func)
+        public async Task<T> ExecuteAsync<T>(IDbConnectionFactory factory, Func<IDbConnection, Task<T>> func)
         {
-            return ExecuteAsync(_options.GetConnectionFactory(connectionStringName), func);
-        }
+            if (AsyncExecutionScope.IsAsync())
+            {
+                using (var conn = factory.Create())
+                    return await func(conn);
+            }
 
-        public Task<T> ExecuteAsync<T>(string connectionStringName, Func<IDbConnection, Task<T>> func)
-        {
-            return ExecuteAsync(_options.GetConnectionFactory(connectionStringName), func);
-        }
-
-        public Task ExecuteAsync(IDbConnectionFactory factory, Func<IDbConnection, Task> func)
-        {
-            return func(factory.Create());
-        }
-
-        public Task<T> ExecuteAsync<T>(IDbConnectionFactory factory, Func<IDbConnection, Task<T>> func)
-        {
-            return func(factory.Create());
+            return await func(GetConnection(factory));
         }
     }
 }

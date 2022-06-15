@@ -17,13 +17,13 @@ namespace Dapper.Easies.MySql
             switch (member.Name)
             {
                 case "Date":
-                    return new SqlExpression($"DATE({GetPropertyName(instance)}))");
+                    return new SqlExpression($"DATE({GetPropertyName(instance)})");
                 case "Hour":
-                    return new SqlExpression($"HOUR({GetPropertyName(instance)}))");
+                    return new SqlExpression($"HOUR({GetPropertyName(instance)})");
                 case "Minute":
-                    return new SqlExpression($"MINUTE({GetPropertyName(instance)}))");
+                    return new SqlExpression($"MINUTE({GetPropertyName(instance)})");
                 case "Second":
-                    return new SqlExpression($"SECOND({GetPropertyName(instance)}))");
+                    return new SqlExpression($"SECOND({GetPropertyName(instance)})");
                 default:
                     return base.AppendDateTimeMember(instance, member);
             }

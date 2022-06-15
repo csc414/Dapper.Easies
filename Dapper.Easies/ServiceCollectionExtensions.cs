@@ -23,11 +23,8 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             var builder = EasiesOptionsBuilder.Instance;
             builderAction?.Invoke(builder);
-            services.TryAdd(new ServiceDescriptor(typeof(IEasiesProvider), typeof(DefaultEasiesProvider), builder.Lifetime));
-            if (builder.Lifetime == ServiceLifetime.Singleton)
-                services.TryAddSingleton<IDbConnectionCache, DbConnectionSingletonCache>();
-            else
-                services.TryAdd(new ServiceDescriptor(typeof(IDbConnectionCache), typeof(DbConnectionLifetimeCache), builder.Lifetime));
+            services.TryAddScoped<IEasiesProvider, DefaultEasiesProvider>();
+            services.TryAddScoped<IDbConnectionCache, DefaultDbConnectionCache>();
             services.TryAddSingleton<ISqlConverter, DefaultSqlConverter>();
             services.TryAddSingleton(builder.Options);
 
