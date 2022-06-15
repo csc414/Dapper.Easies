@@ -11,11 +11,6 @@
 var services = new ServiceCollection();
 services.AddEasiesProvider(builder =>
 {
-    //生命周期默认是 Singleton。
-    //Singleton 为每个查询创建一个新的连接，支持异步查询，并Task.When等待。
-    //Transient，Scoped 在 IEasiesProvider 生命周期中将共用一个 DbConnection ，可根据自身需求配置
-    builder.Lifetime = ServiceLifetime.Singleton;
-
     //开启开发模式会向 Logger 输出生成的Sql。
     builder.DevelopmentMode();
     
@@ -307,6 +302,20 @@ using (new DynamicDbMappingScope(map => map.SetTableName<Class>("tb_class1")))
     await easiesProvider.InsertAsync(...);
 }
 //Class = tb_class
+```
+异步执行
+------------------------------------------------------------
+```csharp
+//IEasiesProvider 服务默认注册为Scoped，在每个请求生命周期中将共用一个 DbConnection，若需要异步执行请使用 AsyncExecutionScope
+
+using (AsyncExecutionScope.Create())
+{
+    var task1 = easiesProvider.Method(...);
+    
+    var task2 = easiesProvider.Method(...);
+    
+    await Task.WhenAll(task1, task2);
+}
 ```
 原生Sql执行
 ------------------------------------------------------------
