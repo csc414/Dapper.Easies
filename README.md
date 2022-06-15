@@ -303,10 +303,12 @@ using (new DynamicDbMappingScope(map => map.SetTableName<Class>("tb_class1")))
 }
 //Class = tb_class
 ```
-异步执行
+异步并行
 ------------------------------------------------------------
 ```csharp
-//IEasiesProvider 服务从 2.1.0 开始生命周期默认注册为Scoped，在每个请求生命周期中将共用一个 DbConnection，并自动释放，若需要异步执行请使用 AsyncExecutionScope
+//IEasiesProvider 服务从 2.1.0 开始生命周期默认注册为 Scoped
+//在 IEasiesProvider 生命周期中将共用一个 DbConnection。
+//若需要异步并行请使用以下方式
 
 using (AsyncExecutionScope.Create())
 {
@@ -320,13 +322,17 @@ using (AsyncExecutionScope.Create())
 原生Sql执行
 ------------------------------------------------------------
 ```csharp
-//生命周期默认是 Singleton。
-//Singleton 为每个查询创建一个新的连接。
-//Transient，Scoped 在 IEasiesProvider 生命周期中将共用一个 DbConnection。
-await easiesProvider.Connection.ExecuteAsync(...);
+//IEasiesProvider 服务从 2.1.0 开始生命周期默认注册为 Scoped
+//在 IEasiesProvider 生命周期中将共用一个 DbConnection。
+easiesProvider.Connection
 
 //多库
-await easiesProvider.GetConnection("多库配置名").ExecuteAsync(...);
+easiesProvider.GetConnection("多库配置名")
+
+//以下方式将创建新的 DbConnection 需自行处理连接的释放
+easiesProvider.CreateConnection()
+
+easiesProvider.CreateConnection("多库配置名")
 ```
 
 关于事务
