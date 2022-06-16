@@ -7,10 +7,20 @@ namespace Dapper.Easies
 {
     public class JoinMetedata
     {
-        public DbObject DbObject { get; set; }
+        public JoinMetedata(DbObject dbObject, JoinType type, Expression joinExpression, IDbQuery query)
+        {
+            DbObject = dbObject;
+            Type = type;
+            JoinExpression = joinExpression;
+            Query = query;
+        }
 
-        public JoinType Type { get; set; }
+        public DbObject DbObject { get; }
 
-        public Expression JoinExpression { get; set; }
+        public JoinType Type { get; }
+
+        public Expression JoinExpression { get; }
+
+        public IDbQuery Query { get; }
     }
 }

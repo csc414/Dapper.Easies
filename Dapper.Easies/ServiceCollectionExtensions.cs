@@ -21,13 +21,12 @@ namespace Microsoft.Extensions.DependencyInjection
 
         public static IServiceCollection AddEasiesProvider(this IServiceCollection services, Action<EasiesOptionsBuilder> builderAction)
         {
-            var builder = new EasiesOptionsBuilder(services);
+            var builder = EasiesOptionsBuilder.Instance;
             builderAction?.Invoke(builder);
-            services.Add(new ServiceDescriptor(typeof(IEasiesProvider), typeof(DefaultEasiesProvider), builder.Lifetime));
-            services.AddSingleton<ISqlConverter, DefaultSqlConverter>();
-            services.AddSingleton(builder.Options);
-            if (!services.Any(o => o.ServiceType == typeof(ISqlSyntax)))
-                services.AddSingleton<ISqlSyntax, DefaultSqlSyntax>();
+            services.TryAddScoped<IEasiesProvider, DefaultEasiesProvider>();
+            services.TryAddScoped<IDbConnectionCache, DefaultDbConnectionCache>();
+            services.TryAddSingleton<ISqlConverter, DefaultSqlConverter>();
+            services.TryAddSingleton(builder.Options);
 
             return services;
         }

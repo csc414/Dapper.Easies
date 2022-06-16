@@ -14,7 +14,7 @@ namespace Dapper.Easies
 
         public IDbConnectionFactory GetConnectionFactory(string connectionStringName)
         {
-            if (ConnectionFactory.TryGetValue(connectionStringName ?? DefaultName, out var factory))
+            if (ConnectionFactory.TryGetValue(connectionStringName, out var factory))
                 return factory;
 
             throw new ArgumentException($"Invalid ConnectionStringName：{connectionStringName}", nameof(connectionStringName));

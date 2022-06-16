@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Dapper.Easies.Tests
 {
-    [DbObject("bnt_student")]
+    [DbObject("tb_students")]
     public class Student : IDbTable
     {
         [DbProperty(PrimaryKey = true, Identity = true)]
@@ -12,16 +12,14 @@ namespace Dapper.Easies.Tests
 
         public Guid ClassId { get; set; }
 
-        [DbProperty("Name")]
-        public string StudentName { get; set; }
+        [DbProperty("StudentName")]
+        public string Name { get; set; }
 
         public int? Age { get; set; }
-
-        public bool IsHandsome { get; set; }
 
         public DateTime CreateTime { get; set; }
 
         [DbProperty(Ignore = true)]
-        public string ClassName { get; set; }
+        public bool IsAdult => Age >= 18;
     }
 }

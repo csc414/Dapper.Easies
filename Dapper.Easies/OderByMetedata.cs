@@ -7,13 +7,13 @@ namespace Dapper.Easies
 {
     public class OrderByMetedata
     {
-        public OrderByMetedata(IEnumerable<Expression> expressions, SortType sortType)
+        public OrderByMetedata(Expression expression, SortType sortType)
         {
-            Expressions = expressions;
+            Expression = expression;
             SortType = sortType;
         }
 
-        public IEnumerable<Expression> Expressions { get; }
+        public Expression Expression { get; }
 
         public SortType SortType { get; }
     }

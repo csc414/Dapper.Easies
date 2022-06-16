@@ -1,9 +1,8 @@
 ﻿using Dapper.Easies;
 using Dapper.Easies.SqlServer;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
 
-namespace Microsoft.Extensions.DependencyInjection
+namespace Dapper.Easies
 {
     public static class EasiesOptionsExtensions
     {
@@ -18,7 +17,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new ArgumentNullException(nameof(name));
 
             options.Options.ConnectionFactory[name] = new SqlServerDbConnectionFactory(connectionString);
-            options.Options.SqlSyntax[name] = new SqlServerSqlSyntax();
+            options.Options.SqlSyntax[name] = SqlServerSqlSyntax.Instance;
             return options;
         }
     }
