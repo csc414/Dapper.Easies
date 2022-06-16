@@ -65,7 +65,7 @@ namespace Dapper.Easies
 
         public virtual void VisitFields(Expression node, StringBuilder sb, ParameterBuilder parameters, string separator = ", ", bool hasAlias = true, bool updateMode = false)
         {
-            if(node is LambdaExpression lambda)
+            if (node is LambdaExpression lambda)
             {
                 SetLambdaExpression(lambda);
                 node = lambda.Body;
@@ -177,8 +177,13 @@ namespace Dapper.Easies
                             else
                                 Builder.Append(GetPropertyName(member));
                         }
-                        else if (hasAlias && arg is SqlExpression sql)
-                            Builder.Append(SqlSyntax.AliasPropertyName(sql.Sql, SqlSyntax.EscapePropertyName(assignment.Member.Name)));
+                        else if (arg is SqlExpression sql)
+                        {
+                            if (hasAlias)
+                                Builder.Append(SqlSyntax.AliasPropertyName(sql.Sql, SqlSyntax.EscapePropertyName(assignment.Member.Name)));
+                            else
+                                Builder.Append(sql.Sql);
+                        }
                     }
                 }
             }
@@ -200,8 +205,14 @@ namespace Dapper.Easies
                     else
                         Builder.Append(GetPropertyName(memberExp));
                 }
-                else if (hasAlias && arg is SqlExpression sql)
-                    Builder.Append(SqlSyntax.AliasPropertyName(sql.Sql, SqlSyntax.EscapePropertyName(member.Name)));
+                else if (arg is SqlExpression sql)
+                {
+                    if (hasAlias)
+                        Builder.Append(SqlSyntax.AliasPropertyName(sql.Sql, SqlSyntax.EscapePropertyName(member.Name)));
+                    else
+                        Builder.Append(sql.Sql);
+                }
+
             }
             return node;
         }

@@ -153,7 +153,7 @@ namespace Dapper.Easies.Tests
 
             result = EasiesProvider.From<Student>()
                 .Join<Class>()
-                .OrderBy((a, b) => new { a.Id, b.Name })
+                .OrderBy((a, b) => new { a.Id, b.Name, b.CreateTime.Year })
                 .ThenByDescending((a, b) => new { a.Id, b.Name })
                 .GetSql();
             OrderByJoinTableTest(result.sql);
@@ -194,7 +194,7 @@ namespace Dapper.Easies.Tests
 
             result = EasiesProvider.From<Student>()
                 .Join<Class>()
-                .GroupBy((a, b) => new { a.Id, b.Name })
+                .GroupBy((a, b) => new { a.Id, b.Name, a.CreateTime.Year })
                 .Select((a, b) => new { a.Id, b.Name })
                 .GetSql();
             GroupByJoinTableTest(result.sql);
@@ -371,6 +371,17 @@ namespace Dapper.Easies.Tests
                 .GetSql();
             ExprSelectTest(result.sql, result.parameters);
 
+            result = student
+                .OrderBy(o => DbFunc.Expr<string>($"{o.Name}, {o.Age}"))
+                .GetSql();
+            ExprOrderByTest(result.sql);
+
+            result = student
+                .GroupBy(o => DbFunc.Expr<string>($"{o.Name}, {o.Age}"))
+                .Select(o => new { o.Name, o.Age })
+                .GetSql();
+            ExprGroupByTest(result.sql);
+
             //DbFunc.Expr 可嵌套在任何Lambda表达式内执行，相当于嵌入原生Sql
         }
 
@@ -379,6 +390,10 @@ namespace Dapper.Easies.Tests
         public abstract void ExprWhereTest(string sql, IParameterLookup parameters);
 
         public abstract void ExprSelectTest(string sql, IParameterLookup parameters);
+
+        public abstract void ExprOrderByTest(string sql);
+
+        public abstract void ExprGroupByTest(string sql);
 
         [Fact]
         public void SubQuery()

@@ -82,7 +82,7 @@ namespace Dapper.Easies.MySql.Tests
 
         public override void OrderByJoinTableTest(string sql)
         {
-            Assert.Equal("SELECT t.`Id` `Id`, t.`ClassId` `ClassId`, t.`StudentName` `Name`, t.`Age` `Age`, t.`CreateTime` `CreateTime` FROM `tb_students` t JOIN `tb_classes` t1 ORDER BY t.`Id`, t1.`ClassName` ASC, t.`Id`, t1.`ClassName` DESC", sql);
+            Assert.Equal("SELECT t.`Id` `Id`, t.`ClassId` `ClassId`, t.`StudentName` `Name`, t.`Age` `Age`, t.`CreateTime` `CreateTime` FROM `tb_students` t JOIN `tb_classes` t1 ORDER BY t.`Id`, t1.`ClassName`, YEAR(t1.`CreateTime`) ASC, t.`Id`, t1.`ClassName` DESC", sql);
         }
 
         public override void OrderByJoinQueryTest(string sql)
@@ -102,7 +102,7 @@ namespace Dapper.Easies.MySql.Tests
 
         public override void GroupByJoinTableTest(string sql)
         {
-            Assert.Equal("SELECT t.`Id` `Id`, t1.`ClassName` `Name` FROM `tb_students` t JOIN `tb_classes` t1 GROUP BY t.`Id`, t1.`ClassName`", sql);
+            Assert.Equal("SELECT t.`Id` `Id`, t1.`ClassName` `Name` FROM `tb_students` t JOIN `tb_classes` t1 GROUP BY t.`Id`, t1.`ClassName`, YEAR(t.`CreateTime`)", sql);
         }
 
         public override void GroupByJoinQueryTest(string sql)
@@ -189,6 +189,16 @@ namespace Dapper.Easies.MySql.Tests
         {
             Assert.Equal("SELECT (t.`StudentName` + @p0) `Name` FROM `tb_students` t", sql);
             Assert.Equal("ÕÅÈý", parameters["p0"]);
+        }
+
+        public override void ExprOrderByTest(string sql)
+        {
+            Assert.Equal("SELECT t.`Id` `Id`, t.`ClassId` `ClassId`, t.`StudentName` `Name`, t.`Age` `Age`, t.`CreateTime` `CreateTime` FROM `tb_students` t ORDER BY t.`StudentName`, t.`Age` ASC", sql);
+        }
+
+        public override void ExprGroupByTest(string sql)
+        {
+            Assert.Equal("SELECT t.`StudentName` `Name`, t.`Age` `Age` FROM `tb_students` t GROUP BY t.`StudentName`, t.`Age`", sql);
         }
 
         public override void SubQueryTest(string sql)
