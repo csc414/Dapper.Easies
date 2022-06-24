@@ -184,11 +184,11 @@ await easiesProvider.From<Student>()
     .QueryAsync();   //多表关联未调用Select的情况下，默认返回主表 Student
 
 //Join 子查询
-var query = await easiesProvider.From<Class>()
+var query = easiesProvider.From<Class>()
     .Select(o => new { o.Id, o.Name })
 
 await easiesProvider.From<Student>()
-    .Join<Class>(query, (a, b) => a.ClassId == b.Id)
+    .Join(query, (a, b) => a.ClassId == b.Id)
     .Select((a, b) => b)
     //.Select((a, b) => new { a.Name, ClassName = b.Name })
     .QueryAsync();  //Select b 匿名类，查询将返回匿名类
