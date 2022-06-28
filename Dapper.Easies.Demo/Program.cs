@@ -29,14 +29,14 @@ namespace Dapper.Easies.Demo
 
             var easiesProvider = serviceProvider.GetRequiredService<IEasiesProvider>();
 
-            var testIds = new string[] {  };
+            var testIds = new string[] { };
 
             await easiesProvider.Connection.ExecuteAsync("Update bnt_class set Name = '' where Id In @Ids", new { Ids = testIds });
 
             await easiesProvider.From<Class>()
                      .Where(o => DbFunc.In(o.Id, new List<Guid> { Guid.NewGuid() }))
-                     .Select<TestClass>()
-                     .QueryAsync();
+                     .Select(o => o.CreateTime)
+                     .FirstOrDefaultAsync<(int a, int b)>();
 
             var subQuery = easiesProvider.From<Student>().Where(c => c.ClassId == Guid.NewGuid()).Select(o => new { o.ClassId, o.Name });
 

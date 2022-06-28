@@ -209,14 +209,14 @@ namespace Dapper.Easies
             return InternalExecuteAsync(conn => conn.QueryFirstOrDefaultAsync<T>(_context.Converter.ToQuerySql(_context, out var parameters, skip: 0, take: 1), parameters));
         }
 
-        public Task<TResult> FirstAsync<TResult>() where TResult : ITuple
+        public Task<TResult> FirstAsync<TResult>() where TResult : struct
         {
             return InternalExecuteAsync(conn => conn.QueryFirstAsync<TResult>(_context.Converter.ToQuerySql(_context, out var parameters, skip: 0, take: 1), parameters));
         }
 
-        public Task<TResult> FirstOrDefaultAsync<TResult>() where TResult : ITuple
+        public Task<TResult?> FirstOrDefaultAsync<TResult>() where TResult : struct
         {
-            return InternalExecuteAsync(conn => conn.QueryFirstOrDefaultAsync<TResult>(_context.Converter.ToQuerySql(_context, out var parameters, skip: 0, take: 1), parameters));
+            return InternalExecuteAsync(conn => conn.QueryFirstOrDefaultAsync<TResult?>(_context.Converter.ToQuerySql(_context, out var parameters, skip: 0, take: 1), parameters));
         }
 
         public Task<IEnumerable<T>> QueryAsync()
@@ -224,14 +224,14 @@ namespace Dapper.Easies
             return InternalExecuteAsync(conn => conn.QueryAsync<T>(_context.Converter.ToQuerySql(_context, out var parameters), parameters));
         }
 
-        public Task<IEnumerable<TResult>> QueryAsync<TResult>() where TResult : ITuple
+        public Task<IEnumerable<TResult>> QueryAsync<TResult>() where TResult : struct
         {
             return InternalExecuteAsync(conn => conn.QueryAsync<TResult>(_context.Converter.ToQuerySql(_context, out var parameters), parameters));
         }
 
         public Task<(IEnumerable<T> data, long total, int max_page)> GetPagerAsync(int page, int size) => InternalGetPagerAsync<T>(page, size);
 
-        public Task<(IEnumerable<TResult> data, long total, int max_page)> GetPagerAsync<TResult>(int page, int size) where TResult : ITuple => InternalGetPagerAsync<TResult>(page, size);
+        public Task<(IEnumerable<TResult> data, long total, int max_page)> GetPagerAsync<TResult>(int page, int size) where TResult : struct => InternalGetPagerAsync<TResult>(page, size);
 
         async Task<(IEnumerable<TResult> data, long total, int max_page)> InternalGetPagerAsync<TResult>(int page, int size)
         {
@@ -246,7 +246,7 @@ namespace Dapper.Easies
 
         public Task<(IEnumerable<T> data, long total)> GetLimitAsync(int skip, int take) => InternalGetLimitAsync<T>(skip, take);
 
-        public Task<(IEnumerable<TResult> data, long total)> GetLimitAsync<TResult>(int skip, int take) where TResult : ITuple => InternalGetLimitAsync<TResult>(skip, take);
+        public Task<(IEnumerable<TResult> data, long total)> GetLimitAsync<TResult>(int skip, int take) where TResult : struct => InternalGetLimitAsync<TResult>(skip, take);
 
         async Task<(IEnumerable<TResult> data, long total)> InternalGetLimitAsync<TResult>(int skip, int take)
         {

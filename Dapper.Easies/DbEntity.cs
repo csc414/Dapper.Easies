@@ -95,16 +95,16 @@ namespace Dapper.Easies
 
         public Task<T> FirstAsync() => _provider.From<T>().FirstAsync();
 
-        public Task<TResult> FirstAsync<TResult>() where TResult : ITuple
+        public Task<TResult> FirstAsync<TResult>() where TResult : struct
             => _provider.From<T>().FirstAsync<TResult>();
 
         public Task<T> FirstOrDefaultAsync() => _provider.From<T>().FirstOrDefaultAsync();
 
-        public Task<TResult> FirstOrDefaultAsync<TResult>() where TResult : ITuple => _provider.From<T>().FirstOrDefaultAsync<TResult>();
+        public Task<TResult?> FirstOrDefaultAsync<TResult>() where TResult : struct => _provider.From<T>().FirstOrDefaultAsync<TResult>();
 
         public Task<IEnumerable<T>> QueryAsync() => _provider.From<T>().QueryAsync();
 
-        public Task<IEnumerable<TResult>> QueryAsync<TResult>() where TResult : ITuple => _provider.From<T>().QueryAsync<TResult>();
+        public Task<IEnumerable<TResult>> QueryAsync<TResult>() where TResult : struct => _provider.From<T>().QueryAsync<TResult>();
 
         public Task<bool> ExistAsync() => _provider.From<T>().ExistAsync();
 
@@ -134,10 +134,10 @@ namespace Dapper.Easies
 
         public Task<(IEnumerable<T> data, long total, int max_page)> GetPagerAsync(int page, int size) => _provider.From<T>().GetPagerAsync(page, size);
 
-        public Task<(IEnumerable<TResult> data, long total, int max_page)> GetPagerAsync<TResult>(int page, int size) where TResult : ITuple => _provider.From<T>().GetPagerAsync<TResult>(page, size);
+        public Task<(IEnumerable<TResult> data, long total, int max_page)> GetPagerAsync<TResult>(int page, int size) where TResult : struct => _provider.From<T>().GetPagerAsync<TResult>(page, size);
 
         public Task<(IEnumerable<T> data, long total)> GetLimitAsync(int skip, int take) => _provider.From<T>().GetLimitAsync(skip, take);
 
-        public Task<(IEnumerable<TResult> data, long total)> GetLimitAsync<TResult>(int skip, int take) where TResult : ITuple => _provider.From<T>().GetLimitAsync<TResult>(skip, take);
+        public Task<(IEnumerable<TResult> data, long total)> GetLimitAsync<TResult>(int skip, int take) where TResult : struct => _provider.From<T>().GetLimitAsync<TResult>(skip, take);
     }
 }
