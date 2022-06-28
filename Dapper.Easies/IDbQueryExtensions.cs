@@ -90,7 +90,34 @@ namespace Dapper.Easies
             return query;
         }
 
+        public static IDbQuery<T1, T2> WhereIf<T1, T2>(this IDbQuery<T1, T2> query, bool condition, Expression<Func<T1, bool>> ifTrue, Expression<Func<T1, bool>> ifFalse = null)
+        {
+            if (condition)
+                return query.Where(ifTrue);
+            else if (ifFalse != null)
+                return query.Where(ifFalse);
+            return query;
+        }
+
         public static IDbQuery<T1, T2> WhereIf<T1, T2>(this IDbQuery<T1, T2> query, bool condition, Expression<Func<T1, T2, bool>> ifTrue, Expression<Func<T1, T2, bool>> ifFalse = null)
+        {
+            if (condition)
+                return query.Where(ifTrue);
+            else if (ifFalse != null)
+                return query.Where(ifFalse);
+            return query;
+        }
+
+        public static IDbQuery<T1, T2, T3> WhereIf<T1, T2, T3>(this IDbQuery<T1, T2, T3> query, bool condition, Expression<Func<T1, bool>> ifTrue, Expression<Func<T1, bool>> ifFalse = null)
+        {
+            if (condition)
+                return query.Where(ifTrue);
+            else if (ifFalse != null)
+                return query.Where(ifFalse);
+            return query;
+        }
+
+        public static IDbQuery<T1, T2, T3> WhereIf<T1, T2, T3>(this IDbQuery<T1, T2, T3> query, bool condition, Expression<Func<T1, T2, bool>> ifTrue, Expression<Func<T1, T2, bool>> ifFalse = null)
         {
             if (condition)
                 return query.Where(ifTrue);
@@ -108,7 +135,70 @@ namespace Dapper.Easies
             return query;
         }
 
+        public static IDbQuery<T1, T2, T3, T4> WhereIf<T1, T2, T3, T4>(this IDbQuery<T1, T2, T3, T4> query, bool condition, Expression<Func<T1, bool>> ifTrue, Expression<Func<T1, bool>> ifFalse = null)
+        {
+            if (condition)
+                return query.Where(ifTrue);
+            else if (ifFalse != null)
+                return query.Where(ifFalse);
+            return query;
+        }
+
+        public static IDbQuery<T1, T2, T3, T4> WhereIf<T1, T2, T3, T4>(this IDbQuery<T1, T2, T3, T4> query, bool condition, Expression<Func<T1, T2, bool>> ifTrue, Expression<Func<T1, T2, bool>> ifFalse = null)
+        {
+            if (condition)
+                return query.Where(ifTrue);
+            else if (ifFalse != null)
+                return query.Where(ifFalse);
+            return query;
+        }
+
+        public static IDbQuery<T1, T2, T3, T4> WhereIf<T1, T2, T3, T4>(this IDbQuery<T1, T2, T3, T4> query, bool condition, Expression<Func<T1, T2, T3, bool>> ifTrue, Expression<Func<T1, T2, T3, bool>> ifFalse = null)
+        {
+            if (condition)
+                return query.Where(ifTrue);
+            else if (ifFalse != null)
+                return query.Where(ifFalse);
+            return query;
+        }
+
         public static IDbQuery<T1, T2, T3, T4> WhereIf<T1, T2, T3, T4>(this IDbQuery<T1, T2, T3, T4> query, bool condition, Expression<Func<T1, T2, T3, T4, bool>> ifTrue, Expression<Func<T1, T2, T3, T4, bool>> ifFalse = null)
+        {
+            if (condition)
+                return query.Where(ifTrue);
+            else if (ifFalse != null)
+                return query.Where(ifFalse);
+            return query;
+        }
+
+        public static IDbQuery<T1, T2, T3, T4, T5> WhereIf<T1, T2, T3, T4, T5>(this IDbQuery<T1, T2, T3, T4, T5> query, bool condition, Expression<Func<T1, bool>> ifTrue, Expression<Func<T1, bool>> ifFalse = null)
+        {
+            if (condition)
+                return query.Where(ifTrue);
+            else if (ifFalse != null)
+                return query.Where(ifFalse);
+            return query;
+        }
+
+        public static IDbQuery<T1, T2, T3, T4, T5> WhereIf<T1, T2, T3, T4, T5>(this IDbQuery<T1, T2, T3, T4, T5> query, bool condition, Expression<Func<T1, T2, bool>> ifTrue, Expression<Func<T1, T2, bool>> ifFalse = null)
+        {
+            if (condition)
+                return query.Where(ifTrue);
+            else if (ifFalse != null)
+                return query.Where(ifFalse);
+            return query;
+        }
+
+        public static IDbQuery<T1, T2, T3, T4, T5> WhereIf<T1, T2, T3, T4, T5>(this IDbQuery<T1, T2, T3, T4, T5> query, bool condition, Expression<Func<T1, T2, T3, bool>> ifTrue, Expression<Func<T1, T2, T3, bool>> ifFalse = null)
+        {
+            if (condition)
+                return query.Where(ifTrue);
+            else if (ifFalse != null)
+                return query.Where(ifFalse);
+            return query;
+        }
+
+        public static IDbQuery<T1, T2, T3, T4, T5> WhereIf<T1, T2, T3, T4, T5>(this IDbQuery<T1, T2, T3, T4, T5> query, bool condition, Expression<Func<T1, T2, T3, T4, bool>> ifTrue, Expression<Func<T1, T2, T3, T4, bool>> ifFalse = null)
         {
             if (condition)
                 return query.Where(ifTrue);

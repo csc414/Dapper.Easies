@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Xml.Linq;
 
 namespace Dapper.Easies
 {
@@ -60,6 +61,8 @@ namespace Dapper.Easies
                     return VisitMethodCall((MethodCallExpression)node);
                 case ExpressionType.NewArrayInit:
                     return VisitNewArray((NewArrayExpression)node);
+                case ExpressionType.ListInit:
+                    return this.VisitListInit((ListInitExpression)node);
                 default:
                     throw new NotImplementedException($"{node.NodeType}");
             }
@@ -332,6 +335,12 @@ namespace Dapper.Easies
         protected virtual Expression VisitNewArray(NewArrayExpression node)
         {
             var args = VisitConstantExpressions(node.Expressions);
+            return Expression.Constant(args);
+        }
+
+        internal virtual Expression VisitListInit(ListInitExpression init)
+        {
+            var args = VisitConstantExpressions(init.Initializers.Select(o => o.Arguments.First()));
             return Expression.Constant(args);
         }
 
