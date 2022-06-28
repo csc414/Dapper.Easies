@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
 
 namespace Dapper.Easies
 {
@@ -263,7 +261,7 @@ namespace Dapper.Easies
 
                     return new SqlExpression(string.Format(GetConstantValue<string>(node.Arguments[0]), vals));
                 }
-                
+
                 return Expression.Constant(node.Method.Invoke(null, VisitConstantExpressions(node.Arguments)));
             }
 
@@ -357,6 +355,9 @@ namespace Dapper.Easies
         {
             var args = exps.Select(o =>
             {
+                if (o is LambdaExpression lambda)
+                    return lambda.Compile();
+
                 var exp = Visit(o);
                 if (exp is ConstantExpression constant)
                     return constant.Value;

@@ -29,9 +29,11 @@ namespace Dapper.Easies.Demo
 
             var easiesProvider = serviceProvider.GetRequiredService<IEasiesProvider>();
 
+            var testIds = new[] { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() };
             await easiesProvider.From<Class>()
-                .Select<TestClass>()
-                .QueryAsync();
+                     .Where(o => DbFunc.In(o.Id, testIds.Select(x => Guid.Parse(x))))
+                     .Select<TestClass>()
+                     .QueryAsync();
 
             var subQuery = easiesProvider.From<Student>().Where(c => c.ClassId == Guid.NewGuid()).Select(o => new { o.ClassId, o.Name });
 
