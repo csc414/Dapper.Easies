@@ -255,6 +255,8 @@ namespace Dapper.Easies
                             return GetPropertyName(parameter);
                         else if (o is ConstantExpression constant)
                             return GetParameterName(constant.Value);
+                        else if (o is SqlExpression sql)
+                            return sql.Sql;
                         else
                             throw new NotSupportedException($"{o}");
                     }).ToArray();

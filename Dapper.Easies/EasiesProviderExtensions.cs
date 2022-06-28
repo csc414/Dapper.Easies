@@ -8,79 +8,72 @@ namespace Dapper.Easies
 {
     public static class EasiesProviderExtensions
     {
-        public static void TransactionScope(this IEasiesProvider _, Action func, TransactionScopeOption scopeOption = TransactionScopeOption.Required)
+        private static TransactionScope CreateScope(ref TransactionOptions? options, TransactionScopeOption scopeOption)
         {
-            using (var scope = new TransactionScope(scopeOption))
+            return options == null ? new(scopeOption, TransactionScopeAsyncFlowOption.Enabled) : new(scopeOption, options.Value, TransactionScopeAsyncFlowOption.Enabled);
+        }
+
+        public static async Task TransactionScopeAsync(this IEasiesProvider _, Func<Task> func, TransactionOptions? options = null, TransactionScopeOption scopeOption = TransactionScopeOption.Required)
+        {
+            try
             {
-                func();
-                scope.Complete();
+                using (var scope = CreateScope(ref options, scopeOption))
+                {
+                    await func();
+                    scope.Complete();
+                }
+            }
+            catch (TransactionRollback.TransactionRollbackException)
+            {
             }
         }
 
-        public static void TransactionScope(this IEasiesProvider _, Action func, TransactionOptions options, TransactionScopeOption scopeOption = TransactionScopeOption.Required)
+        public static async Task<TResult> TransactionScopeAsync<TResult>(this IEasiesProvider _, Func<Task<TResult>> func, TransactionOptions? options = null, TransactionScopeOption scopeOption = TransactionScopeOption.Required)
         {
-            using (var scope = new TransactionScope(scopeOption, options))
+            try
             {
-                func();
-                scope.Complete();
+                using (var scope = CreateScope(ref options, scopeOption))
+                {
+                    var result = await func();
+                    scope.Complete();
+                    return result;
+                }
+            }
+            catch (TransactionRollback.TransactionRollbackException<TResult> ex)
+            {
+                return ex.ReturnValue;
             }
         }
 
-        public static TResult TransactionScope<TResult>(this IEasiesProvider _, Func<TResult> func, TransactionScopeOption scopeOption = TransactionScopeOption.Required)
+        public static async Task TransactionScopeAsync(this IEasiesProvider _, Func<IRollback, Task> func, TransactionOptions? options = null, TransactionScopeOption scopeOption = TransactionScopeOption.Required)
         {
-            using (var scope = new TransactionScope(scopeOption))
+            try
             {
-                var result = func();
-                scope.Complete();
-                return result;
+                using (var scope = CreateScope(ref options, scopeOption))
+                {
+                    await func(TransactionRollback.Instance);
+                    scope.Complete();
+                }
+            }
+            catch (TransactionRollback.TransactionRollbackException)
+            {
             }
         }
 
-        public static TResult TransactionScope<TResult>(this IEasiesProvider _, Func<TResult> func, TransactionOptions options, TransactionScopeOption scopeOption = TransactionScopeOption.Required)
+        public static async Task<TResult> TransactionScopeAsync<TResult>(this IEasiesProvider _, Func<IRollbackWithResult, Task<TResult>> func, TransactionOptions? options = null, TransactionScopeOption scopeOption = TransactionScopeOption.Required)
         {
-            using (var scope = new TransactionScope(scopeOption, options))
+            try
             {
-                var result = func();
-                scope.Complete();
-                return result;
+                using (var scope = CreateScope(ref options, scopeOption))
+                {
+                    var result = await func(TransactionRollback.Instance);
+                    scope.Complete();
+                    return result;
+                }
             }
-        }
-
-        public static async Task TransactionScopeAsync(this IEasiesProvider _, Func<Task> func, TransactionScopeOption scopeOption = TransactionScopeOption.Required)
-        {
-            using (var scope = new TransactionScope(scopeOption, TransactionScopeAsyncFlowOption.Enabled))
+            catch (TransactionRollback.TransactionRollbackException<TResult> ex)
             {
-                await func();
-                scope.Complete();
-            }
-        }
-
-        public static async Task TransactionScopeAsync(this IEasiesProvider _, Func<Task> func, TransactionOptions options, TransactionScopeOption scopeOption = TransactionScopeOption.Required)
-        {
-            using (var scope = new TransactionScope(scopeOption, options, TransactionScopeAsyncFlowOption.Enabled))
-            {
-                await func();
-                scope.Complete();
-            }
-        }
-
-        public static async Task<TResult> TransactionScopeAsync<TResult>(this IEasiesProvider _, Func<Task<TResult>> func, TransactionScopeOption scopeOption = TransactionScopeOption.Required)
-        {
-            using (var scope = new TransactionScope(scopeOption, TransactionScopeAsyncFlowOption.Enabled))
-            {
-                var result = await func();
-                scope.Complete();
-                return result;
-            }
-        }
-
-        public static async Task<TResult> TransactionScopeAsync<TResult>(this IEasiesProvider _, Func<Task<TResult>> func, TransactionOptions options, TransactionScopeOption scopeOption = TransactionScopeOption.Required)
-        {
-            using (var scope = new TransactionScope(scopeOption, options, TransactionScopeAsyncFlowOption.Enabled))
-            {
-                var result = await func();
-                scope.Complete();
-                return result;
+                return ex.ReturnValue;
             }
         }
     }
