@@ -127,6 +127,7 @@ namespace Dapper.Easies
                 if (_objs.Count > 0)
                     return;
 
+                SqlMapper.AddTypeHandler(new UnmanagedTypeHandler<int>());
                 SqlMapper.AddTypeHandler(new UnmanagedTypeHandler<long>());
                 SqlMapper.AddTypeHandler(new UnmanagedTypeHandler<decimal>());
 

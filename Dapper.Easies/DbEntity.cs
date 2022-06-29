@@ -124,7 +124,7 @@ namespace Dapper.Easies
 
         public Task<decimal> AvgAsync<TField>(Expression<Func<T, TField>> field) => _provider.From<T>().AvgAsync(field);
 
-        public Task<decimal> SumAsync<TField>(Expression<Func<T, TField>> field) => _provider.From<T>().SumAsync(field);
+        public Task<TField> SumAsync<TField>(Expression<Func<T, TField>> field) => _provider.From<T>().SumAsync(field);
 
         public IDbQuery<T> Skip(int count) => _provider.From<T>().Skip(count);
 

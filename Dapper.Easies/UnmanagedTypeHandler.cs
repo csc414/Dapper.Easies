@@ -7,12 +7,15 @@ namespace Dapper.Easies
     {
         public override T Parse(object value)
         {
-            if (value is T num)
-                return num;
+            if (value != null)
+            {
+                if (value is T num)
+                    return num;
 
-            var val = Convert.ChangeType(value, typeof(T));
-            if (val != null)
-                return (T)val;
+                var val = Convert.ChangeType(value, typeof(T));
+                if (val != null)
+                    return (T)val;
+            }
 
             return default;
         }

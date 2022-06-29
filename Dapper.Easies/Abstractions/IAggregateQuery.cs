@@ -18,7 +18,7 @@ namespace Dapper.Easies
 
         Task<decimal> AvgAsync<TField>(Expression<Func<T, TField>> field);
 
-        Task<decimal> SumAsync<TField>(Expression<Func<T, TField>> field);
+        Task<TField> SumAsync<TField>(Expression<Func<T, TField>> field);
     }
 
     public interface IAggregateDbQuery<T1, T2> : IAggregateDbQuery<T1>
@@ -31,7 +31,7 @@ namespace Dapper.Easies
 
         Task<decimal> AvgAsync<TField>(Expression<Func<T1, T2, TField>> field);
 
-        Task<decimal> SumAsync<TField>(Expression<Func<T1, T2, TField>> field);
+        Task<TField> SumAsync<TField>(Expression<Func<T1, T2, TField>> field);
     }
 
     public interface IAggregateDbQuery<T1, T2, T3> : IAggregateDbQuery<T1, T2>
@@ -44,7 +44,7 @@ namespace Dapper.Easies
 
         Task<decimal> AvgAsync<TField>(Expression<Func<T1, T2, T3, TField>> field);
 
-        Task<decimal> SumAsync<TField>(Expression<Func<T1, T2, T3, TField>> field);
+        Task<TField> SumAsync<TField>(Expression<Func<T1, T2, T3, TField>> field);
     }
 
     public interface IAggregateDbQuery<T1, T2, T3, T4> : IAggregateDbQuery<T1, T2, T3>
@@ -57,7 +57,7 @@ namespace Dapper.Easies
 
         Task<decimal> AvgAsync<TField>(Expression<Func<T1, T2, T3, T4, TField>> field);
 
-        Task<decimal> SumAsync<TField>(Expression<Func<T1, T2, T3, T4, TField>> field);
+        Task<TField> SumAsync<TField>(Expression<Func<T1, T2, T3, T4, TField>> field);
     }
 
     public interface IAggregateDbQuery<T1, T2, T3, T4, T5> : IAggregateDbQuery<T1, T2, T3, T4>
@@ -70,6 +70,6 @@ namespace Dapper.Easies
 
         Task<decimal> AvgAsync<TField>(Expression<Func<T1, T2, T3, T4, T5, TField>> field);
 
-        Task<decimal> SumAsync<TField>(Expression<Func<T1, T2, T3, T4, T5, TField>> field);
+        Task<TField> SumAsync<TField>(Expression<Func<T1, T2, T3, T4, T5, TField>> field);
     }
 }

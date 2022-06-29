@@ -102,12 +102,12 @@ namespace Dapper.Easies
             return InternalExecuteAsync(conn => conn.ExecuteScalarAsync<decimal>(_context.Converter.ToQuerySql(_context, out var parameters, aggregateInfo: new AggregateInfo(AggregateType.Avg, field)), parameters));
         }
 
-        protected Task<decimal> SumAsync<TResult>(Expression field)
+        protected Task<TResult> SumAsync<TResult>(Expression field)
         {
             if (field == null)
                 throw new ArgumentException("字段不能为空");
 
-            return InternalExecuteAsync(conn => conn.ExecuteScalarAsync<decimal>(_context.Converter.ToQuerySql(_context, out var parameters, aggregateInfo: new AggregateInfo(AggregateType.Sum, field)), parameters));
+            return InternalExecuteAsync(conn => conn.ExecuteScalarAsync<TResult>(_context.Converter.ToQuerySql(_context, out var parameters, aggregateInfo: new AggregateInfo(AggregateType.Sum, field)), parameters));
         }
     }
 
@@ -283,7 +283,7 @@ namespace Dapper.Easies
 
         public Task<decimal> AvgAsync<TField>(Expression<Func<T, TField>> field) => base.AvgAsync<TField>(field);
 
-        public Task<decimal> SumAsync<TField>(Expression<Func<T, TField>> field) => base.SumAsync<TField>(field);
+        public Task<TField> SumAsync<TField>(Expression<Func<T, TField>> field) => base.SumAsync<TField>(field);
 
         // ----------------------------------------------- Group By -----------------------------------------------
         public IGroupingDbQuery<T> GroupBy(Expression<Func<T, object>> fields)
@@ -463,7 +463,7 @@ namespace Dapper.Easies
 
         public Task<decimal> AvgAsync<TField>(Expression<Func<T1, T2, TField>> field) => base.AvgAsync<TField>(field);
 
-        public Task<decimal> SumAsync<TField>(Expression<Func<T1, T2, TField>> field) => base.SumAsync<TField>(field);
+        public Task<TField> SumAsync<TField>(Expression<Func<T1, T2, TField>> field) => base.SumAsync<TField>(field);
 
         // ----------------------------------------------- Group By -----------------------------------------------
         public new IGroupingDbQuery<T1, T2> GroupBy(Expression<Func<T1, object>> fields)
@@ -693,7 +693,7 @@ namespace Dapper.Easies
 
         public Task<decimal> AvgAsync<TField>(Expression<Func<T1, T2, T3, TField>> field) => base.AvgAsync<TField>(field);
 
-        public Task<decimal> SumAsync<TField>(Expression<Func<T1, T2, T3, TField>> field) => base.SumAsync<TField>(field);
+        public Task<TField> SumAsync<TField>(Expression<Func<T1, T2, T3, TField>> field) => base.SumAsync<TField>(field);
 
         // ----------------------------------------------- Group By -----------------------------------------------
         public new IGroupingDbQuery<T1, T2, T3> GroupBy(Expression<Func<T1, object>> fields)
@@ -973,7 +973,7 @@ namespace Dapper.Easies
 
         public Task<decimal> AvgAsync<TField>(Expression<Func<T1, T2, T3, T4, TField>> field) => base.AvgAsync<TField>(field);
 
-        public Task<decimal> SumAsync<TField>(Expression<Func<T1, T2, T3, T4, TField>> field) => base.SumAsync<TField>(field);
+        public Task<TField> SumAsync<TField>(Expression<Func<T1, T2, T3, T4, TField>> field) => base.SumAsync<TField>(field);
 
         // ----------------------------------------------- Group By -----------------------------------------------
         public new IGroupingDbQuery<T1, T2, T3, T4> GroupBy(Expression<Func<T1, object>> fields)
@@ -1280,7 +1280,7 @@ namespace Dapper.Easies
 
         public Task<decimal> AvgAsync<TField>(Expression<Func<T1, T2, T3, T4, T5, TField>> field) => base.AvgAsync<TField>(field);
 
-        public Task<decimal> SumAsync<TField>(Expression<Func<T1, T2, T3, T4, T5, TField>> field) => base.SumAsync<TField>(field);
+        public Task<TField> SumAsync<TField>(Expression<Func<T1, T2, T3, T4, T5, TField>> field) => base.SumAsync<TField>(field);
 
         // ----------------------------------------------- Group By -----------------------------------------------
         public new IGroupingDbQuery<T1, T2, T3, T4, T5> GroupBy(Expression<Func<T1, object>> fields)
