@@ -188,6 +188,14 @@ namespace Dapper.Easies
                             else
                                 Builder.Append(sql.Sql);
                         }
+                        else if(arg is ConstantExpression constant)
+                        {
+                            var parameterName = GetParameterName(constant.Value);
+                            if (hasAlias)
+                                Builder.Append(SqlSyntax.AliasPropertyName(parameterName, SqlSyntax.EscapePropertyName(assignment.Member.Name), true));
+                            else
+                                Builder.Append(parameterName);
+                        }
                     }
                 }
             }
@@ -219,6 +227,14 @@ namespace Dapper.Easies
                         Builder.Append(SqlSyntax.AliasPropertyName(sql.Sql, SqlSyntax.EscapePropertyName(member.Name), true));
                     else
                         Builder.Append(sql.Sql);
+                }
+                else if (arg is ConstantExpression constant)
+                {
+                    var parameterName = GetParameterName(constant.Value);
+                    if (hasAlias)
+                        Builder.Append(SqlSyntax.AliasPropertyName(parameterName, SqlSyntax.EscapePropertyName(member.Name), true));
+                    else
+                        Builder.Append(parameterName);
                 }
 
             }

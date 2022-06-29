@@ -124,6 +124,12 @@ namespace Dapper.Easies
         {
             lock(_objs)
             {
+                if (_objs.Count > 0)
+                    return;
+
+                SqlMapper.AddTypeHandler(new UnmanagedTypeHandler<long>());
+                SqlMapper.AddTypeHandler(new UnmanagedTypeHandler<decimal>());
+
                 var assemblies = GetRuntimeAssemblies();
                 var type = typeof(IDbObject);
                 var objs = assemblies.SelectMany(o => o.GetTypes().Where(t => t.IsClass && !t.IsAbstract && !t.IsGenericType && type.IsAssignableFrom(t)));

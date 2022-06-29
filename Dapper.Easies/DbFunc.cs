@@ -31,12 +31,12 @@ namespace Dapper.Easies
             throw new InvalidOperationException("Do not call this method directly.");
         }
 
-        public static T Avg<T>(T field)
+        public static decimal Avg<T>(T field)
         {
             throw new InvalidOperationException("Do not call this method directly.");
         }
 
-        public static T Avg<T>(object field)
+        public static decimal Avg<T>(object field)
         {
             throw new InvalidOperationException("Do not call this method directly.");
         }
