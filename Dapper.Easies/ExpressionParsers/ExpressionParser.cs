@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -18,6 +19,8 @@ namespace Dapper.Easies
         private static Type s_dbFuncType = typeof(DbFunc);
 
         private static Type s_dbObjectExtensionType = typeof(DbObjectExtensions);
+
+        private static ConcurrentDictionary<int, Delegate> s_delegates = new ConcurrentDictionary<int, Delegate>();
 
         protected Expression Visit(Expression node)
         {
@@ -367,7 +370,7 @@ namespace Dapper.Easies
             var args = exps.Select(o =>
             {
                 if (o is LambdaExpression lambda)
-                    return lambda.Compile();
+                    return s_delegates.GetOrAdd(ExpressionEqualityComparer.Instance.GetHashCode(lambda), hashCode => lambda.Compile());
 
                 var exp = Visit(o);
                 if (exp is ConstantExpression constant)

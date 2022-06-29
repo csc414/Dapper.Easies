@@ -60,7 +60,7 @@ namespace Dapper.Easies
                         if (constantExpression.Value != null
                             && !(constantExpression.Value is IQueryable))
                         {
-                            hash.Add(constantExpression.Value);
+                            hash.Add(constantExpression.Type);
                         }
 
                         break;
