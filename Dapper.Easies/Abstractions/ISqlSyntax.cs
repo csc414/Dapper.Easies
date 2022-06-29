@@ -25,6 +25,6 @@ namespace Dapper.Easies
 
         string AliasTableName(string name, string alias);
 
-        string AliasPropertyName(string name, string alias);
+        string AliasPropertyName(string name, string alias, bool force = false);
     }
 }

@@ -314,9 +314,12 @@ namespace Dapper.Easies.MySql
             return $"{name} {alias}";
         }
 
-        public virtual string AliasPropertyName(string name, string alias)
+        public virtual string AliasPropertyName(string name, string alias, bool force)
         {
-            return $"{name} {alias}";
+            if (!force && name.Equals(alias, StringComparison.Ordinal))
+                return name;
+
+            return $"{name} AS {alias}";
         }
     }
 }

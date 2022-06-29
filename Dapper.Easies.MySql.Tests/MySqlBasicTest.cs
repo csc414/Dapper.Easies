@@ -57,13 +57,13 @@ namespace Dapper.Easies.MySql.Tests
 
         public override void GetTest(string sql, IParameterLookup parameters)
         {
-            Assert.Equal("SELECT `Id` `Id`, `ClassId` `ClassId`, `StudentName` `Name`, `Age` `Age`, `CreateTime` `CreateTime` FROM `tb_students` WHERE `Id` = @p0 LIMIT 0,1", sql);
+            Assert.Equal("SELECT `Id`, `ClassId`, `StudentName` AS `Name`, `Age`, `CreateTime` FROM `tb_students` WHERE `Id` = @p0 LIMIT 0,1", sql);
             Assert.Equal(1, parameters["p0"]);
         }
 
         public override void GetMutipleIdTest(string sql, IParameterLookup parameters)
         {
-            Assert.Equal("SELECT `Id` `Id`, `IdCard` `IdCard`, `ClassId` `ClassId`, `StudentName` `Name`, `Age` `Age`, `CreateTime` `CreateTime` FROM `tb_mutiple_id_students` WHERE `Id` = @p0 AND `IdCard` = @p1 LIMIT 0,1", sql);
+            Assert.Equal("SELECT `Id`, `IdCard`, `ClassId`, `StudentName` AS `Name`, `Age`, `CreateTime` FROM `tb_mutiple_id_students` WHERE `Id` = @p0 AND `IdCard` = @p1 LIMIT 0,1", sql);
             Assert.Equal(1, parameters["p0"]);
             Assert.Equal(2, parameters["p1"]);
         }

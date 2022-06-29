@@ -173,14 +173,18 @@ namespace Dapper.Easies
                         if (arg is MemberExpression member)
                         {
                             if (hasAlias)
-                                Builder.Append(SqlSyntax.AliasPropertyName(GetPropertyName(member), SqlSyntax.EscapePropertyName(assignment.Member.Name)));
+                            {
+                                var alias = GetPropertyNameWithAlias(member);
+                                var propertyName = SqlSyntax.AliasPropertyName(alias.name, SqlSyntax.EscapePropertyName(assignment.Member.Name));
+                                Builder.Append(FormatPropertyName(alias.tableAlias, propertyName));
+                            }
                             else
                                 Builder.Append(GetPropertyName(member));
                         }
                         else if (arg is SqlExpression sql)
                         {
                             if (hasAlias)
-                                Builder.Append(SqlSyntax.AliasPropertyName(sql.Sql, SqlSyntax.EscapePropertyName(assignment.Member.Name)));
+                                Builder.Append(SqlSyntax.AliasPropertyName(sql.Sql, SqlSyntax.EscapePropertyName(assignment.Member.Name), true));
                             else
                                 Builder.Append(sql.Sql);
                         }
@@ -201,14 +205,18 @@ namespace Dapper.Easies
                 if (arg is MemberExpression memberExp)
                 {
                     if (hasAlias)
-                        Builder.Append(SqlSyntax.AliasPropertyName(GetPropertyName(memberExp), SqlSyntax.EscapePropertyName(member.Name)));
+                    {
+                        var alias = GetPropertyNameWithAlias(memberExp);
+                        var propertyName = SqlSyntax.AliasPropertyName(alias.name, SqlSyntax.EscapePropertyName(member.Name));
+                        Builder.Append(FormatPropertyName(alias.tableAlias, propertyName));
+                    }
                     else
                         Builder.Append(GetPropertyName(memberExp));
                 }
                 else if (arg is SqlExpression sql)
                 {
                     if (hasAlias)
-                        Builder.Append(SqlSyntax.AliasPropertyName(sql.Sql, SqlSyntax.EscapePropertyName(member.Name)));
+                        Builder.Append(SqlSyntax.AliasPropertyName(sql.Sql, SqlSyntax.EscapePropertyName(member.Name), true));
                     else
                         Builder.Append(sql.Sql);
                 }
@@ -257,6 +265,20 @@ namespace Dapper.Easies
 
         protected override string GetPropertyName(Expression exp)
         {
+            var names = GetPropertyNameWithAlias(exp);
+            return FormatPropertyName(names.tableAlias, names.name);
+        }
+
+        public virtual string FormatPropertyName(string tableAlias, string name)
+        {
+            if (tableAlias == null)
+                return name;
+
+            return $"{tableAlias}.{name}";
+        }
+
+        protected (string tableAlias, string name) GetPropertyNameWithAlias(Expression exp)
+        {
             if (exp is MemberExpression member)
             {
                 var parameter = (ParameterExpression)member.Expression;
@@ -264,12 +286,12 @@ namespace Dapper.Easies
                 var aliasIndex = Lambda.Parameters.IndexOf(parameter);
                 var propertyName = table == null ? SqlSyntax.EscapePropertyName(member.Member.Name) : table[member.Member.Name].EscapeName;
                 if (Context == null || (table == null && aliasIndex == 0))
-                    return propertyName;
+                    return (null, propertyName);
 
-                return $"{Context.Alias[aliasIndex].Alias}.{propertyName}";
+                return (Context.Alias[aliasIndex].Alias, propertyName);
             }
             else if (exp is SqlExpression sql)
-                return sql.ToString();
+                return (sql.ToString(), null); ;
 
             throw new NotSupportedException($"{exp}");
         }
