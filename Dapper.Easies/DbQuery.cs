@@ -102,12 +102,12 @@ namespace Dapper.Easies
             return InternalExecuteAsync(conn => conn.ExecuteScalarAsync<decimal>(_context.Converter.ToQuerySql(_context, out var parameters, aggregateInfo: new AggregateInfo(AggregateType.Avg, field)), parameters));
         }
 
-        protected Task<decimal> SumAsync<TResult>(Expression field)
+        protected Task<TResult> SumAsync<TResult>(Expression field)
         {
             if (field == null)
                 throw new ArgumentException("字段不能为空");
 
-            return InternalExecuteAsync(conn => conn.ExecuteScalarAsync<decimal>(_context.Converter.ToQuerySql(_context, out var parameters, aggregateInfo: new AggregateInfo(AggregateType.Sum, field)), parameters));
+            return InternalExecuteAsync(conn => conn.ExecuteScalarAsync<TResult>(_context.Converter.ToQuerySql(_context, out var parameters, aggregateInfo: new AggregateInfo(AggregateType.Sum, field)), parameters));
         }
     }
 
@@ -209,14 +209,14 @@ namespace Dapper.Easies
             return InternalExecuteAsync(conn => conn.QueryFirstOrDefaultAsync<T>(_context.Converter.ToQuerySql(_context, out var parameters, skip: 0, take: 1), parameters));
         }
 
-        public Task<TResult> FirstAsync<TResult>() where TResult : ITuple
+        public Task<TResult> FirstAsync<TResult>() where TResult : struct
         {
             return InternalExecuteAsync(conn => conn.QueryFirstAsync<TResult>(_context.Converter.ToQuerySql(_context, out var parameters, skip: 0, take: 1), parameters));
         }
 
-        public Task<TResult> FirstOrDefaultAsync<TResult>() where TResult : ITuple
+        public Task<TResult?> FirstOrDefaultAsync<TResult>() where TResult : struct
         {
-            return InternalExecuteAsync(conn => conn.QueryFirstOrDefaultAsync<TResult>(_context.Converter.ToQuerySql(_context, out var parameters, skip: 0, take: 1), parameters));
+            return InternalExecuteAsync(conn => conn.QueryFirstOrDefaultAsync<TResult?>(_context.Converter.ToQuerySql(_context, out var parameters, skip: 0, take: 1), parameters));
         }
 
         public Task<IEnumerable<T>> QueryAsync()
@@ -224,14 +224,14 @@ namespace Dapper.Easies
             return InternalExecuteAsync(conn => conn.QueryAsync<T>(_context.Converter.ToQuerySql(_context, out var parameters), parameters));
         }
 
-        public Task<IEnumerable<TResult>> QueryAsync<TResult>() where TResult : ITuple
+        public Task<IEnumerable<TResult>> QueryAsync<TResult>() where TResult : struct
         {
             return InternalExecuteAsync(conn => conn.QueryAsync<TResult>(_context.Converter.ToQuerySql(_context, out var parameters), parameters));
         }
 
         public Task<(IEnumerable<T> data, long total, int max_page)> GetPagerAsync(int page, int size) => InternalGetPagerAsync<T>(page, size);
 
-        public Task<(IEnumerable<TResult> data, long total, int max_page)> GetPagerAsync<TResult>(int page, int size) where TResult : ITuple => InternalGetPagerAsync<TResult>(page, size);
+        public Task<(IEnumerable<TResult> data, long total, int max_page)> GetPagerAsync<TResult>(int page, int size) where TResult : struct => InternalGetPagerAsync<TResult>(page, size);
 
         async Task<(IEnumerable<TResult> data, long total, int max_page)> InternalGetPagerAsync<TResult>(int page, int size)
         {
@@ -246,7 +246,7 @@ namespace Dapper.Easies
 
         public Task<(IEnumerable<T> data, long total)> GetLimitAsync(int skip, int take) => InternalGetLimitAsync<T>(skip, take);
 
-        public Task<(IEnumerable<TResult> data, long total)> GetLimitAsync<TResult>(int skip, int take) where TResult : ITuple => InternalGetLimitAsync<TResult>(skip, take);
+        public Task<(IEnumerable<TResult> data, long total)> GetLimitAsync<TResult>(int skip, int take) where TResult : struct => InternalGetLimitAsync<TResult>(skip, take);
 
         async Task<(IEnumerable<TResult> data, long total)> InternalGetLimitAsync<TResult>(int skip, int take)
         {
@@ -283,10 +283,10 @@ namespace Dapper.Easies
 
         public Task<decimal> AvgAsync<TField>(Expression<Func<T, TField>> field) => base.AvgAsync<TField>(field);
 
-        public Task<decimal> SumAsync<TField>(Expression<Func<T, TField>> field) => base.SumAsync<TField>(field);
+        public Task<TField> SumAsync<TField>(Expression<Func<T, TField>> field) => base.SumAsync<TField>(field);
 
         // ----------------------------------------------- Group By -----------------------------------------------
-        public IGroupingDbQuery<T> GroupBy<TFields>(Expression<Func<T, TFields>> fields)
+        public IGroupingDbQuery<T> GroupBy(Expression<Func<T, object>> fields)
         {
             _context.GroupByExpression = fields;
             _context.OrderByMetedata = null;
@@ -341,9 +341,21 @@ namespace Dapper.Easies
     {
         internal DbQuery(QueryContext context) : base(context) { }
 
+        public new IDbQuery<T1, T2> Where(Expression<Func<T1, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
         public IDbQuery<T1, T2> Where(Expression<Func<T1, T2, bool>> predicate)
         {
             AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2> Where(Expression<Func<T1, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
             return this;
         }
 
@@ -395,9 +407,21 @@ namespace Dapper.Easies
             return new DbQuery<T1, T2, TJoin>(_context);
         }
 
+        public new IOrderedDbQuery<T1, T2> OrderBy(Expression<Func<T1, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
         public IOrderedDbQuery<T1, T2> OrderBy(Expression<Func<T1, T2, object>> orderFields)
         {
             SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2> OrderByDescending(Expression<Func<T1, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
             return this;
         }
 
@@ -407,9 +431,21 @@ namespace Dapper.Easies
             return this;
         }
 
+        public new IOrderedDbQuery<T1, T2> ThenBy(Expression<Func<T1, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
         public IOrderedDbQuery<T1, T2> ThenBy(Expression<Func<T1, T2, object>> orderFields)
         {
             SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2> ThenByDescending(Expression<Func<T1, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
             return this;
         }
 
@@ -427,15 +463,29 @@ namespace Dapper.Easies
 
         public Task<decimal> AvgAsync<TField>(Expression<Func<T1, T2, TField>> field) => base.AvgAsync<TField>(field);
 
-        public Task<decimal> SumAsync<TField>(Expression<Func<T1, T2, TField>> field) => base.SumAsync<TField>(field);
+        public Task<TField> SumAsync<TField>(Expression<Func<T1, T2, TField>> field) => base.SumAsync<TField>(field);
 
         // ----------------------------------------------- Group By -----------------------------------------------
-        public IGroupingDbQuery<T1, T2> GroupBy<TFields>(Expression<Func<T1, T2, TFields>> fields)
+        public new IGroupingDbQuery<T1, T2> GroupBy(Expression<Func<T1, object>> fields)
         {
             _context.GroupByExpression = fields;
             _context.OrderByMetedata = null;
             _context.ThenByMetedata = null;
             return this;
+        }
+
+        public IGroupingDbQuery<T1, T2> GroupBy(Expression<Func<T1, T2, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2>.Select<TResult>(Expression<Func<T1, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
         }
 
         IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2>.Select<TResult>(Expression<Func<T1, T2, TResult>> selector)
@@ -444,9 +494,21 @@ namespace Dapper.Easies
             return new DbQuery<TResult>(_context);
         }
 
+        IGroupingDbQuery<T1, T2> IGroupingDbQuery<T1, T2>.Having(Expression<Func<T1, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
         IGroupingDbQuery<T1, T2> IGroupingDbQuery<T1, T2>.Having(Expression<Func<T1, T2, bool>> predicate)
         {
             AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2> IGroupingDbQuery<T1, T2>.Having(Expression<Func<T1, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
             return this;
         }
 
@@ -461,9 +523,33 @@ namespace Dapper.Easies
     {
         internal DbQuery(QueryContext context) : base(context) { }
 
+        public new IDbQuery<T1, T2, T3> Where(Expression<Func<T1, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3> Where(Expression<Func<T1, T2, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
         public IDbQuery<T1, T2, T3> Where(Expression<Func<T1, T2, T3, bool>> predicate)
         {
             AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3> Where(Expression<Func<T1, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3> Where(Expression<Func<T1, T2, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
             return this;
         }
 
@@ -471,6 +557,18 @@ namespace Dapper.Easies
         {
             AddWhereExpression(CreateExpressionLambda(expression));
             return this;
+        }
+
+        public new ISelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        public new ISelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
         }
 
         public ISelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, TResult>> selector)
@@ -515,9 +613,33 @@ namespace Dapper.Easies
             return new DbQuery<T1, T2, T3, TJoin>(_context);
         }
 
+        public new IOrderedDbQuery<T1, T2, T3> OrderBy(Expression<Func<T1, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3> OrderBy(Expression<Func<T1, T2, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
         public IOrderedDbQuery<T1, T2, T3> OrderBy(Expression<Func<T1, T2, T3, object>> orderFields)
         {
             SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3> OrderByDescending(Expression<Func<T1, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3> OrderByDescending(Expression<Func<T1, T2, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
             return this;
         }
 
@@ -527,9 +649,33 @@ namespace Dapper.Easies
             return this;
         }
 
+        public new IOrderedDbQuery<T1, T2, T3> ThenBy(Expression<Func<T1, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3> ThenBy(Expression<Func<T1, T2, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
         public IOrderedDbQuery<T1, T2, T3> ThenBy(Expression<Func<T1, T2, T3, object>> orderFields)
         {
             SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3> ThenByDescending(Expression<Func<T1, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3> ThenByDescending(Expression<Func<T1, T2, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
             return this;
         }
 
@@ -547,15 +693,43 @@ namespace Dapper.Easies
 
         public Task<decimal> AvgAsync<TField>(Expression<Func<T1, T2, T3, TField>> field) => base.AvgAsync<TField>(field);
 
-        public Task<decimal> SumAsync<TField>(Expression<Func<T1, T2, T3, TField>> field) => base.SumAsync<TField>(field);
+        public Task<TField> SumAsync<TField>(Expression<Func<T1, T2, T3, TField>> field) => base.SumAsync<TField>(field);
 
         // ----------------------------------------------- Group By -----------------------------------------------
-        public IGroupingDbQuery<T1, T2, T3> GroupBy<TFields>(Expression<Func<T1, T2, T3, TFields>> fields)
+        public new IGroupingDbQuery<T1, T2, T3> GroupBy(Expression<Func<T1, object>> fields)
         {
             _context.GroupByExpression = fields;
             _context.OrderByMetedata = null;
             _context.ThenByMetedata = null;
             return this;
+        }
+
+        public new IGroupingDbQuery<T1, T2, T3> GroupBy(Expression<Func<T1, T2, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        public IGroupingDbQuery<T1, T2, T3> GroupBy(Expression<Func<T1, T2, T3, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3>.Select<TResult>(Expression<Func<T1, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3>.Select<TResult>(Expression<Func<T1, T2, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
         }
 
         IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3>.Select<TResult>(Expression<Func<T1, T2, T3, TResult>> selector)
@@ -564,9 +738,33 @@ namespace Dapper.Easies
             return new DbQuery<TResult>(_context);
         }
 
+        IGroupingDbQuery<T1, T2, T3> IGroupingDbQuery<T1, T2, T3>.Having(Expression<Func<T1, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3> IGroupingDbQuery<T1, T2, T3>.Having(Expression<Func<T1, T2, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
         IGroupingDbQuery<T1, T2, T3> IGroupingDbQuery<T1, T2, T3>.Having(Expression<Func<T1, T2, T3, bool>> predicate)
         {
             AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3> IGroupingDbQuery<T1, T2, T3>.Having(Expression<Func<T1, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3> IGroupingDbQuery<T1, T2, T3>.Having(Expression<Func<T1, T2, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
             return this;
         }
 
@@ -581,9 +779,45 @@ namespace Dapper.Easies
     {
         internal DbQuery(QueryContext context) : base(context) { }
 
+        public new IDbQuery<T1, T2, T3, T4> Where(Expression<Func<T1, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4> Where(Expression<Func<T1, T2, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4> Where(Expression<Func<T1, T2, T3, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
         public IDbQuery<T1, T2, T3, T4> Where(Expression<Func<T1, T2, T3, T4, bool>> predicate)
         {
             AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4> Where(Expression<Func<T1, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4> Where(Expression<Func<T1, T2, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4> Where(Expression<Func<T1, T2, T3, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
             return this;
         }
 
@@ -635,9 +869,45 @@ namespace Dapper.Easies
             return new DbQuery<T1, T2, T3, T4, TJoin>(_context);
         }
 
+        public new IOrderedDbQuery<T1, T2, T3, T4> OrderBy(Expression<Func<T1, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4> OrderBy(Expression<Func<T1, T2, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4> OrderBy(Expression<Func<T1, T2, T3, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
         public IOrderedDbQuery<T1, T2, T3, T4> OrderBy(Expression<Func<T1, T2, T3, T4, object>> orderFields)
         {
             SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4> OrderByDescending(Expression<Func<T1, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4> OrderByDescending(Expression<Func<T1, T2, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4> OrderByDescending(Expression<Func<T1, T2, T3, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
             return this;
         }
 
@@ -647,9 +917,45 @@ namespace Dapper.Easies
             return this;
         }
 
+        public new IOrderedDbQuery<T1, T2, T3, T4> ThenBy(Expression<Func<T1, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4> ThenBy(Expression<Func<T1, T2, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4> ThenBy(Expression<Func<T1, T2, T3, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
         public IOrderedDbQuery<T1, T2, T3, T4> ThenBy(Expression<Func<T1, T2, T3, T4, object>> orderFields)
         {
             SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4> ThenByDescending(Expression<Func<T1, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4> ThenByDescending(Expression<Func<T1, T2, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4> ThenByDescending(Expression<Func<T1, T2, T3, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
             return this;
         }
 
@@ -667,15 +973,57 @@ namespace Dapper.Easies
 
         public Task<decimal> AvgAsync<TField>(Expression<Func<T1, T2, T3, T4, TField>> field) => base.AvgAsync<TField>(field);
 
-        public Task<decimal> SumAsync<TField>(Expression<Func<T1, T2, T3, T4, TField>> field) => base.SumAsync<TField>(field);
+        public Task<TField> SumAsync<TField>(Expression<Func<T1, T2, T3, T4, TField>> field) => base.SumAsync<TField>(field);
 
         // ----------------------------------------------- Group By -----------------------------------------------
-        public IGroupingDbQuery<T1, T2, T3, T4> GroupBy<TFields>(Expression<Func<T1, T2, T3, T4, TFields>> fields)
+        public new IGroupingDbQuery<T1, T2, T3, T4> GroupBy(Expression<Func<T1, object>> fields)
         {
             _context.GroupByExpression = fields;
             _context.OrderByMetedata = null;
             _context.ThenByMetedata = null;
             return this;
+        }
+
+        public new IGroupingDbQuery<T1, T2, T3, T4> GroupBy(Expression<Func<T1, T2, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        public new IGroupingDbQuery<T1, T2, T3, T4> GroupBy(Expression<Func<T1, T2, T3, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        public IGroupingDbQuery<T1, T2, T3, T4> GroupBy(Expression<Func<T1, T2, T3, T4, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4>.Select<TResult>(Expression<Func<T1, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4>.Select<TResult>(Expression<Func<T1, T2, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4>.Select<TResult>(Expression<Func<T1, T2, T3, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
         }
 
         IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4>.Select<TResult>(Expression<Func<T1, T2, T3, T4, TResult>> selector)
@@ -684,9 +1032,45 @@ namespace Dapper.Easies
             return new DbQuery<TResult>(_context);
         }
 
+        IGroupingDbQuery<T1, T2, T3, T4> IGroupingDbQuery<T1, T2, T3, T4>.Having(Expression<Func<T1, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4> IGroupingDbQuery<T1, T2, T3, T4>.Having(Expression<Func<T1, T2, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4> IGroupingDbQuery<T1, T2, T3, T4>.Having(Expression<Func<T1, T2, T3, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
         IGroupingDbQuery<T1, T2, T3, T4> IGroupingDbQuery<T1, T2, T3, T4>.Having(Expression<Func<T1, T2, T3, T4, bool>> predicate)
         {
             AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4> IGroupingDbQuery<T1, T2, T3, T4>.Having(Expression<Func<T1, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4> IGroupingDbQuery<T1, T2, T3, T4>.Having(Expression<Func<T1, T2, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4> IGroupingDbQuery<T1, T2, T3, T4>.Having(Expression<Func<T1, T2, T3, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
             return this;
         }
 
@@ -701,9 +1085,57 @@ namespace Dapper.Easies
     {
         internal DbQuery(QueryContext context) : base(context) { }
 
+        public new IDbQuery<T1, T2, T3, T4, T5> Where(Expression<Func<T1, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5> Where(Expression<Func<T1, T2, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5> Where(Expression<Func<T1, T2, T3, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5> Where(Expression<Func<T1, T2, T3, T4, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
         public IDbQuery<T1, T2, T3, T4, T5> Where(Expression<Func<T1, T2, T3, T4, T5, bool>> predicate)
         {
             AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5> Where(Expression<Func<T1, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5> Where(Expression<Func<T1, T2, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5> Where(Expression<Func<T1, T2, T3, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5> Where(Expression<Func<T1, T2, T3, T4, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
             return this;
         }
 
@@ -719,11 +1151,60 @@ namespace Dapper.Easies
             return new DbQuery<TResult>(_context);
         }
 
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5> OrderBy(Expression<Func<T1, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5> OrderBy(Expression<Func<T1, T2, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5> OrderBy(Expression<Func<T1, T2, T3, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5> OrderBy(Expression<Func<T1, T2, T3, T4, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
         public IOrderedDbQuery<T1, T2, T3, T4, T5> OrderBy(Expression<Func<T1, T2, T3, T4, T5, object>> orderFields)
         {
             SetOrderBy(orderFields, SortType.Asc);
             return this;
         }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5> OrderByDescending(Expression<Func<T1, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5> OrderByDescending(Expression<Func<T1, T2, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5> OrderByDescending(Expression<Func<T1, T2, T3, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5> OrderByDescending(Expression<Func<T1, T2, T3, T4, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
 
         public IOrderedDbQuery<T1, T2, T3, T4, T5> OrderByDescending(Expression<Func<T1, T2, T3, T4, T5, object>> orderFields)
         {
@@ -731,9 +1212,57 @@ namespace Dapper.Easies
             return this;
         }
 
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5> ThenBy(Expression<Func<T1, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5> ThenBy(Expression<Func<T1, T2, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5> ThenBy(Expression<Func<T1, T2, T3, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5> ThenBy(Expression<Func<T1, T2, T3, T4, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
         public IOrderedDbQuery<T1, T2, T3, T4, T5> ThenBy(Expression<Func<T1, T2, T3, T4, T5, object>> orderFields)
         {
             SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5> ThenByDescending(Expression<Func<T1, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5> ThenByDescending(Expression<Func<T1, T2, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5> ThenByDescending(Expression<Func<T1, T2, T3, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5> ThenByDescending(Expression<Func<T1, T2, T3, T4, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
             return this;
         }
 
@@ -751,15 +1280,71 @@ namespace Dapper.Easies
 
         public Task<decimal> AvgAsync<TField>(Expression<Func<T1, T2, T3, T4, T5, TField>> field) => base.AvgAsync<TField>(field);
 
-        public Task<decimal> SumAsync<TField>(Expression<Func<T1, T2, T3, T4, T5, TField>> field) => base.SumAsync<TField>(field);
+        public Task<TField> SumAsync<TField>(Expression<Func<T1, T2, T3, T4, T5, TField>> field) => base.SumAsync<TField>(field);
 
         // ----------------------------------------------- Group By -----------------------------------------------
-        public IGroupingDbQuery<T1, T2, T3, T4, T5> GroupBy<TFields>(Expression<Func<T1, T2, T3, T4, T5, TFields>> fields)
+        public new IGroupingDbQuery<T1, T2, T3, T4, T5> GroupBy(Expression<Func<T1, object>> fields)
         {
             _context.GroupByExpression = fields;
             _context.OrderByMetedata = null;
             _context.ThenByMetedata = null;
             return this;
+        }
+
+        public new IGroupingDbQuery<T1, T2, T3, T4, T5> GroupBy(Expression<Func<T1, T2, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        public new IGroupingDbQuery<T1, T2, T3, T4, T5> GroupBy(Expression<Func<T1, T2, T3, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        public new IGroupingDbQuery<T1, T2, T3, T4, T5> GroupBy(Expression<Func<T1, T2, T3, T4, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        public IGroupingDbQuery<T1, T2, T3, T4, T5> GroupBy(Expression<Func<T1, T2, T3, T4, T5, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5>.Select<TResult>(Expression<Func<T1, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5>.Select<TResult>(Expression<Func<T1, T2, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5>.Select<TResult>(Expression<Func<T1, T2, T3, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5>.Select<TResult>(Expression<Func<T1, T2, T3, T4, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
         }
 
         IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5>.Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, TResult>> selector)
@@ -768,9 +1353,57 @@ namespace Dapper.Easies
             return new DbQuery<TResult>(_context);
         }
 
+        IGroupingDbQuery<T1, T2, T3, T4, T5> IGroupingDbQuery<T1, T2, T3, T4, T5>.Having(Expression<Func<T1, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5> IGroupingDbQuery<T1, T2, T3, T4, T5>.Having(Expression<Func<T1, T2, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5> IGroupingDbQuery<T1, T2, T3, T4, T5>.Having(Expression<Func<T1, T2, T3, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5> IGroupingDbQuery<T1, T2, T3, T4, T5>.Having(Expression<Func<T1, T2, T3, T4, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
         IGroupingDbQuery<T1, T2, T3, T4, T5> IGroupingDbQuery<T1, T2, T3, T4, T5>.Having(Expression<Func<T1, T2, T3, T4, T5, bool>> predicate)
         {
             AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5> IGroupingDbQuery<T1, T2, T3, T4, T5>.Having(Expression<Func<T1, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5> IGroupingDbQuery<T1, T2, T3, T4, T5>.Having(Expression<Func<T1, T2, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5> IGroupingDbQuery<T1, T2, T3, T4, T5>.Having(Expression<Func<T1, T2, T3, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5> IGroupingDbQuery<T1, T2, T3, T4, T5>.Having(Expression<Func<T1, T2, T3, T4, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
             return this;
         }
 

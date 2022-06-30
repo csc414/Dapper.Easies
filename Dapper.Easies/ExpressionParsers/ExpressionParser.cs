@@ -1,10 +1,10 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
+using System.Xml.Linq;
 
 namespace Dapper.Easies
 {
@@ -19,6 +19,8 @@ namespace Dapper.Easies
         private static Type s_dbFuncType = typeof(DbFunc);
 
         private static Type s_dbObjectExtensionType = typeof(DbObjectExtensions);
+
+        private static ConcurrentDictionary<int, Delegate> s_delegates = new ConcurrentDictionary<int, Delegate>();
 
         protected Expression Visit(Expression node)
         {
@@ -62,6 +64,8 @@ namespace Dapper.Easies
                     return VisitMethodCall((MethodCallExpression)node);
                 case ExpressionType.NewArrayInit:
                     return VisitNewArray((NewArrayExpression)node);
+                case ExpressionType.ListInit:
+                    return this.VisitListInit((ListInitExpression)node);
                 default:
                     throw new NotImplementedException($"{node.NodeType}");
             }
@@ -265,7 +269,7 @@ namespace Dapper.Easies
 
                     return new SqlExpression(string.Format(GetConstantValue<string>(node.Arguments[0]), vals));
                 }
-                
+
                 return Expression.Constant(node.Method.Invoke(null, VisitConstantExpressions(node.Arguments)));
             }
 
@@ -337,6 +341,12 @@ namespace Dapper.Easies
             return Expression.Constant(args);
         }
 
+        internal virtual Expression VisitListInit(ListInitExpression init)
+        {
+            var args = VisitConstantExpressions(init.Initializers.Select(o => o.Arguments.First()));
+            return Expression.Constant(args);
+        }
+
         protected virtual object GetConstantValue(Expression exp)
         {
             if (exp is ConstantExpression constant)
@@ -359,6 +369,9 @@ namespace Dapper.Easies
         {
             var args = exps.Select(o =>
             {
+                if (o is LambdaExpression lambda)
+                    return s_delegates.GetOrAdd(ExpressionEqualityComparer.Instance.GetHashCode(lambda), hashCode => lambda.Compile());
+
                 var exp = Visit(o);
                 if (exp is ConstantExpression constant)
                     return constant.Value;

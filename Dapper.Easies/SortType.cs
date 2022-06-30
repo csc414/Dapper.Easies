@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Dapper.Easies
 {
-    public enum SortType
+    public enum SortType : byte
     {
         Asc,
         Desc

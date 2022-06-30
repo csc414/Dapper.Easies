@@ -29,9 +29,9 @@ namespace Dapper.Easies.Demo
 
             var easiesProvider = serviceProvider.GetRequiredService<IEasiesProvider>();
 
-            await easiesProvider.From<Class>()
-                .Select<TestClass>()
-                .QueryAsync();
+            var testIds = new string[] { "98258db6-3ece-445b-a6a6-0bd44876b079" };
+
+            await easiesProvider.Connection.ExecuteAsync("Update bnt_class set Name = '' where Id In @Ids", new { Ids = testIds });
 
             var subQuery = easiesProvider.From<Student>().Where(c => c.ClassId == Guid.NewGuid()).Select(o => new { o.ClassId, o.Name });
 
@@ -39,10 +39,10 @@ namespace Dapper.Easies.Demo
             {
                 var a = easiesProvider.From<Class>()
                     .Join(subQuery, (a, b) => a.Id == b.ClassId)
-                    .Where((a, b) => b.Name == "测试")
-                    .WhereIf(true, (a, b) => DbFunc.IsNotNull(a.Id))
-                    .OrderBy((a, b) => b.ClassId)
-                    .Select((a, b) => a)
+                    .Where((_, b) => b.Name == "测试")
+                    .WhereIf(true, a => DbFunc.IsNotNull(a.Id))
+                    .OrderBy(a => a.CreateTime)
+                    .Select(a => a)
                     .QueryAsync();
 
                 var b = easiesProvider.From<Class>()

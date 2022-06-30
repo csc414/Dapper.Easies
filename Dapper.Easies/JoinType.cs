@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Dapper.Easies
 {
-    public enum JoinType
+    public enum JoinType : byte
     {
         Inner,
         Left,
