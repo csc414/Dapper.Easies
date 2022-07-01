@@ -5,7 +5,7 @@ using System.Text;
 namespace Dapper.Easies.Demo
 {
     [DbObject("bnt_student")]
-    public class Student : IDbTable
+    public class Student : IDbTable, ITenant
     {
         [DbProperty(PrimaryKey = true, Identity = true)]
         public int Id { get; set; }
@@ -23,5 +23,7 @@ namespace Dapper.Easies.Demo
 
         [DbProperty(Ignore = true)]
         public string ClassName { get; set; }
+
+        public Guid? TenantId { get; set; }
     }
 }

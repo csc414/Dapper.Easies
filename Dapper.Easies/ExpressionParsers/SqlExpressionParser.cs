@@ -297,8 +297,8 @@ namespace Dapper.Easies
         {
             if (exp is MemberExpression member)
             {
-                var parameter = (ParameterExpression)member.Expression;
-                var table = DbObject.Get(parameter.Type);
+                var parameter = (ParameterExpression)Visit(member.Expression);
+                var table = parameter.Type.IsInterface ? Context.DbObject : DbObject.Get(parameter.Type);
                 var aliasIndex = Lambda.Parameters.IndexOf(parameter);
                 var propertyName = table == null ? SqlSyntax.EscapePropertyName(member.Member.Name) : table[member.Member.Name].EscapeName;
                 if (Context == null || (table == null && aliasIndex == 0))

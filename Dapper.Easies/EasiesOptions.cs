@@ -12,6 +12,10 @@ namespace Dapper.Easies
 
         public IDictionary<string, ISqlSyntax> SqlSyntax { get; set; } = new Dictionary<string, ISqlSyntax>(StringComparer.Ordinal);
 
+        public bool DevelopmentMode { get; set; }
+
+        public IList<Type> Appenders { get; } = new List<Type>();
+
         public IDbConnectionFactory GetConnectionFactory(string connectionStringName)
         {
             if (ConnectionFactory.TryGetValue(connectionStringName, out var factory))
@@ -27,7 +31,5 @@ namespace Dapper.Easies
 
             throw new ArgumentException($"Invalid ConnectionStringName：{connectionStringName}", nameof(connectionStringName));
         }
-
-        public bool DevelopmentMode { get; set; }
     }
 }

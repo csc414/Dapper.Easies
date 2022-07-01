@@ -4,6 +4,7 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+using System.Xml.Linq;
 
 namespace Dapper.Easies
 {
@@ -27,6 +28,10 @@ namespace Dapper.Easies
 
         private List<Expression> _havingExpressions;
 
+        private List<Expression> _combineWhereExpressions;
+
+        private bool _initAppender = false;
+
         public DbObject DbObject { get; }
 
         public List<DbAlias> Alias { get; }
@@ -37,7 +42,27 @@ namespace Dapper.Easies
 
         public IReadOnlyCollection<JoinMetedata> JoinMetedatas => _joinMetedatas;
 
-        public IReadOnlyCollection<Expression> WhereExpressions => _whereExpressions;
+        public IReadOnlyCollection<Expression> WhereExpressions
+        {
+            get
+            {
+                if (!_initAppender)
+                {
+                    if (!NoAppender && DbObject.Appender != null)
+                    {
+                        _combineWhereExpressions = new List<Expression>(DbObject.Appender());
+                        if(_whereExpressions != null)
+                            _combineWhereExpressions.AddRange(_whereExpressions);
+                    }
+                    else
+                        _combineWhereExpressions = _whereExpressions;
+
+                    _initAppender = true;
+                }
+
+                return _combineWhereExpressions;
+            }
+        }
 
         public IReadOnlyCollection<Expression> HavingExpressions => _havingExpressions;
 
@@ -55,6 +80,8 @@ namespace Dapper.Easies
 
         public bool Distinct { get; set; }
 
+        public bool NoAppender { get; set; }
+
         public void AddJoin(Type joinType, Expression joinExpression, JoinType type, IDbQuery query = null)
         {
             var dbObject = DbObject.Get(joinType);
@@ -65,9 +92,9 @@ namespace Dapper.Easies
                     throw new ArgumentException($"无法连接来自不同配置的表");
             }
 
-            if(query != null)
+            if (query != null)
             {
-                if(DbObject.ConnectionStringName != query.Context.DbObject.ConnectionStringName)
+                if (DbObject.ConnectionStringName != query.Context.DbObject.ConnectionStringName)
                     throw new ArgumentException($"无法连接来自不同配置的表");
             }
 

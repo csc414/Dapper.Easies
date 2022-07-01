@@ -1,9 +1,10 @@
-﻿using Microsoft.Extensions.DependencyModel;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Dapper.Easies
@@ -26,25 +27,29 @@ namespace Dapper.Easies
 
         public string ConnectionStringName { get; internal set; }
 
+        public Func<IEnumerable<Expression>> Appender { get; internal set; }
+
         private string _dbName;
 
-        public string DbName { 
-            get 
+        public string DbName
+        {
+            get
             {
                 var holder = DynamicDbMappingScope._locals.Value;
-                if(holder != null)
+                if (holder != null)
                 {
                     if (holder.TableNameMap.TryGetValue(this, out var map))
                         return map.name;
                 }
 
                 return _dbName;
-            } 
+            }
         }
 
         private string _escapeName;
 
-        public string EscapeName { 
+        public string EscapeName
+        {
             get
             {
                 var holder = DynamicDbMappingScope._locals.Value;
@@ -102,7 +107,7 @@ namespace Dapper.Easies
 
             public string DbName { get; }
 
-            public string EscapeName{ get; internal set; }
+            public string EscapeName { get; internal set; }
 
             public string EscapeNameAsAlias { get; internal set; }
 
@@ -120,12 +125,19 @@ namespace Dapper.Easies
             return string.Format("{0}.{1}", context.Alias[aliasIndex].Alias, property.EscapeName);
         }
 
-        internal static void Initialize(EasiesOptions options)
+        internal static void Initialize(IServiceProvider serviceProvider, EasiesOptions options)
         {
-            lock(_objs)
+            lock (_objs)
             {
                 if (_objs.Count > 0)
                     return;
+
+                var appenders = new List<(Type t, MethodInfo method, object obj)>();
+                foreach (var t in options.Appenders)
+                {
+                    var obj = ActivatorUtilities.GetServiceOrCreateInstance(serviceProvider, t);
+                    appenders.AddRange(t.GetInterfaces().Where(o => o.IsGenericType).Select(o => (o.GenericTypeArguments.First(), o.GetMethod("Append"), obj)));
+                }
 
                 SqlMapper.AddTypeHandler(new UnmanagedTypeHandler<int>());
                 SqlMapper.AddTypeHandler(new UnmanagedTypeHandler<long>());
@@ -142,6 +154,7 @@ namespace Dapper.Easies
                     obj.ConnectionFactory = options.GetConnectionFactory(obj.ConnectionStringName ?? EasiesOptions.DefaultName);
                     obj.SqlSyntax = options.GetSqlSyntax(obj.ConnectionStringName);
                     obj.EscapeName = obj.SqlSyntax.EscapeTableName(obj.DbName);
+                    obj.Appender = GetAppendFunction(appenders.Where(o => o.t.IsAssignableFrom(t)));
                     foreach (var p in t.GetTypeInfo().GetProperties(BindingFlags.Instance | BindingFlags.Public))
                     {
                         var attr = p.GetCustomAttribute<DbPropertyAttribute>();
@@ -160,6 +173,23 @@ namespace Dapper.Easies
                     Add(t, obj);
                 }
             }
+        }
+
+        static Func<IEnumerable<Expression>> GetAppendFunction(IEnumerable<(Type t, MethodInfo method, object obj)> funcs)
+        {
+            if (funcs.Any())
+            {
+                var exps = new List<Expression>();
+                var lsType = typeof(List<Expression>);
+                var lsVar = Expression.Variable(lsType);
+                exps.Add(Expression.Assign(lsVar, Expression.New(lsType)));
+                foreach (var item in funcs)
+                    exps.Add(Expression.Call(lsVar, "Add", null, Expression.Call(Expression.Constant(item.obj), item.method)));
+                exps.Add(lsVar);
+                return Expression.Lambda<Func<IEnumerable<Expression>>>(Expression.Block(new ParameterExpression[] { lsVar }, exps)).Compile();
+            }
+
+            return default;
         }
 
         static IEnumerable<Assembly> GetRuntimeAssemblies()

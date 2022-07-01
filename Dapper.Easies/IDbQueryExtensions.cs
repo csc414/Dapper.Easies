@@ -11,6 +11,12 @@ namespace Dapper.Easies
 {
     public static class DbQueryExtensions
     {
+        public static T NoAppender<T>(this T query) where T : IDbQuery
+        {
+            query.Context.NoAppender = true;
+            return query;
+        }
+
         public static T Skip<T>(this T query, int count) where T : IDbQuery
         {
             query.Context.Skip = count;

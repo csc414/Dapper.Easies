@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Dapper.Easies
 {
-    public enum AggregateType
+    public enum AggregateType : byte
     {
         Count,
         Max,
