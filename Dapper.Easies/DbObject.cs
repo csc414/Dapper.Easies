@@ -17,7 +17,7 @@ namespace Dapper.Easies
 
         public DbObject(string dbName, Type type)
         {
-            _dbName = dbName;
+            DbName = dbName;
             Type = type;
         }
 
@@ -29,43 +29,9 @@ namespace Dapper.Easies
 
         public Func<IEnumerable<Expression>> Appender { get; internal set; }
 
-        private string _dbName;
+        public string DbName { get; internal set; }
 
-        public string DbName
-        {
-            get
-            {
-                var holder = DynamicDbMappingScope._locals.Value;
-                if (holder != null)
-                {
-                    if (holder.TableNameMap.TryGetValue(this, out var map))
-                        return map.name;
-                }
-
-                return _dbName;
-            }
-        }
-
-        private string _escapeName;
-
-        public string EscapeName
-        {
-            get
-            {
-                var holder = DynamicDbMappingScope._locals.Value;
-                if (holder != null)
-                {
-                    if (holder.TableNameMap.TryGetValue(this, out var map))
-                        return map.escapeName;
-                }
-
-                return _escapeName;
-            }
-            internal set
-            {
-                _escapeName = value;
-            }
-        }
+        public string EscapeName { get; internal set; }
 
         public Type Type { get; }
 
@@ -107,22 +73,17 @@ namespace Dapper.Easies
 
             public string DbName { get; }
 
+            public PropertyInfo PropertyInfo { get; }
+
             public string EscapeName { get; internal set; }
 
             public string EscapeNameAsAlias { get; internal set; }
 
-            public bool PrimaryKey { get; set; }
+            public bool PrimaryKey { get; internal set; }
 
-            public bool IdentityKey { get; set; }
+            public bool IdentityKey { get; internal set; }
 
-            public bool Ignore { get; set; }
-
-            public PropertyInfo PropertyInfo { get; }
-        }
-
-        internal static string GetTablePropertyAlias(QueryContext context, DbProperty property, int aliasIndex)
-        {
-            return string.Format("{0}.{1}", context.Alias[aliasIndex].Alias, property.EscapeName);
+            public bool Ignore { get; internal set; }
         }
 
         internal static void Initialize(IServiceProvider serviceProvider, EasiesOptions options)
