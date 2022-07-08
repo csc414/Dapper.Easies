@@ -4,18 +4,18 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+using System.Xml.Linq;
 
 namespace Dapper.Easies
 {
     public class QueryContext : ICloneable
     {
-        public QueryContext(IDbConnectionCache connection, ISqlConverter sqlConverter, DbObject dbObject) : this(connection, sqlConverter, dbObject, new[] { new DbAlias(dbObject.EscapeName, "t") })
+        public QueryContext(ISqlConverter sqlConverter, DbObject dbObject) : this(sqlConverter, dbObject, new[] { new DbAlias(dbObject.EscapeName, "t") })
         {
         }
 
-        public QueryContext(IDbConnectionCache connection, ISqlConverter sqlConverter, DbObject dbObject, IEnumerable<DbAlias> alias)
+        public QueryContext(ISqlConverter sqlConverter, DbObject dbObject, IEnumerable<DbAlias> alias)
         {
-            Connection = connection;
             Converter = sqlConverter;
             DbObject = dbObject;
             Alias = new List<DbAlias>(alias);
@@ -27,17 +27,39 @@ namespace Dapper.Easies
 
         private List<Expression> _havingExpressions;
 
+        private List<Expression> _combineWhereExpressions;
+
+        private bool _initAppender = false;
+
         public DbObject DbObject { get; }
 
         public List<DbAlias> Alias { get; }
 
         public ISqlConverter Converter { get; }
 
-        public IDbConnectionCache Connection { get; }
-
         public IReadOnlyCollection<JoinMetedata> JoinMetedatas => _joinMetedatas;
 
-        public IReadOnlyCollection<Expression> WhereExpressions => _whereExpressions;
+        public IReadOnlyCollection<Expression> WhereExpressions
+        {
+            get
+            {
+                if (!_initAppender)
+                {
+                    if (!NoAppender && DbObject.Appender != null)
+                    {
+                        _combineWhereExpressions = new List<Expression>(DbObject.Appender());
+                        if(_whereExpressions != null)
+                            _combineWhereExpressions.AddRange(_whereExpressions);
+                    }
+                    else
+                        _combineWhereExpressions = _whereExpressions;
+
+                    _initAppender = true;
+                }
+
+                return _combineWhereExpressions;
+            }
+        }
 
         public IReadOnlyCollection<Expression> HavingExpressions => _havingExpressions;
 
@@ -55,6 +77,8 @@ namespace Dapper.Easies
 
         public bool Distinct { get; set; }
 
+        public bool NoAppender { get; set; }
+
         public void AddJoin(Type joinType, Expression joinExpression, JoinType type, IDbQuery query = null)
         {
             var dbObject = DbObject.Get(joinType);
@@ -65,9 +89,9 @@ namespace Dapper.Easies
                     throw new ArgumentException($"无法连接来自不同配置的表");
             }
 
-            if(query != null)
+            if (query != null)
             {
-                if(DbObject.ConnectionStringName != query.Context.DbObject.ConnectionStringName)
+                if (DbObject.ConnectionStringName != query.Context.DbObject.ConnectionStringName)
                     throw new ArgumentException($"无法连接来自不同配置的表");
             }
 
@@ -105,7 +129,7 @@ namespace Dapper.Easies
 
         public object Clone()
         {
-            var context = new QueryContext(Connection, Converter, DbObject, Alias);
+            var context = new QueryContext(Converter, DbObject, Alias);
             if (_havingExpressions != null)
                 context._havingExpressions = new List<Expression>(_havingExpressions);
             if (_joinMetedatas != null)

@@ -23,6 +23,12 @@ namespace Dapper.Easies
             return this;
         }
 
+        public EasiesOptionsBuilder UseAppender<T>()
+        {
+            Options.Appenders.Add(typeof(T));
+            return this;
+        }
+
         public EasiesOptions Options => _options ?? (_options = new EasiesOptions());
 
         internal void SetOptions(EasiesOptions options)

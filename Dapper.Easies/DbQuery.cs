@@ -29,7 +29,11 @@ namespace Dapper.Easies
 
         QueryContext IDbQuery.Context => _context;
 
-        protected Task<T> InternalExecuteAsync<T>(Func<IDbConnection, Task<T>> func) => _context.Connection.ExecuteAsync(_context.DbObject.ConnectionFactory, func);
+        protected async Task<TResult> InternalExecuteAsync<TResult>(Func<IDbConnection, Task<TResult>> func)
+        {
+            using var conn = _context.DbObject.ConnectionFactory.Create();
+            return await func(conn);
+        }
 
         protected void AddWhereExpression(Expression whereExpression)
         {

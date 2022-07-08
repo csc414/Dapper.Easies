@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Text;
 
 namespace Dapper.Easies
@@ -12,10 +13,22 @@ namespace Dapper.Easies
 
         public IDictionary<string, ISqlSyntax> SqlSyntax { get; set; } = new Dictionary<string, ISqlSyntax>(StringComparer.Ordinal);
 
+        public bool DevelopmentMode { get; set; }
+
+        public IList<Type> Appenders { get; } = new List<Type>();
+
         public IDbConnectionFactory GetConnectionFactory(string connectionStringName)
         {
             if (ConnectionFactory.TryGetValue(connectionStringName, out var factory))
                 return factory;
+
+            throw new ArgumentException($"Invalid ConnectionStringName：{connectionStringName}", nameof(connectionStringName));
+        }
+
+        public IDbConnection GetConnection(string connectionStringName)
+        {
+            if (ConnectionFactory.TryGetValue(connectionStringName, out var factory))
+                return factory.Create();
 
             throw new ArgumentException($"Invalid ConnectionStringName：{connectionStringName}", nameof(connectionStringName));
         }
@@ -27,7 +40,5 @@ namespace Dapper.Easies
 
             throw new ArgumentException($"Invalid ConnectionStringName：{connectionStringName}", nameof(connectionStringName));
         }
-
-        public bool DevelopmentMode { get; set; }
     }
 }

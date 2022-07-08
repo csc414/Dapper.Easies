@@ -10,11 +10,11 @@ namespace Dapper.Easies
 
         private readonly ILogger _logger;
 
-        public DefaultSqlConverter(EasiesOptions options, ILoggerFactory factory = null)
+        public DefaultSqlConverter(IServiceProvider serviceProvider, EasiesOptions options, ILoggerFactory factory = null)
         {
             _options = options;
             _logger = factory?.CreateLogger<DefaultSqlConverter>();
-            DbObject.Initialize(options);
+            DbObject.Initialize(serviceProvider, options);
         }
 
         public string ToQuerySql(QueryContext context, ParameterBuilder parameterBuilder)
