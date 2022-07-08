@@ -50,7 +50,7 @@ namespace Dapper.Easies
 
         internal bool Add(string name, DbProperty property) => _properties.TryAdd(name, property);
 
-        public static DbObject Get<T>() => Get(typeof(T));
+        public static DbObject Get<T>() where T : IDbObject => Get(typeof(T));
 
         public static DbObject Get(Type type)
         {

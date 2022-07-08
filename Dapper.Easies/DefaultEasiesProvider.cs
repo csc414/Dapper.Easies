@@ -6,34 +6,35 @@ using System.Threading.Tasks;
 using System.Transactions;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Data.Common;
 
 namespace Dapper.Easies
 {
     public class DefaultEasiesProvider : IEasiesProvider
     {
-        private readonly IDbConnectionCache _connection;
+        private readonly EasiesOptions _options;
 
         private readonly ISqlConverter _sqlConverter;
 
-        public DefaultEasiesProvider(IDbConnectionCache connection, ISqlConverter sqlConverter)
+        public DefaultEasiesProvider(EasiesOptions options, ISqlConverter sqlConverter)
         {
-            _connection = connection;
+            _options = options;
             _sqlConverter = sqlConverter;
         }
 
-        public IDbConnection Connection => _connection.Connection;
+        public IDbConnection CreateConnection() => CreateConnection(EasiesOptions.DefaultName);
 
-        public IDbConnection GetConnection(string connectionStringName) => _connection.GetConnection(connectionStringName);
+        public IDbConnection CreateConnection(string connectionStringName) => _options.GetConnection(connectionStringName);
 
-        public IDbConnection CreateConnection() => _connection.CreateConnection(EasiesOptions.DefaultName);
-
-        public IDbConnection CreateConnection(string connectionStringName) => _connection.CreateConnection(connectionStringName);
-
-        Task<TResult> InternalExecuteAsync<T, TResult>(Func<IDbConnection, Task<TResult>> func) => _connection.ExecuteAsync(DbObject.Get<T>().ConnectionFactory, func);
+        async Task<TResult> InternalExecuteAsync<T, TResult>(Func<IDbConnection, Task<TResult>> func) where T : IDbObject
+        {
+            using var conn = DbObject.Get<T>().ConnectionFactory.Create();
+            return await func(conn);
+        }
 
         public DbEntity<T> Entity<T>() where T : IDbTable => new DbEntity<T>(this);
 
-        public IDbQuery<T> From<T>() where T : IDbObject => new DbQuery<T>(new QueryContext(_connection, _sqlConverter, DbObject.Get(typeof(T))));
+        public IDbQuery<T> From<T>() where T : IDbObject => new DbQuery<T>(new QueryContext(_sqlConverter, DbObject.Get(typeof(T))));
 
         public Task<T> GetAsync<T>(params object[] ids) where T : IDbObject
         {

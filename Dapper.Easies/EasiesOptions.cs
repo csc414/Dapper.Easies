@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Text;
 
 namespace Dapper.Easies
@@ -20,6 +21,14 @@ namespace Dapper.Easies
         {
             if (ConnectionFactory.TryGetValue(connectionStringName, out var factory))
                 return factory;
+
+            throw new ArgumentException($"Invalid ConnectionStringName：{connectionStringName}", nameof(connectionStringName));
+        }
+
+        public IDbConnection GetConnection(string connectionStringName)
+        {
+            if (ConnectionFactory.TryGetValue(connectionStringName, out var factory))
+                return factory.Create();
 
             throw new ArgumentException($"Invalid ConnectionStringName：{connectionStringName}", nameof(connectionStringName));
         }

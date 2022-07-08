@@ -34,44 +34,41 @@ namespace Dapper.Easies.Demo
 
             var subQuery = easiesProvider.From<Student>().Where(c => c.ClassId == Guid.NewGuid()).Select(o => new { o.ClassId, o.Name });
 
-            using (AsyncExecutionScope.Create())
-            {
-                var a = easiesProvider.From<Class>()
-                    .Join(subQuery, (a, b) => a.Id == b.ClassId)
-                    .Where((_, b) => b.Name == "测试")
-                    .WhereIf(true, a => DbFunc.IsNotNull(a.Id))
-                    .OrderBy(a => a.CreateTime)
-                    .Select(a => a)
-                    .QueryAsync();
+            var a = easiesProvider.From<Class>()
+                .Join(subQuery, (a, b) => a.Id == b.ClassId)
+                .Where((_, b) => b.Name == "测试")
+                .WhereIf(true, a => DbFunc.IsNotNull(a.Id))
+                .OrderBy(a => a.CreateTime)
+                .Select(a => a)
+                .QueryAsync();
 
-                var b = easiesProvider.From<Class>()
-                    .Where(o => DbFunc.In(o.Id, easiesProvider.From<Class>().Where(x => x.Id == o.Id).Select(o => o.Id).SubQuery()))
-                    .OrderBy(o => o.CreateTime)
-                    .GetPagerAsync(2, 2);
+            var b = easiesProvider.From<Class>()
+                .Where(o => DbFunc.In(o.Id, easiesProvider.From<Class>().Where(x => x.Id == o.Id).Select(o => o.Id).SubQuery()))
+                .OrderBy(o => o.CreateTime)
+                .GetPagerAsync(2, 2);
 
-                var c = easiesProvider.From<Class>()
-                    .Select((o) => new
-                    {
-                        o.Name,
-                        Count = easiesProvider.From<Student>()
-                                .Where(c => c.ClassId == o.Id)
-                                .Select(c => DbFunc.Count())
-                                .SubQueryScalar()
-                    })
-                    .QueryAsync();
+            var c = easiesProvider.From<Class>()
+                .Select((o) => new
+                {
+                    o.Name,
+                    Count = easiesProvider.From<Student>()
+                            .Where(c => c.ClassId == o.Id)
+                            .Select(c => DbFunc.Count())
+                            .SubQueryScalar()
+                })
+                .QueryAsync();
 
-                var d = easiesProvider.From<Student>()
-                   .Join<Class>((a, b) => a.ClassId == b.Id)
-                   .Where((o, _) => o.IsAdult && o.Name.Contains("阿萨"))
-                   .GroupBy((o, _) => new { o.IsAdult, o.ClassId })
-                   .Having((o, _) => DbFunc.Count() > 0)
-                   .Select((o, _) => new { o.IsAdult, o.ClassId })
-                   .OrderBy(o => o.IsAdult)
-                   .ThenByDescending(o => o.ClassId)
-                   .QueryAsync();
+            var d = easiesProvider.From<Student>()
+                .Join<Class>((a, b) => a.ClassId == b.Id)
+                .Where((o, _) => o.IsAdult && o.Name.Contains("阿萨"))
+                .GroupBy((o, _) => new { o.IsAdult, o.ClassId })
+                .Having((o, _) => DbFunc.Count() > 0)
+                .Select((o, _) => new { o.IsAdult, o.ClassId })
+                .OrderBy(o => o.IsAdult)
+                .ThenByDescending(o => o.ClassId)
+                .QueryAsync();
 
-                await Task.WhenAll(a, b, c, d);
-            }
+            await Task.WhenAll(a, b, c, d);
 
             var pager = await easiesProvider.From<Student>()
                 .Join<Class>((a, b) => a.ClassId == b.Id)
