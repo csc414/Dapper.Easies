@@ -281,60 +281,46 @@ studentEntity.Where(...);
 ...
 //使用强类型实体可省略每次调用传递泛型，更多的方法不在此展示。
 ```
-动态映射表名
+条件追加器
 ------------------------------------------------------------
 ```csharp
-//可用于分表操作
-
-//Class = tb_class
-using (new DynamicDbMappingScope(map => map.SetTableName<Class>("tb_class1")))
+//从 2.1.3 版本开始增加了全局条件追加器，可基于接口或模型追加条件，可轻松实现租户，或逻辑删除等等功能。
+services.AddEasiesProvider(builder =>
 {
-    //Class = tb_class1
-    await easiesProvider.InsertAsync(...);
+    ...
+    builder.UseAppender<TenantAppender>();   //考虑到性能问题，以单例的模式注册
+});
 
-    using (new DynamicDbMappingScope(map => map.SetTableName<Class>("tb_class2")))
+public interface ITenant
+{
+    public Guid? TenantId { get; set; }
+}
+
+public class TenantAppender : IAppender<ITenant>
+{
+    Expression<Func<ITenant, bool>> IAppender<ITenant>.Append()
     {
-        //Class = tb_class2
-        await easiesProvider.InsertAsync(...);
+        return o => o.TenantId == Guid.NewGuid();
     }
-
-    //Class = tb_class1
-    await easiesProvider.InsertAsync(...);
 }
-//Class = tb_class
-```
-异步并行
-------------------------------------------------------------
-```csharp
-//IEasiesProvider 服务从 2.1.0 开始生命周期默认注册为 Scoped
-//在 IEasiesProvider 生命周期中将共用一个 DbConnection。
-//若需要异步并行请使用以下方式
 
-using (AsyncExecutionScope.Create())
-{
-    var task1 = easiesProvider.Method(...);
-    
-    var task2 = easiesProvider.Method(...);
-    
-    await Task.WhenAll(task1, task2);
-}
+只有使用From的情况下才会追加条件，别的方法不追加。
+
+await easiesProvider.From<Class>().QueryAsync();     //条件会追加 Class.TenantId = @p0
+
+await easiesProvider.From<Student>()        //多表情况下只会追加操作的主表条件 Student.TenantId = @p0
+    .Join<Class>((a, b) => a.TenantId == b.TenantId)
+    .QueryAsync();
+
 ```
 原生Sql执行
 ------------------------------------------------------------
 ```csharp
-//IEasiesProvider 服务从 2.1.0 开始生命周期默认注册为 Scoped
-//在 IEasiesProvider 生命周期中将共用一个 DbConnection。
-easiesProvider.Connection
-
-//多库
-easiesProvider.GetConnection("多库配置名")
-
 //以下方式将创建新的 DbConnection 需自行处理连接的释放
 easiesProvider.CreateConnection()
 
 easiesProvider.CreateConnection("多库配置名")
 ```
-
 关于事务
 ------------------------------------------------------------
 基于 [TransactionScope](https://docs.microsoft.com/zh-cn/dotnet/api/system.transactions.transactionscope?view=net-6.0 "TransactionScope") 做了简单的封装。
