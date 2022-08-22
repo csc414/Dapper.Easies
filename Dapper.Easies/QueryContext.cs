@@ -109,6 +109,7 @@ namespace Dapper.Easies
                 _whereExpressions = new List<Expression>();
 
             _whereExpressions.Add(whereExpression);
+            _initAppender = false;
         }
 
         public void SetWhere(Index i, LambdaExpression whereExpression)
@@ -117,6 +118,7 @@ namespace Dapper.Easies
                 _whereExpressions[i] = DbQuery.CreateExpressionLambda(whereExpression);
             else
                 _whereExpressions[i] = whereExpression;
+            _initAppender = false;
         }
 
         public void AddHaving(Expression havingExpression)
