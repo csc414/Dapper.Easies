@@ -18,14 +18,24 @@ namespace Dapper.Easies.MySql
             if (context.Distinct)
                 sql.AppendFormat(" DISTINCT");
 
+            bool wrapCount = false;
+
             if (aggregateInfo != null)
             {
                 switch (aggregateInfo.Type)
                 {
                     case AggregateType.Count:
-                        sql.Append(" COUNT(");
-                        if (aggregateInfo.Expression == null)
-                            sql.Append('*');
+                        if (context.GroupByExpression != null)
+                        {
+                            sql.Append(" 1");
+                            wrapCount = true;
+                        }
+                        else
+                        {
+                            sql.Append(" COUNT(");
+                            if (aggregateInfo.Expression == null)
+                                sql.Append('*');
+                        }
                         break;
                     case AggregateType.Max:
                         sql.Append(" MAX(");
@@ -40,9 +50,12 @@ namespace Dapper.Easies.MySql
                         sql.Append(" SUM(");
                         break;
                 }
-                if (aggregateInfo.Expression != null)
-                    parser.Visit(aggregateInfo.Expression, sql, parameterBuilder);
-                sql.Append(")");
+                if (!wrapCount)
+                {
+                    if (aggregateInfo.Expression != null)
+                        parser.Visit(aggregateInfo.Expression, sql, parameterBuilder);
+                    sql.Append(")");
+                }
             }
             else if (context.SelectorExpression != null)
             {
@@ -71,6 +84,9 @@ namespace Dapper.Easies.MySql
             var takeCount = take ?? context.Take;
             if (takeCount > 0)
                 sql.Append($" LIMIT {skip ?? context.Skip},{takeCount}");
+
+            if (wrapCount)
+                return $"SELECT COUNT(*) FROM ({sql}) _t";
 
             return sql.ToString();
         }
