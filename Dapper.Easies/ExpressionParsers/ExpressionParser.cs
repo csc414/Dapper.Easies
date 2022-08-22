@@ -276,14 +276,24 @@ namespace Dapper.Easies
             return node;
         }
 
+        private int _logicalDeep = 0;
+
+        protected int LogicalDeep => _logicalDeep;
+
         protected virtual Expression VisitLogical(BinaryExpression node)
         {
-            var left = Visit(node.Left);
-            Handle(left);
-            AppendLogicalOperator(node.NodeType);
-            var right = Visit(node.Right);
-            Handle(right);
+            _logicalDeep++;
 
+            AppendLogical(() =>
+            {
+                var left = Visit(node.Left);
+                Handle(left);
+                AppendLogicalOperator(node.NodeType);
+                var right = Visit(node.Right);
+                Handle(right);
+            });
+
+            _logicalDeep--;
             void Handle(Expression exp)
             {
                 if (exp.NodeType == ExpressionType.MemberAccess)
@@ -421,6 +431,12 @@ namespace Dapper.Easies
 
         protected virtual void AppendNot(Action exec)
         {
+            exec();
+        }
+
+        protected virtual void AppendLogical(Action exec)
+        {
+            exec();
         }
 
         protected SqlExpression CreateSql(string sql)
