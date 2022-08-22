@@ -521,5 +521,17 @@ namespace Dapper.Easies
             exec();
             Builder.Append(")");
         }
+
+        protected override void AppendLogical(Action exec)
+        {
+            if(LogicalDeep > 1)
+            {
+                Builder.Append("(");
+                exec();
+                Builder.Append(")");
+            }
+            else
+                exec();
+        }
     }
 }
