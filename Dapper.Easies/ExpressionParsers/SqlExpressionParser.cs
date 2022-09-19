@@ -290,6 +290,9 @@ namespace Dapper.Easies
             if (tableAlias == null)
                 return name;
 
+            if (name == null)
+                return tableAlias;
+
             return $"{tableAlias}.{name}";
         }
 
@@ -307,7 +310,7 @@ namespace Dapper.Easies
                 return (Context.Alias[aliasIndex].Alias, propertyName);
             }
             else if (exp is SqlExpression sql)
-                return (sql.ToString(), null); ;
+                return (sql.ToString(), null);
 
             throw new NotSupportedException($"{exp}");
         }
