@@ -11,6 +11,8 @@ namespace Dapper.Easies
 {
     public static class DbQueryExtensions
     {
+        private readonly static Type[] s_dbQueryTypes = new[] { typeof(DbQuery<>), typeof(DbQuery<,>), typeof(DbQuery<,,>), typeof(DbQuery<,,,>), typeof(DbQuery<,,,,>) };
+
         public static T NoAppender<T>(this T query) where T : IDbQuery
         {
             query.Context.NoAppender = true;
@@ -31,7 +33,8 @@ namespace Dapper.Easies
 
         public static T NewQuery<T>(this T query) where T : IDbQuery
         {
-            var type = typeof(DbQuery<>).MakeGenericType(typeof(T).GetGenericArguments());
+            var args = typeof(T).GetGenericArguments();
+            var type = s_dbQueryTypes[args.Length - 1].MakeGenericType(args);
             return (T)Activator.CreateInstance(type, BindingFlags.Instance | BindingFlags.NonPublic, null, new[] { query.Context.Clone() }, null);
         }
 

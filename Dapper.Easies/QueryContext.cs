@@ -144,6 +144,8 @@ namespace Dapper.Easies
             context.GroupByExpression = GroupByExpression;
             context.Skip = Skip;
             context.Take = Take;
+            context.Distinct = Distinct;
+            context.NoAppender = NoAppender;
             return context;
         }
     }
