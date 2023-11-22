@@ -155,7 +155,7 @@ namespace Dapper.Easies
 
         static IEnumerable<Assembly> GetRuntimeAssemblies()
         {
-            var reg = new Regex("Microsoft\\..*|System.*|mscorlib|netstandard|WindowsBase", RegexOptions.Singleline | RegexOptions.Compiled);
+            var reg = new Regex("^Microsoft\\..*|^System\\..*|mscorlib|netstandard|WindowsBase", RegexOptions.Singleline | RegexOptions.Compiled);
             var context = DependencyContext.Default;
             var assemblies = context.RuntimeLibraries
                 .SelectMany(library => library.GetDefaultAssemblyNames(context))
