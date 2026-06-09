@@ -1149,6 +1149,42 @@ namespace Dapper.Easies
             return this;
         }
 
+        public new IDbQuery<T1, T2, T3, T4, T5, TJoin> Join<TJoin>(ISelectedDbQuery<TJoin> query, JoinType type = JoinType.Inner) where TJoin : class
+        {
+            AddJoinMetedata<TJoin>(query, null, type);
+            return new DbQuery<T1, T2, T3, T4, T5, TJoin>(_context);
+        }
+
+        public IDbQuery<T1, T2, T3, T4, T5, TJoin> Join<TJoin>(ISelectedDbQuery<TJoin> query, Expression<Func<T1, T2, T3, T4, T5, TJoin, bool>> on, JoinType type = JoinType.Inner) where TJoin : class
+        {
+            AddJoinMetedata<TJoin>(query, on, type);
+            return new DbQuery<T1, T2, T3, T4, T5, TJoin>(_context);
+        }
+
+        public IDbQuery<T1, T2, T3, T4, T5, TJoin> Join<TJoin>(ISelectedDbQuery<TJoin> query, Expression<Func<T1, T2, T3, T4, T5, TJoin, string>> on, JoinType type = JoinType.Inner) where TJoin : class
+        {
+            AddJoinMetedata<TJoin>(query, CreateExpressionLambda(on), type);
+            return new DbQuery<T1, T2, T3, T4, T5, TJoin>(_context);
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, TJoin> Join<TJoin>(JoinType type = JoinType.Inner) where TJoin : IDbObject
+        {
+            AddJoinMetedata<TJoin>(null, type);
+            return new DbQuery<T1, T2, T3, T4, T5, TJoin>(_context);
+        }
+
+        public IDbQuery<T1, T2, T3, T4, T5, TJoin> Join<TJoin>(Expression<Func<T1, T2, T3, T4, T5, TJoin, bool>> on, JoinType type = JoinType.Inner) where TJoin : IDbObject
+        {
+            AddJoinMetedata<TJoin>(on, type);
+            return new DbQuery<T1, T2, T3, T4, T5, TJoin>(_context);
+        }
+
+        public IDbQuery<T1, T2, T3, T4, T5, TJoin> Join<TJoin>(Expression<Func<T1, T2, T3, T4, T5, TJoin, string>> on, JoinType type = JoinType.Inner) where TJoin : IDbObject
+        {
+            AddJoinMetedata<TJoin>(CreateExpressionLambda(on), type);
+            return new DbQuery<T1, T2, T3, T4, T5, TJoin>(_context);
+        }
+
         public ISelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, TResult>> selector)
         {
             _context.SelectorExpression = selector;
@@ -1412,6 +1448,2058 @@ namespace Dapper.Easies
         }
 
         IGroupingDbQuery<T1, T2, T3, T4, T5> IGroupingDbQuery<T1, T2, T3, T4, T5>.Having(Expression<Func<T1, T2, T3, T4, T5, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+    }
+
+    public class DbQuery<T1, T2, T3, T4, T5, T6> : DbQuery<T1, T2, T3, T4, T5>, IDbQuery<T1, T2, T3, T4, T5, T6>, IOrderedDbQuery<T1, T2, T3, T4, T5, T6>, IGroupingDbQuery<T1, T2, T3, T4, T5, T6>
+    {
+        internal DbQuery(QueryContext context) : base(context) { }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6> Where(Expression<Func<T1, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6> Where(Expression<Func<T1, T2, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6> Where(Expression<Func<T1, T2, T3, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6> Where(Expression<Func<T1, T2, T3, T4, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6> Where(Expression<Func<T1, T2, T3, T4, T5, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public IDbQuery<T1, T2, T3, T4, T5, T6> Where(Expression<Func<T1, T2, T3, T4, T5, T6, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6> Where(Expression<Func<T1, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6> Where(Expression<Func<T1, T2, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6> Where(Expression<Func<T1, T2, T3, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6> Where(Expression<Func<T1, T2, T3, T4, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6> Where(Expression<Func<T1, T2, T3, T4, T5, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public IDbQuery<T1, T2, T3, T4, T5, T6> Where(Expression<Func<T1, T2, T3, T4, T5, T6, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, TJoin> Join<TJoin>(ISelectedDbQuery<TJoin> query, JoinType type = JoinType.Inner) where TJoin : class
+        {
+            AddJoinMetedata<TJoin>(query, null, type);
+            return new DbQuery<T1, T2, T3, T4, T5, T6, TJoin>(_context);
+        }
+
+        public IDbQuery<T1, T2, T3, T4, T5, T6, TJoin> Join<TJoin>(ISelectedDbQuery<TJoin> query, Expression<Func<T1, T2, T3, T4, T5, T6, TJoin, bool>> on, JoinType type = JoinType.Inner) where TJoin : class
+        {
+            AddJoinMetedata<TJoin>(query, on, type);
+            return new DbQuery<T1, T2, T3, T4, T5, T6, TJoin>(_context);
+        }
+
+        public IDbQuery<T1, T2, T3, T4, T5, T6, TJoin> Join<TJoin>(ISelectedDbQuery<TJoin> query, Expression<Func<T1, T2, T3, T4, T5, T6, TJoin, string>> on, JoinType type = JoinType.Inner) where TJoin : class
+        {
+            AddJoinMetedata<TJoin>(query, CreateExpressionLambda(on), type);
+            return new DbQuery<T1, T2, T3, T4, T5, T6, TJoin>(_context);
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, TJoin> Join<TJoin>(JoinType type = JoinType.Inner) where TJoin : IDbObject
+        {
+            AddJoinMetedata<TJoin>(null, type);
+            return new DbQuery<T1, T2, T3, T4, T5, T6, TJoin>(_context);
+        }
+
+        public IDbQuery<T1, T2, T3, T4, T5, T6, TJoin> Join<TJoin>(Expression<Func<T1, T2, T3, T4, T5, T6, TJoin, bool>> on, JoinType type = JoinType.Inner) where TJoin : IDbObject
+        {
+            AddJoinMetedata<TJoin>(on, type);
+            return new DbQuery<T1, T2, T3, T4, T5, T6, TJoin>(_context);
+        }
+
+        public IDbQuery<T1, T2, T3, T4, T5, T6, TJoin> Join<TJoin>(Expression<Func<T1, T2, T3, T4, T5, T6, TJoin, string>> on, JoinType type = JoinType.Inner) where TJoin : IDbObject
+        {
+            AddJoinMetedata<TJoin>(CreateExpressionLambda(on), type);
+            return new DbQuery<T1, T2, T3, T4, T5, T6, TJoin>(_context);
+        }
+
+        public ISelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6> OrderBy(Expression<Func<T1, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6> OrderBy(Expression<Func<T1, T2, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6> OrderBy(Expression<Func<T1, T2, T3, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6> OrderBy(Expression<Func<T1, T2, T3, T4, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6> OrderBy(Expression<Func<T1, T2, T3, T4, T5, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public IOrderedDbQuery<T1, T2, T3, T4, T5, T6> OrderBy(Expression<Func<T1, T2, T3, T4, T5, T6, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6> OrderByDescending(Expression<Func<T1, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6> OrderByDescending(Expression<Func<T1, T2, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6> OrderByDescending(Expression<Func<T1, T2, T3, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6> OrderByDescending(Expression<Func<T1, T2, T3, T4, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6> OrderByDescending(Expression<Func<T1, T2, T3, T4, T5, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public IOrderedDbQuery<T1, T2, T3, T4, T5, T6> OrderByDescending(Expression<Func<T1, T2, T3, T4, T5, T6, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6> ThenBy(Expression<Func<T1, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6> ThenBy(Expression<Func<T1, T2, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6> ThenBy(Expression<Func<T1, T2, T3, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6> ThenBy(Expression<Func<T1, T2, T3, T4, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6> ThenBy(Expression<Func<T1, T2, T3, T4, T5, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public IOrderedDbQuery<T1, T2, T3, T4, T5, T6> ThenBy(Expression<Func<T1, T2, T3, T4, T5, T6, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6> ThenByDescending(Expression<Func<T1, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6> ThenByDescending(Expression<Func<T1, T2, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6> ThenByDescending(Expression<Func<T1, T2, T3, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6> ThenByDescending(Expression<Func<T1, T2, T3, T4, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6> ThenByDescending(Expression<Func<T1, T2, T3, T4, T5, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public IOrderedDbQuery<T1, T2, T3, T4, T5, T6> ThenByDescending(Expression<Func<T1, T2, T3, T4, T5, T6, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public Task<long> CountAsync(Expression<Func<T1, T2, T3, T4, T5, T6, object>> field) => base.CountAsync(field);
+
+        public Task<TResult> MaxAsync<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, TResult>> field) => base.MaxAsync<TResult>(field);
+
+        public Task<TResult> MinAsync<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, TResult>> field) => base.MinAsync<TResult>(field);
+
+        public Task<decimal> AvgAsync<TField>(Expression<Func<T1, T2, T3, T4, T5, T6, TField>> field) => base.AvgAsync<TField>(field);
+
+        public Task<TField> SumAsync<TField>(Expression<Func<T1, T2, T3, T4, T5, T6, TField>> field) => base.SumAsync<TField>(field);
+
+        public new IGroupingDbQuery<T1, T2, T3, T4, T5, T6> GroupBy(Expression<Func<T1, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        public new IGroupingDbQuery<T1, T2, T3, T4, T5, T6> GroupBy(Expression<Func<T1, T2, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        public new IGroupingDbQuery<T1, T2, T3, T4, T5, T6> GroupBy(Expression<Func<T1, T2, T3, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        public new IGroupingDbQuery<T1, T2, T3, T4, T5, T6> GroupBy(Expression<Func<T1, T2, T3, T4, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        public new IGroupingDbQuery<T1, T2, T3, T4, T5, T6> GroupBy(Expression<Func<T1, T2, T3, T4, T5, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        public IGroupingDbQuery<T1, T2, T3, T4, T5, T6> GroupBy(Expression<Func<T1, T2, T3, T4, T5, T6, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5, T6>.Select<TResult>(Expression<Func<T1, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5, T6>.Select<TResult>(Expression<Func<T1, T2, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5, T6>.Select<TResult>(Expression<Func<T1, T2, T3, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5, T6>.Select<TResult>(Expression<Func<T1, T2, T3, T4, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5, T6>.Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5, T6>.Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6> IGroupingDbQuery<T1, T2, T3, T4, T5, T6>.Having(Expression<Func<T1, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6> IGroupingDbQuery<T1, T2, T3, T4, T5, T6>.Having(Expression<Func<T1, T2, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6> IGroupingDbQuery<T1, T2, T3, T4, T5, T6>.Having(Expression<Func<T1, T2, T3, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6> IGroupingDbQuery<T1, T2, T3, T4, T5, T6>.Having(Expression<Func<T1, T2, T3, T4, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6> IGroupingDbQuery<T1, T2, T3, T4, T5, T6>.Having(Expression<Func<T1, T2, T3, T4, T5, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6> IGroupingDbQuery<T1, T2, T3, T4, T5, T6>.Having(Expression<Func<T1, T2, T3, T4, T5, T6, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6> IGroupingDbQuery<T1, T2, T3, T4, T5, T6>.Having(Expression<Func<T1, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6> IGroupingDbQuery<T1, T2, T3, T4, T5, T6>.Having(Expression<Func<T1, T2, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6> IGroupingDbQuery<T1, T2, T3, T4, T5, T6>.Having(Expression<Func<T1, T2, T3, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6> IGroupingDbQuery<T1, T2, T3, T4, T5, T6>.Having(Expression<Func<T1, T2, T3, T4, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6> IGroupingDbQuery<T1, T2, T3, T4, T5, T6>.Having(Expression<Func<T1, T2, T3, T4, T5, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6> IGroupingDbQuery<T1, T2, T3, T4, T5, T6>.Having(Expression<Func<T1, T2, T3, T4, T5, T6, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+    }
+
+    public class DbQuery<T1, T2, T3, T4, T5, T6, T7> : DbQuery<T1, T2, T3, T4, T5, T6>, IDbQuery<T1, T2, T3, T4, T5, T6, T7>, IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7>, IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7>
+    {
+        internal DbQuery(QueryContext context) : base(context) { }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7> Where(Expression<Func<T1, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7> Where(Expression<Func<T1, T2, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7> Where(Expression<Func<T1, T2, T3, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7> Where(Expression<Func<T1, T2, T3, T4, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7> Where(Expression<Func<T1, T2, T3, T4, T5, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7> Where(Expression<Func<T1, T2, T3, T4, T5, T6, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public IDbQuery<T1, T2, T3, T4, T5, T6, T7> Where(Expression<Func<T1, T2, T3, T4, T5, T6, T7, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7> Where(Expression<Func<T1, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7> Where(Expression<Func<T1, T2, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7> Where(Expression<Func<T1, T2, T3, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7> Where(Expression<Func<T1, T2, T3, T4, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7> Where(Expression<Func<T1, T2, T3, T4, T5, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7> Where(Expression<Func<T1, T2, T3, T4, T5, T6, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public IDbQuery<T1, T2, T3, T4, T5, T6, T7> Where(Expression<Func<T1, T2, T3, T4, T5, T6, T7, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, TJoin> Join<TJoin>(ISelectedDbQuery<TJoin> query, JoinType type = JoinType.Inner) where TJoin : class
+        {
+            AddJoinMetedata<TJoin>(query, null, type);
+            return new DbQuery<T1, T2, T3, T4, T5, T6, T7, TJoin>(_context);
+        }
+
+        public IDbQuery<T1, T2, T3, T4, T5, T6, T7, TJoin> Join<TJoin>(ISelectedDbQuery<TJoin> query, Expression<Func<T1, T2, T3, T4, T5, T6, T7, TJoin, bool>> on, JoinType type = JoinType.Inner) where TJoin : class
+        {
+            AddJoinMetedata<TJoin>(query, on, type);
+            return new DbQuery<T1, T2, T3, T4, T5, T6, T7, TJoin>(_context);
+        }
+
+        public IDbQuery<T1, T2, T3, T4, T5, T6, T7, TJoin> Join<TJoin>(ISelectedDbQuery<TJoin> query, Expression<Func<T1, T2, T3, T4, T5, T6, T7, TJoin, string>> on, JoinType type = JoinType.Inner) where TJoin : class
+        {
+            AddJoinMetedata<TJoin>(query, CreateExpressionLambda(on), type);
+            return new DbQuery<T1, T2, T3, T4, T5, T6, T7, TJoin>(_context);
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, TJoin> Join<TJoin>(JoinType type = JoinType.Inner) where TJoin : IDbObject
+        {
+            AddJoinMetedata<TJoin>(null, type);
+            return new DbQuery<T1, T2, T3, T4, T5, T6, T7, TJoin>(_context);
+        }
+
+        public IDbQuery<T1, T2, T3, T4, T5, T6, T7, TJoin> Join<TJoin>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, TJoin, bool>> on, JoinType type = JoinType.Inner) where TJoin : IDbObject
+        {
+            AddJoinMetedata<TJoin>(on, type);
+            return new DbQuery<T1, T2, T3, T4, T5, T6, T7, TJoin>(_context);
+        }
+
+        public IDbQuery<T1, T2, T3, T4, T5, T6, T7, TJoin> Join<TJoin>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, TJoin, string>> on, JoinType type = JoinType.Inner) where TJoin : IDbObject
+        {
+            AddJoinMetedata<TJoin>(CreateExpressionLambda(on), type);
+            return new DbQuery<T1, T2, T3, T4, T5, T6, T7, TJoin>(_context);
+        }
+
+        public ISelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7> OrderBy(Expression<Func<T1, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7> OrderBy(Expression<Func<T1, T2, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7> OrderBy(Expression<Func<T1, T2, T3, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7> OrderBy(Expression<Func<T1, T2, T3, T4, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7> OrderBy(Expression<Func<T1, T2, T3, T4, T5, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7> OrderBy(Expression<Func<T1, T2, T3, T4, T5, T6, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7> OrderBy(Expression<Func<T1, T2, T3, T4, T5, T6, T7, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7> OrderByDescending(Expression<Func<T1, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7> OrderByDescending(Expression<Func<T1, T2, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7> OrderByDescending(Expression<Func<T1, T2, T3, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7> OrderByDescending(Expression<Func<T1, T2, T3, T4, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7> OrderByDescending(Expression<Func<T1, T2, T3, T4, T5, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7> OrderByDescending(Expression<Func<T1, T2, T3, T4, T5, T6, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7> OrderByDescending(Expression<Func<T1, T2, T3, T4, T5, T6, T7, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7> ThenBy(Expression<Func<T1, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7> ThenBy(Expression<Func<T1, T2, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7> ThenBy(Expression<Func<T1, T2, T3, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7> ThenBy(Expression<Func<T1, T2, T3, T4, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7> ThenBy(Expression<Func<T1, T2, T3, T4, T5, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7> ThenBy(Expression<Func<T1, T2, T3, T4, T5, T6, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7> ThenBy(Expression<Func<T1, T2, T3, T4, T5, T6, T7, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7> ThenByDescending(Expression<Func<T1, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7> ThenByDescending(Expression<Func<T1, T2, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7> ThenByDescending(Expression<Func<T1, T2, T3, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7> ThenByDescending(Expression<Func<T1, T2, T3, T4, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7> ThenByDescending(Expression<Func<T1, T2, T3, T4, T5, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7> ThenByDescending(Expression<Func<T1, T2, T3, T4, T5, T6, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7> ThenByDescending(Expression<Func<T1, T2, T3, T4, T5, T6, T7, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public Task<long> CountAsync(Expression<Func<T1, T2, T3, T4, T5, T6, T7, object>> field) => base.CountAsync(field);
+
+        public Task<TResult> MaxAsync<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, TResult>> field) => base.MaxAsync<TResult>(field);
+
+        public Task<TResult> MinAsync<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, TResult>> field) => base.MinAsync<TResult>(field);
+
+        public Task<decimal> AvgAsync<TField>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, TField>> field) => base.AvgAsync<TField>(field);
+
+        public Task<TField> SumAsync<TField>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, TField>> field) => base.SumAsync<TField>(field);
+
+        public new IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> GroupBy(Expression<Func<T1, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        public new IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> GroupBy(Expression<Func<T1, T2, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        public new IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> GroupBy(Expression<Func<T1, T2, T3, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        public new IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> GroupBy(Expression<Func<T1, T2, T3, T4, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        public new IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> GroupBy(Expression<Func<T1, T2, T3, T4, T5, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        public new IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> GroupBy(Expression<Func<T1, T2, T3, T4, T5, T6, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        public IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> GroupBy(Expression<Func<T1, T2, T3, T4, T5, T6, T7, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7>.Select<TResult>(Expression<Func<T1, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7>.Select<TResult>(Expression<Func<T1, T2, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7>.Select<TResult>(Expression<Func<T1, T2, T3, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7>.Select<TResult>(Expression<Func<T1, T2, T3, T4, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7>.Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7>.Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7>.Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7>.Having(Expression<Func<T1, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7>.Having(Expression<Func<T1, T2, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7>.Having(Expression<Func<T1, T2, T3, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7>.Having(Expression<Func<T1, T2, T3, T4, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7>.Having(Expression<Func<T1, T2, T3, T4, T5, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7>.Having(Expression<Func<T1, T2, T3, T4, T5, T6, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7>.Having(Expression<Func<T1, T2, T3, T4, T5, T6, T7, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7>.Having(Expression<Func<T1, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7>.Having(Expression<Func<T1, T2, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7>.Having(Expression<Func<T1, T2, T3, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7>.Having(Expression<Func<T1, T2, T3, T4, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7>.Having(Expression<Func<T1, T2, T3, T4, T5, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7>.Having(Expression<Func<T1, T2, T3, T4, T5, T6, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7>.Having(Expression<Func<T1, T2, T3, T4, T5, T6, T7, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+    }
+
+    public class DbQuery<T1, T2, T3, T4, T5, T6, T7, T8> : DbQuery<T1, T2, T3, T4, T5, T6, T7>, IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8>, IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8>, IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8>
+    {
+        internal DbQuery(QueryContext context) : base(context) { }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> Where(Expression<Func<T1, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> Where(Expression<Func<T1, T2, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> Where(Expression<Func<T1, T2, T3, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> Where(Expression<Func<T1, T2, T3, T4, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> Where(Expression<Func<T1, T2, T3, T4, T5, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> Where(Expression<Func<T1, T2, T3, T4, T5, T6, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> Where(Expression<Func<T1, T2, T3, T4, T5, T6, T7, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> Where(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> Where(Expression<Func<T1, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> Where(Expression<Func<T1, T2, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> Where(Expression<Func<T1, T2, T3, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> Where(Expression<Func<T1, T2, T3, T4, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> Where(Expression<Func<T1, T2, T3, T4, T5, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> Where(Expression<Func<T1, T2, T3, T4, T5, T6, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> Where(Expression<Func<T1, T2, T3, T4, T5, T6, T7, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> Where(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, TJoin> Join<TJoin>(ISelectedDbQuery<TJoin> query, JoinType type = JoinType.Inner) where TJoin : class
+        {
+            AddJoinMetedata<TJoin>(query, null, type);
+            return new DbQuery<T1, T2, T3, T4, T5, T6, T7, T8, TJoin>(_context);
+        }
+
+        public IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, TJoin> Join<TJoin>(ISelectedDbQuery<TJoin> query, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, TJoin, bool>> on, JoinType type = JoinType.Inner) where TJoin : class
+        {
+            AddJoinMetedata<TJoin>(query, on, type);
+            return new DbQuery<T1, T2, T3, T4, T5, T6, T7, T8, TJoin>(_context);
+        }
+
+        public IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, TJoin> Join<TJoin>(ISelectedDbQuery<TJoin> query, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, TJoin, string>> on, JoinType type = JoinType.Inner) where TJoin : class
+        {
+            AddJoinMetedata<TJoin>(query, CreateExpressionLambda(on), type);
+            return new DbQuery<T1, T2, T3, T4, T5, T6, T7, T8, TJoin>(_context);
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, TJoin> Join<TJoin>(JoinType type = JoinType.Inner) where TJoin : IDbObject
+        {
+            AddJoinMetedata<TJoin>(null, type);
+            return new DbQuery<T1, T2, T3, T4, T5, T6, T7, T8, TJoin>(_context);
+        }
+
+        public IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, TJoin> Join<TJoin>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, TJoin, bool>> on, JoinType type = JoinType.Inner) where TJoin : IDbObject
+        {
+            AddJoinMetedata<TJoin>(on, type);
+            return new DbQuery<T1, T2, T3, T4, T5, T6, T7, T8, TJoin>(_context);
+        }
+
+        public IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, TJoin> Join<TJoin>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, TJoin, string>> on, JoinType type = JoinType.Inner) where TJoin : IDbObject
+        {
+            AddJoinMetedata<TJoin>(CreateExpressionLambda(on), type);
+            return new DbQuery<T1, T2, T3, T4, T5, T6, T7, T8, TJoin>(_context);
+        }
+
+        public ISelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> OrderBy(Expression<Func<T1, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> OrderBy(Expression<Func<T1, T2, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> OrderBy(Expression<Func<T1, T2, T3, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> OrderBy(Expression<Func<T1, T2, T3, T4, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> OrderBy(Expression<Func<T1, T2, T3, T4, T5, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> OrderBy(Expression<Func<T1, T2, T3, T4, T5, T6, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> OrderBy(Expression<Func<T1, T2, T3, T4, T5, T6, T7, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> OrderBy(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> OrderByDescending(Expression<Func<T1, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> OrderByDescending(Expression<Func<T1, T2, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> OrderByDescending(Expression<Func<T1, T2, T3, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> OrderByDescending(Expression<Func<T1, T2, T3, T4, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> OrderByDescending(Expression<Func<T1, T2, T3, T4, T5, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> OrderByDescending(Expression<Func<T1, T2, T3, T4, T5, T6, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> OrderByDescending(Expression<Func<T1, T2, T3, T4, T5, T6, T7, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> OrderByDescending(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> ThenBy(Expression<Func<T1, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> ThenBy(Expression<Func<T1, T2, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> ThenBy(Expression<Func<T1, T2, T3, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> ThenBy(Expression<Func<T1, T2, T3, T4, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> ThenBy(Expression<Func<T1, T2, T3, T4, T5, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> ThenBy(Expression<Func<T1, T2, T3, T4, T5, T6, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> ThenBy(Expression<Func<T1, T2, T3, T4, T5, T6, T7, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> ThenBy(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> ThenByDescending(Expression<Func<T1, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> ThenByDescending(Expression<Func<T1, T2, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> ThenByDescending(Expression<Func<T1, T2, T3, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> ThenByDescending(Expression<Func<T1, T2, T3, T4, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> ThenByDescending(Expression<Func<T1, T2, T3, T4, T5, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> ThenByDescending(Expression<Func<T1, T2, T3, T4, T5, T6, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> ThenByDescending(Expression<Func<T1, T2, T3, T4, T5, T6, T7, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> ThenByDescending(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public Task<long> CountAsync(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, object>> field) => base.CountAsync(field);
+
+        public Task<TResult> MaxAsync<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult>> field) => base.MaxAsync<TResult>(field);
+
+        public Task<TResult> MinAsync<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult>> field) => base.MinAsync<TResult>(field);
+
+        public Task<decimal> AvgAsync<TField>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, TField>> field) => base.AvgAsync<TField>(field);
+
+        public Task<TField> SumAsync<TField>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, TField>> field) => base.SumAsync<TField>(field);
+
+        public new IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> GroupBy(Expression<Func<T1, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        public new IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> GroupBy(Expression<Func<T1, T2, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        public new IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> GroupBy(Expression<Func<T1, T2, T3, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        public new IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> GroupBy(Expression<Func<T1, T2, T3, T4, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        public new IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> GroupBy(Expression<Func<T1, T2, T3, T4, T5, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        public new IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> GroupBy(Expression<Func<T1, T2, T3, T4, T5, T6, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        public new IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> GroupBy(Expression<Func<T1, T2, T3, T4, T5, T6, T7, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        public IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> GroupBy(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8>.Select<TResult>(Expression<Func<T1, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8>.Select<TResult>(Expression<Func<T1, T2, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8>.Select<TResult>(Expression<Func<T1, T2, T3, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8>.Select<TResult>(Expression<Func<T1, T2, T3, T4, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8>.Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8>.Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8>.Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8>.Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8>.Having(Expression<Func<T1, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8>.Having(Expression<Func<T1, T2, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8>.Having(Expression<Func<T1, T2, T3, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8>.Having(Expression<Func<T1, T2, T3, T4, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8>.Having(Expression<Func<T1, T2, T3, T4, T5, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8>.Having(Expression<Func<T1, T2, T3, T4, T5, T6, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8>.Having(Expression<Func<T1, T2, T3, T4, T5, T6, T7, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8>.Having(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8>.Having(Expression<Func<T1, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8>.Having(Expression<Func<T1, T2, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8>.Having(Expression<Func<T1, T2, T3, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8>.Having(Expression<Func<T1, T2, T3, T4, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8>.Having(Expression<Func<T1, T2, T3, T4, T5, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8>.Having(Expression<Func<T1, T2, T3, T4, T5, T6, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8>.Having(Expression<Func<T1, T2, T3, T4, T5, T6, T7, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8>.Having(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+    }
+
+    public class DbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> : DbQuery<T1, T2, T3, T4, T5, T6, T7, T8>, IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9>, IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9>, IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9>
+    {
+        internal DbQuery(QueryContext context) : base(context) { }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Where(Expression<Func<T1, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Where(Expression<Func<T1, T2, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Where(Expression<Func<T1, T2, T3, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Where(Expression<Func<T1, T2, T3, T4, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Where(Expression<Func<T1, T2, T3, T4, T5, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Where(Expression<Func<T1, T2, T3, T4, T5, T6, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Where(Expression<Func<T1, T2, T3, T4, T5, T6, T7, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Where(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Where(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, bool>> predicate)
+        {
+            AddWhereExpression(predicate);
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Where(Expression<Func<T1, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Where(Expression<Func<T1, T2, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Where(Expression<Func<T1, T2, T3, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Where(Expression<Func<T1, T2, T3, T4, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Where(Expression<Func<T1, T2, T3, T4, T5, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Where(Expression<Func<T1, T2, T3, T4, T5, T6, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Where(Expression<Func<T1, T2, T3, T4, T5, T6, T7, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public new IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Where(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Where(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, string>> expression)
+        {
+            AddWhereExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        public ISelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> OrderBy(Expression<Func<T1, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> OrderBy(Expression<Func<T1, T2, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> OrderBy(Expression<Func<T1, T2, T3, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> OrderBy(Expression<Func<T1, T2, T3, T4, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> OrderBy(Expression<Func<T1, T2, T3, T4, T5, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> OrderBy(Expression<Func<T1, T2, T3, T4, T5, T6, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> OrderBy(Expression<Func<T1, T2, T3, T4, T5, T6, T7, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> OrderBy(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> OrderBy(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> OrderByDescending(Expression<Func<T1, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> OrderByDescending(Expression<Func<T1, T2, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> OrderByDescending(Expression<Func<T1, T2, T3, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> OrderByDescending(Expression<Func<T1, T2, T3, T4, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> OrderByDescending(Expression<Func<T1, T2, T3, T4, T5, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> OrderByDescending(Expression<Func<T1, T2, T3, T4, T5, T6, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> OrderByDescending(Expression<Func<T1, T2, T3, T4, T5, T6, T7, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> OrderByDescending(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> OrderByDescending(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, object>> orderFields)
+        {
+            SetOrderBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> ThenBy(Expression<Func<T1, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> ThenBy(Expression<Func<T1, T2, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> ThenBy(Expression<Func<T1, T2, T3, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> ThenBy(Expression<Func<T1, T2, T3, T4, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> ThenBy(Expression<Func<T1, T2, T3, T4, T5, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> ThenBy(Expression<Func<T1, T2, T3, T4, T5, T6, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> ThenBy(Expression<Func<T1, T2, T3, T4, T5, T6, T7, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> ThenBy(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> ThenBy(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Asc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> ThenByDescending(Expression<Func<T1, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> ThenByDescending(Expression<Func<T1, T2, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> ThenByDescending(Expression<Func<T1, T2, T3, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> ThenByDescending(Expression<Func<T1, T2, T3, T4, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> ThenByDescending(Expression<Func<T1, T2, T3, T4, T5, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> ThenByDescending(Expression<Func<T1, T2, T3, T4, T5, T6, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> ThenByDescending(Expression<Func<T1, T2, T3, T4, T5, T6, T7, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public new IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> ThenByDescending(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public IOrderedDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> ThenByDescending(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, object>> orderFields)
+        {
+            SetThenBy(orderFields, SortType.Desc);
+            return this;
+        }
+
+        public Task<long> CountAsync(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, object>> field) => base.CountAsync(field);
+
+        public Task<TResult> MaxAsync<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult>> field) => base.MaxAsync<TResult>(field);
+
+        public Task<TResult> MinAsync<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult>> field) => base.MinAsync<TResult>(field);
+
+        public Task<decimal> AvgAsync<TField>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TField>> field) => base.AvgAsync<TField>(field);
+
+        public Task<TField> SumAsync<TField>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TField>> field) => base.SumAsync<TField>(field);
+
+        public new IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> GroupBy(Expression<Func<T1, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        public new IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> GroupBy(Expression<Func<T1, T2, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        public new IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> GroupBy(Expression<Func<T1, T2, T3, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        public new IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> GroupBy(Expression<Func<T1, T2, T3, T4, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        public new IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> GroupBy(Expression<Func<T1, T2, T3, T4, T5, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        public new IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> GroupBy(Expression<Func<T1, T2, T3, T4, T5, T6, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        public new IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> GroupBy(Expression<Func<T1, T2, T3, T4, T5, T6, T7, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        public new IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> GroupBy(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        public IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> GroupBy(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, object>> fields)
+        {
+            _context.GroupByExpression = fields;
+            _context.OrderByMetedata = null;
+            _context.ThenByMetedata = null;
+            return this;
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9>.Select<TResult>(Expression<Func<T1, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9>.Select<TResult>(Expression<Func<T1, T2, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9>.Select<TResult>(Expression<Func<T1, T2, T3, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9>.Select<TResult>(Expression<Func<T1, T2, T3, T4, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9>.Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9>.Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9>.Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9>.Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingSelectedDbQuery<TResult> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9>.Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult>> selector)
+        {
+            _context.SelectorExpression = selector;
+            return new DbQuery<TResult>(_context);
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9>.Having(Expression<Func<T1, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9>.Having(Expression<Func<T1, T2, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9>.Having(Expression<Func<T1, T2, T3, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9>.Having(Expression<Func<T1, T2, T3, T4, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9>.Having(Expression<Func<T1, T2, T3, T4, T5, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9>.Having(Expression<Func<T1, T2, T3, T4, T5, T6, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9>.Having(Expression<Func<T1, T2, T3, T4, T5, T6, T7, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9>.Having(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9>.Having(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, bool>> predicate)
+        {
+            AddHavingExpression(predicate);
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9>.Having(Expression<Func<T1, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9>.Having(Expression<Func<T1, T2, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9>.Having(Expression<Func<T1, T2, T3, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9>.Having(Expression<Func<T1, T2, T3, T4, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9>.Having(Expression<Func<T1, T2, T3, T4, T5, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9>.Having(Expression<Func<T1, T2, T3, T4, T5, T6, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9>.Having(Expression<Func<T1, T2, T3, T4, T5, T6, T7, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9>.Having(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, string>> expression)
+        {
+            AddHavingExpression(CreateExpressionLambda(expression));
+            return this;
+        }
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9>.Having(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, string>> expression)
         {
             AddHavingExpression(CreateExpressionLambda(expression));
             return this;

@@ -72,4 +72,56 @@ namespace Dapper.Easies
 
         Task<TField> SumAsync<TField>(Expression<Func<T1, T2, T3, T4, T5, TField>> field);
     }
+
+    public interface IAggregateDbQuery<T1, T2, T3, T4, T5, T6> : IAggregateDbQuery<T1, T2, T3, T4, T5>
+    {
+        Task<long> CountAsync(Expression<Func<T1, T2, T3, T4, T5, T6, object>> field);
+
+        Task<TResult> MaxAsync<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, TResult>> field);
+
+        Task<TResult> MinAsync<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, TResult>> field);
+
+        Task<decimal> AvgAsync<TField>(Expression<Func<T1, T2, T3, T4, T5, T6, TField>> field);
+
+        Task<TField> SumAsync<TField>(Expression<Func<T1, T2, T3, T4, T5, T6, TField>> field);
+    }
+
+    public interface IAggregateDbQuery<T1, T2, T3, T4, T5, T6, T7> : IAggregateDbQuery<T1, T2, T3, T4, T5, T6>
+    {
+        Task<long> CountAsync(Expression<Func<T1, T2, T3, T4, T5, T6, T7, object>> field);
+
+        Task<TResult> MaxAsync<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, TResult>> field);
+
+        Task<TResult> MinAsync<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, TResult>> field);
+
+        Task<decimal> AvgAsync<TField>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, TField>> field);
+
+        Task<TField> SumAsync<TField>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, TField>> field);
+    }
+
+    public interface IAggregateDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> : IAggregateDbQuery<T1, T2, T3, T4, T5, T6, T7>
+    {
+        Task<long> CountAsync(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, object>> field);
+
+        Task<TResult> MaxAsync<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult>> field);
+
+        Task<TResult> MinAsync<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult>> field);
+
+        Task<decimal> AvgAsync<TField>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, TField>> field);
+
+        Task<TField> SumAsync<TField>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, TField>> field);
+    }
+
+    public interface IAggregateDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> : IAggregateDbQuery<T1, T2, T3, T4, T5, T6, T7, T8>
+    {
+        Task<long> CountAsync(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, object>> field);
+
+        Task<TResult> MaxAsync<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult>> field);
+
+        Task<TResult> MinAsync<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult>> field);
+
+        Task<decimal> AvgAsync<TField>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TField>> field);
+
+        Task<TField> SumAsync<TField>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TField>> field);
+    }
 }

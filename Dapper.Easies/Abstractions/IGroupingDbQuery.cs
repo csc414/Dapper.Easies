@@ -109,4 +109,196 @@ namespace Dapper.Easies
 
         IGroupingDbQuery<T1, T2, T3, T4, T5> Having(Expression<Func<T1, T2, T3, T4, T5, bool>> predicate);
     }
+
+    public interface IGroupingDbQuery<T1, T2, T3, T4, T5, T6>
+    {
+        IGroupingSelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, TResult>> selector);
+
+        IGroupingSelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, TResult>> selector);
+
+        IGroupingSelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, TResult>> selector);
+
+        IGroupingSelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, T4, TResult>> selector);
+
+        IGroupingSelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, TResult>> selector);
+
+        IGroupingSelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, TResult>> selector);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6> Having(Expression<Func<T1, string>> expression);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6> Having(Expression<Func<T1, T2, string>> expression);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6> Having(Expression<Func<T1, T2, T3, string>> expression);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6> Having(Expression<Func<T1, T2, T3, T4, string>> expression);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6> Having(Expression<Func<T1, T2, T3, T4, T5, string>> expression);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6> Having(Expression<Func<T1, T2, T3, T4, T5, T6, string>> expression);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6> Having(Expression<Func<T1, bool>> predicate);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6> Having(Expression<Func<T1, T2, bool>> predicate);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6> Having(Expression<Func<T1, T2, T3, bool>> predicate);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6> Having(Expression<Func<T1, T2, T3, T4, bool>> predicate);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6> Having(Expression<Func<T1, T2, T3, T4, T5, bool>> predicate);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6> Having(Expression<Func<T1, T2, T3, T4, T5, T6, bool>> predicate);
+    }
+
+    public interface IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7>
+    {
+        IGroupingSelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, TResult>> selector);
+
+        IGroupingSelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, TResult>> selector);
+
+        IGroupingSelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, TResult>> selector);
+
+        IGroupingSelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, T4, TResult>> selector);
+
+        IGroupingSelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, TResult>> selector);
+
+        IGroupingSelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, TResult>> selector);
+
+        IGroupingSelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, TResult>> selector);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> Having(Expression<Func<T1, string>> expression);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> Having(Expression<Func<T1, T2, string>> expression);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> Having(Expression<Func<T1, T2, T3, string>> expression);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> Having(Expression<Func<T1, T2, T3, T4, string>> expression);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> Having(Expression<Func<T1, T2, T3, T4, T5, string>> expression);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> Having(Expression<Func<T1, T2, T3, T4, T5, T6, string>> expression);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> Having(Expression<Func<T1, T2, T3, T4, T5, T6, T7, string>> expression);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> Having(Expression<Func<T1, bool>> predicate);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> Having(Expression<Func<T1, T2, bool>> predicate);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> Having(Expression<Func<T1, T2, T3, bool>> predicate);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> Having(Expression<Func<T1, T2, T3, T4, bool>> predicate);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> Having(Expression<Func<T1, T2, T3, T4, T5, bool>> predicate);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> Having(Expression<Func<T1, T2, T3, T4, T5, T6, bool>> predicate);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7> Having(Expression<Func<T1, T2, T3, T4, T5, T6, T7, bool>> predicate);
+    }
+
+    public interface IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8>
+    {
+        IGroupingSelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, TResult>> selector);
+
+        IGroupingSelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, TResult>> selector);
+
+        IGroupingSelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, TResult>> selector);
+
+        IGroupingSelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, T4, TResult>> selector);
+
+        IGroupingSelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, TResult>> selector);
+
+        IGroupingSelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, TResult>> selector);
+
+        IGroupingSelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, TResult>> selector);
+
+        IGroupingSelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult>> selector);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> Having(Expression<Func<T1, string>> expression);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> Having(Expression<Func<T1, T2, string>> expression);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> Having(Expression<Func<T1, T2, T3, string>> expression);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> Having(Expression<Func<T1, T2, T3, T4, string>> expression);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> Having(Expression<Func<T1, T2, T3, T4, T5, string>> expression);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> Having(Expression<Func<T1, T2, T3, T4, T5, T6, string>> expression);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> Having(Expression<Func<T1, T2, T3, T4, T5, T6, T7, string>> expression);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> Having(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, string>> expression);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> Having(Expression<Func<T1, bool>> predicate);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> Having(Expression<Func<T1, T2, bool>> predicate);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> Having(Expression<Func<T1, T2, T3, bool>> predicate);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> Having(Expression<Func<T1, T2, T3, T4, bool>> predicate);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> Having(Expression<Func<T1, T2, T3, T4, T5, bool>> predicate);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> Having(Expression<Func<T1, T2, T3, T4, T5, T6, bool>> predicate);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> Having(Expression<Func<T1, T2, T3, T4, T5, T6, T7, bool>> predicate);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> Having(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, bool>> predicate);
+    }
+
+    public interface IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9>
+    {
+        IGroupingSelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, TResult>> selector);
+
+        IGroupingSelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, TResult>> selector);
+
+        IGroupingSelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, TResult>> selector);
+
+        IGroupingSelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, T4, TResult>> selector);
+
+        IGroupingSelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, TResult>> selector);
+
+        IGroupingSelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, TResult>> selector);
+
+        IGroupingSelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, TResult>> selector);
+
+        IGroupingSelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult>> selector);
+
+        IGroupingSelectedDbQuery<TResult> Select<TResult>(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult>> selector);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Having(Expression<Func<T1, string>> expression);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Having(Expression<Func<T1, T2, string>> expression);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Having(Expression<Func<T1, T2, T3, string>> expression);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Having(Expression<Func<T1, T2, T3, T4, string>> expression);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Having(Expression<Func<T1, T2, T3, T4, T5, string>> expression);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Having(Expression<Func<T1, T2, T3, T4, T5, T6, string>> expression);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Having(Expression<Func<T1, T2, T3, T4, T5, T6, T7, string>> expression);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Having(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, string>> expression);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Having(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, string>> expression);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Having(Expression<Func<T1, bool>> predicate);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Having(Expression<Func<T1, T2, bool>> predicate);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Having(Expression<Func<T1, T2, T3, bool>> predicate);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Having(Expression<Func<T1, T2, T3, T4, bool>> predicate);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Having(Expression<Func<T1, T2, T3, T4, T5, bool>> predicate);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Having(Expression<Func<T1, T2, T3, T4, T5, T6, bool>> predicate);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Having(Expression<Func<T1, T2, T3, T4, T5, T6, T7, bool>> predicate);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Having(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, bool>> predicate);
+
+        IGroupingDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> Having(Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, bool>> predicate);
+    }
 }

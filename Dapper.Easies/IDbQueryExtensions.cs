@@ -225,6 +225,42 @@ namespace Dapper.Easies
             return query;
         }
 
+        public static IDbQuery<T1, T2, T3, T4, T5, T6> WhereIf<T1, T2, T3, T4, T5, T6>(this IDbQuery<T1, T2, T3, T4, T5, T6> query, bool condition, Expression<Func<T1, T2, T3, T4, T5, bool>> ifTrue, Expression<Func<T1, T2, T3, T4, T5, T6, bool>> ifFalse = null)
+        {
+            if (condition)
+                return query.Where(ifTrue);
+            else if (ifFalse != null)
+                return query.Where(ifFalse);
+            return query;
+        }
+
+        public static IDbQuery<T1, T2, T3, T4, T5, T6, T7> WhereIf<T1, T2, T3, T4, T5, T6, T7>(this IDbQuery<T1, T2, T3, T4, T5, T6, T7> query, bool condition, Expression<Func<T1, T2, T3, T4, T5, T6, T7, bool>> ifTrue, Expression<Func<T1, T2, T3, T4, T5, T6, T7, bool>> ifFalse = null)
+        {
+            if (condition)
+                return query.Where(ifTrue);
+            else if (ifFalse != null)
+                return query.Where(ifFalse);
+            return query;
+        }
+
+        public static IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> WhereIf<T1, T2, T3, T4, T5, T6, T7, T8>(this IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> query, bool condition, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, bool>> ifTrue, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, bool>> ifFalse = null)
+        {
+            if (condition)
+                return query.Where(ifTrue);
+            else if (ifFalse != null)
+                return query.Where(ifFalse);
+            return query;
+        }
+
+        public static IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> WhereIf<T1, T2, T3, T4, T5, T6, T7, T8, T9>(this IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> query, bool condition, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, bool>> ifTrue, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, bool>> ifFalse = null)
+        {
+            if (condition)
+                return query.Where(ifTrue);
+            else if (ifFalse != null)
+                return query.Where(ifFalse);
+            return query;
+        }
+
         public static (string sql, DynamicParameters parameters) GetSql<T>(this T query, int? skip = null, int? take = null, AggregateInfo aggregateInfo = null) where T : IDbQuery
         {
             var sql = query.Context.Converter.ToQuerySql(query.Context, out var parameters, skip, take, aggregateInfo);

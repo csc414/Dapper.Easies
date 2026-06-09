@@ -30,4 +30,20 @@ namespace Dapper.Easies
     public interface IDbQuery<T1, T2, T3, T4, T5> : IGeneralDbQuery<T1, T2, T3, T4, T5>
     {
     }
+
+    public interface IDbQuery<T1, T2, T3, T4, T5, T6> : IGeneralDbQuery<T1, T2, T3, T4, T5, T6>
+    {
+    }
+
+    public interface IDbQuery<T1, T2, T3, T4, T5, T6, T7> : IGeneralDbQuery<T1, T2, T3, T4, T5, T6, T7>
+    {
+    }
+
+    public interface IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8> : IGeneralDbQuery<T1, T2, T3, T4, T5, T6, T7, T8>
+    {
+    }
+
+    public interface IDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9> : IGeneralDbQuery<T1, T2, T3, T4, T5, T6, T7, T8, T9>
+    {
+    }
 }
