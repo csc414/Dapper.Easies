@@ -215,23 +215,24 @@ namespace Dapper.Easies
         {
             var getter = s_memberGetters.GetOrAdd(member, m =>
             {
+                var param = Expression.Parameter(typeof(object), "obj");
+                Expression body;
                 if (m is PropertyInfo p)
                 {
-                    var param = Expression.Parameter(typeof(object), "obj");
-                    var cast = Expression.Convert(param, p.DeclaringType);
-                    var access = Expression.Property(cast, p);
-                    var box = Expression.Convert(access, typeof(object));
-                    return Expression.Lambda<Func<object, object>>(box, param).Compile();
+                    // 静态属性要求实例表达式为 null，实例属性需把入参转换到声明类型。
+                    // 与原 propertyInfo.GetValue(val) 语义一致（静态传 null）。
+                    var isStatic = p.GetMethod != null && p.GetMethod.IsStatic;
+                    var target = isStatic ? null : Expression.Convert(param, p.DeclaringType);
+                    body = Expression.Property(target, p);
                 }
                 else
                 {
                     var f = (FieldInfo)m;
-                    var param = Expression.Parameter(typeof(object), "obj");
-                    var cast = Expression.Convert(param, f.DeclaringType);
-                    var access = Expression.Field(cast, f);
-                    var box = Expression.Convert(access, typeof(object));
-                    return Expression.Lambda<Func<object, object>>(box, param).Compile();
+                    var target = f.IsStatic ? null : Expression.Convert(param, f.DeclaringType);
+                    body = Expression.Field(target, f);
                 }
+                var box = Expression.Convert(body, typeof(object));
+                return Expression.Lambda<Func<object, object>>(box, param).Compile();
             });
             return getter(instance);
         }
