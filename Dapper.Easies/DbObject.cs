@@ -15,6 +15,12 @@ namespace Dapper.Easies
 
         private Dictionary<string, DbProperty> _properties = new Dictionary<string, DbProperty>();
 
+        // 物化的字段集合，初始化后只读，避免每次访问都重新 LINQ 过滤 + 分配
+        private DbProperty[] _propertiesCache;
+        private DbProperty[] _primaryKeysCache;
+        private DbProperty[] _nonIdentityPropertiesCache;
+        private DbProperty[] _nonPrimaryKeyPropertiesCache;
+
         public DbObject(string dbName, Type type)
         {
             DbName = dbName;
@@ -35,7 +41,44 @@ namespace Dapper.Easies
 
         public Type Type { get; }
 
-        public IEnumerable<DbProperty> Properties => _properties.Values.Where(o => !o.Ignore);
+        public IEnumerable<DbProperty> Properties => _propertiesCache;
+
+        /// <summary>主键字段（已物化，避免每次重复过滤分配）。</summary>
+        public IReadOnlyList<DbProperty> PrimaryKeys => _primaryKeysCache;
+
+        /// <summary>非自增字段（用于 Insert，已物化）。</summary>
+        public IReadOnlyList<DbProperty> NonIdentityProperties => _nonIdentityPropertiesCache;
+
+        /// <summary>非主键字段（用于 Update，已物化）。</summary>
+        public IReadOnlyList<DbProperty> NonPrimaryKeyProperties => _nonPrimaryKeyPropertiesCache;
+
+        // ---- 仅依赖表结构的 SQL 缓存槽，首次生成后复用 ----
+        // volatile + 双检锁保证多线程安全，由各 ISqlSyntax 在生成后回填
+        private volatile string _cachedInsertSql;
+        private volatile string _cachedUpdateSql;
+        private volatile string _cachedDeleteSql;
+        private volatile string _cachedGetByIdSql;
+
+        public string CachedInsertSql
+        {
+            get => _cachedInsertSql;
+            set => _cachedInsertSql = value;
+        }
+        public string CachedUpdateSql
+        {
+            get => _cachedUpdateSql;
+            set => _cachedUpdateSql = value;
+        }
+        public string CachedDeleteSql
+        {
+            get => _cachedDeleteSql;
+            set => _cachedDeleteSql = value;
+        }
+        public string CachedGetByIdSql
+        {
+            get => _cachedGetByIdSql;
+            set => _cachedGetByIdSql = value;
+        }
 
         public DbProperty IdentityKey { get; set; }
 
@@ -131,9 +174,18 @@ namespace Dapper.Easies
                             obj.IdentityKey = property;
                         }
                     }
+                    obj.MaterializeProperties();
                     Add(t, obj);
                 }
             }
+        }
+
+        private void MaterializeProperties()
+        {
+            _propertiesCache = _properties.Values.Where(o => !o.Ignore).ToArray();
+            _primaryKeysCache = _propertiesCache.Where(o => o.PrimaryKey).ToArray();
+            _nonIdentityPropertiesCache = _propertiesCache.Where(o => !o.IdentityKey).ToArray();
+            _nonPrimaryKeyPropertiesCache = _propertiesCache.Where(o => !o.PrimaryKey).ToArray();
         }
 
         static Func<IEnumerable<Expression>> GetAppendFunction(IEnumerable<(Type t, MethodInfo method, object obj)> funcs)

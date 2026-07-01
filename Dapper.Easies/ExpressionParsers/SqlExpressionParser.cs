@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -10,6 +11,13 @@ namespace Dapper.Easies
     public class SqlExpressionParser : ExpressionParser
     {
         private static Type s_dbQueryExtensionType = typeof(DbQueryExtensions);
+
+        // VisitFields 在每次 Select 全类型字段时都要枚举类型的公共属性，反射 GetProperties() 代价较高且结果稳定，按 Type 缓存。
+        private static readonly ConcurrentDictionary<Type, PropertyInfo[]> s_typeProperties =
+            new ConcurrentDictionary<Type, PropertyInfo[]>();
+
+        private static PropertyInfo[] GetProperties(Type type)
+            => s_typeProperties.GetOrAdd(type, t => t.GetProperties());
 
         private StringBuilder _sb = null;
 
@@ -76,7 +84,7 @@ namespace Dapper.Easies
             {
                 var table = Context.DbObject;
                 var i = 0;
-                foreach (var property in selectType.SelectType.GetProperties())
+                foreach (var property in GetProperties(selectType.SelectType))
                 {
                     var p = table[property.Name];
                     if (p != null)
@@ -101,7 +109,7 @@ namespace Dapper.Easies
                 {
                     var alias = Context.Alias[aliasIndex];
                     var i = 0;
-                    foreach (var property in parameter.Type.GetProperties())
+                    foreach (var property in GetProperties(parameter.Type))
                     {
                         if (i > 0)
                             Builder.Append(separator);
@@ -110,7 +118,7 @@ namespace Dapper.Easies
                         if (Context == null)
                             Builder.Append(propertyName);
                         else
-                            Builder.Append($"{alias.Alias}.{propertyName}");
+                            Builder.Append(alias.Alias).Append('.').Append(propertyName);
                         i++;
                     }
                 }

@@ -68,7 +68,8 @@ namespace Dapper.Easies.MySql
                 parser.VisitFields(context.DbObject, alias, sql);
             }
 
-            sql.Append($" FROM {AliasTableName(alias.Name, alias.Alias)}");
+            sql.Append(" FROM ");
+            sql.Append(AliasTableName(alias.Name, alias.Alias));
 
             AppendJoin(parser, context, sql, parameterBuilder);
 
@@ -83,10 +84,12 @@ namespace Dapper.Easies.MySql
 
             var takeCount = take ?? context.Take;
             if (takeCount > 0)
-                sql.Append($" LIMIT {skip ?? context.Skip},{takeCount}");
+            {
+                sql.Append(" LIMIT ").Append(skip ?? context.Skip).Append(',').Append(takeCount);
+            }
 
             if (wrapCount)
-                return $"SELECT COUNT(*) FROM ({sql}) _t";
+                return "SELECT COUNT(*) FROM (" + sql.ToString() + ") _t";
 
             return sql.ToString();
         }
@@ -184,13 +187,29 @@ namespace Dapper.Easies.MySql
 
         public virtual string SelectFormat(DbObject dbObject, object[] ids, ParameterBuilder parameterBuilder)
         {
-            var primaryKeys = dbObject.Properties.Where(o => o.PrimaryKey).ToArray();
-            if (primaryKeys.Length == 0)
+            var primaryKeys = dbObject.PrimaryKeys;
+            if (primaryKeys.Count == 0)
                 throw new ArgumentException("实体类没有主键");
 
-            if (ids.Length < primaryKeys.Length)
+            if (ids.Length < primaryKeys.Count)
                 throw new ArgumentException("参数与主键数不一致");
 
+            // 仅 where 部分含参数；select/from/limit 结构稳定，缓存模板后只追加参数化 where。
+            var sql = new StringBuilder(dbObject.CachedGetByIdSql ?? BuildGetByIdSql(dbObject), 0x100);
+            var i = 0;
+            foreach (var item in primaryKeys)
+            {
+                if (i > 0)
+                    sql.Append(" AND ");
+                sql.Append(item.EscapeName).Append(" = ").Append(parameterBuilder.Add(ids[i]));
+                i++;
+            }
+            sql.Append(" LIMIT 0,1");
+            return sql.ToString();
+        }
+
+        private string BuildGetByIdSql(DbObject dbObject)
+        {
             var sql = new StringBuilder("SELECT ", 0x80);
             var i = 0;
             foreach (var item in dbObject.Properties)
@@ -200,23 +219,21 @@ namespace Dapper.Easies.MySql
                 sql.Append(item.EscapeNameAsAlias);
                 i++;
             }
-            sql.Append($" FROM {dbObject.EscapeName} WHERE ");
-            i = 0;
-            foreach (var item in primaryKeys)
-            {
-                if (i > 0)
-                    sql.Append(" AND ");
-                sql.Append($"{item.EscapeName} = {parameterBuilder.Add(ids[i])}");
-                i++;
-            }
-            sql.Append(" LIMIT 0,1");
-            return sql.ToString();
+            sql.Append(" FROM ").Append(dbObject.EscapeName).Append(" WHERE ");
+            var cache = sql.ToString();
+            dbObject.CachedGetByIdSql = cache;
+            return cache;
         }
 
         public virtual string InsertFormat(DbObject dbObject, bool hasIdentityKey)
         {
-            var sql = new StringBuilder($"INSERT INTO {dbObject.EscapeName}(", 0x80);
-            var properties = dbObject.Properties.Where(o => !o.IdentityKey);
+            var cached = dbObject.CachedInsertSql;
+            if (cached != null)
+                return cached;
+
+            var sql = new StringBuilder(0x80);
+            sql.Append("INSERT INTO ").Append(dbObject.EscapeName).Append('(');
+            var properties = dbObject.NonIdentityProperties;
             var i = 0;
             foreach (var item in properties)
             {
@@ -231,22 +248,25 @@ namespace Dapper.Easies.MySql
             {
                 if (i > 0)
                     sql.Append(", ");
-                sql.Append($"@{item.PropertyInfo.Name}");
+                sql.Append('@').Append(item.PropertyInfo.Name);
                 i++;
             }
-            sql.Append(")");
+            sql.Append(')');
 
             if (hasIdentityKey)
                 sql.Append("; SELECT LAST_INSERT_ID()");
 
-            return sql.ToString();
+            var result = sql.ToString();
+            dbObject.CachedInsertSql = result;
+            return result;
         }
 
         public virtual string DeleteFormat(QueryContext context, ParameterBuilder parameterBuilder)
         {
             var parser = new MySqlExpressionParser(context);
             var alias = context.Alias[0];
-            var sql = new StringBuilder($"DELETE {alias.Alias} FROM {AliasTableName(alias.Name, alias.Alias)}", 0x80);
+            var sql = new StringBuilder(0x80);
+            sql.Append("DELETE ").Append(alias.Alias).Append(" FROM ").Append(AliasTableName(alias.Name, alias.Alias));
 
             AppendWhere(parser, context, sql, parameterBuilder);
 
@@ -255,11 +275,16 @@ namespace Dapper.Easies.MySql
 
         public virtual string DeleteFormat(DbObject dbObject)
         {
-            var primaryKeys = dbObject.Properties.Where(o => o.PrimaryKey).ToArray();
-            if (primaryKeys.Length == 0)
+            var cached = dbObject.CachedDeleteSql;
+            if (cached != null)
+                return cached;
+
+            var primaryKeys = dbObject.PrimaryKeys;
+            if (primaryKeys.Count == 0)
                 throw new ArgumentException("实体类没有主键");
 
-            var sql = new StringBuilder($"DELETE FROM {dbObject.EscapeName}", 0x40);
+            var sql = new StringBuilder(0x40);
+            sql.Append("DELETE FROM ").Append(dbObject.EscapeName);
 
             sql.Append(" WHERE ");
             var i = 0;
@@ -267,17 +292,20 @@ namespace Dapper.Easies.MySql
             {
                 if (i > 0)
                     sql.Append(" AND ");
-                sql.Append($"{item.EscapeName} = @{item.PropertyInfo.Name}");
+                sql.Append(item.EscapeName).Append(" = @").Append(item.PropertyInfo.Name);
                 i++;
             }
-            return sql.ToString();
+            var result = sql.ToString();
+            dbObject.CachedDeleteSql = result;
+            return result;
         }
 
         public virtual string UpdateFormat(Expression fields, QueryContext context, ParameterBuilder parameterBuilder)
         {
             var parser = new MySqlExpressionParser(context);
             var alias = context.Alias[0];
-            var sql = new StringBuilder($"UPDATE {AliasTableName(alias.Name, alias.Alias)} SET ", 0x80);
+            var sql = new StringBuilder(0x80);
+            sql.Append("UPDATE ").Append(AliasTableName(alias.Name, alias.Alias)).Append(" SET ");
 
             parser.VisitFields(fields, sql, parameterBuilder, updateMode: true);
 
@@ -288,18 +316,23 @@ namespace Dapper.Easies.MySql
 
         public virtual string UpdateFormat(DbObject dbObject)
         {
-            var primaryKeys = dbObject.Properties.Where(o => o.PrimaryKey).ToArray();
-            if (primaryKeys.Length == 0)
+            var cached = dbObject.CachedUpdateSql;
+            if (cached != null)
+                return cached;
+
+            var primaryKeys = dbObject.PrimaryKeys;
+            if (primaryKeys.Count == 0)
                 throw new ArgumentException("实体类没有主键");
 
-            var sql = new StringBuilder($"UPDATE {dbObject.EscapeName} SET ", 0x80);
+            var sql = new StringBuilder(0x80);
+            sql.Append("UPDATE ").Append(dbObject.EscapeName).Append(" SET ");
 
             var i = 0;
-            foreach (var item in dbObject.Properties.Where(o => !o.PrimaryKey))
+            foreach (var item in dbObject.NonPrimaryKeyProperties)
             {
                 if (i > 0)
                     sql.Append(", ");
-                sql.Append($"{item.EscapeName} = @{item.PropertyInfo.Name}");
+                sql.Append(item.EscapeName).Append(" = @").Append(item.PropertyInfo.Name);
                 i++;
             }
 
@@ -309,10 +342,12 @@ namespace Dapper.Easies.MySql
             {
                 if (i > 0)
                     sql.Append(" AND ");
-                sql.Append($"{item.EscapeName} = @{item.PropertyInfo.Name}");
+                sql.Append(item.EscapeName).Append(" = @").Append(item.PropertyInfo.Name);
                 i++;
             }
-            return sql.ToString();
+            var result = sql.ToString();
+            dbObject.CachedUpdateSql = result;
+            return result;
         }
 
         public virtual string EscapeTableName(string name)

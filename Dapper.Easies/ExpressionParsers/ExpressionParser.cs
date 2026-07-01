@@ -193,10 +193,10 @@ namespace Dapper.Easies
                     val = ((ConstantExpression)exp).Value;
 
                 if (node.Member is PropertyInfo propertyInfo)
-                    return Expression.Constant(propertyInfo.GetValue(val), propertyInfo.PropertyType);
+                    return Expression.Constant(GetMemberValue(propertyInfo, val), propertyInfo.PropertyType);
 
                 if (node.Member is FieldInfo fieldInfo)
-                    return Expression.Constant(fieldInfo.GetValue(val), fieldInfo.FieldType);
+                    return Expression.Constant(GetMemberValue(fieldInfo, val), fieldInfo.FieldType);
             }
             else if (Nullable.GetUnderlyingType(node.Member.DeclaringType) != null)
                 return exp;
@@ -205,6 +205,35 @@ namespace Dapper.Easies
                 return AppendDateTimeMember(exp, node.Member);
 
             return node;
+        }
+
+        // 反射取成员值是 where 条件中捕获变量的高频热路径，按 MemberInfo 缓存编译好的 getter 避免每次反射调用。
+        private static readonly ConcurrentDictionary<MemberInfo, Func<object, object>> s_memberGetters =
+            new ConcurrentDictionary<MemberInfo, Func<object, object>>();
+
+        private static object GetMemberValue(MemberInfo member, object instance)
+        {
+            var getter = s_memberGetters.GetOrAdd(member, m =>
+            {
+                if (m is PropertyInfo p)
+                {
+                    var param = Expression.Parameter(typeof(object), "obj");
+                    var cast = Expression.Convert(param, p.DeclaringType);
+                    var access = Expression.Property(cast, p);
+                    var box = Expression.Convert(access, typeof(object));
+                    return Expression.Lambda<Func<object, object>>(box, param).Compile();
+                }
+                else
+                {
+                    var f = (FieldInfo)m;
+                    var param = Expression.Parameter(typeof(object), "obj");
+                    var cast = Expression.Convert(param, f.DeclaringType);
+                    var access = Expression.Field(cast, f);
+                    var box = Expression.Convert(access, typeof(object));
+                    return Expression.Lambda<Func<object, object>>(box, param).Compile();
+                }
+            });
+            return getter(instance);
         }
 
         protected virtual Expression VisitMethodCall(MethodCallExpression node, bool isExpr = false)
@@ -219,7 +248,7 @@ namespace Dapper.Easies
                     return Expression.Constant(node.Method.Invoke(constant.Value, VisitConstantExpressions(node.Arguments)));
                 else if (obj.NodeType == ExpressionType.MemberAccess)
                 {
-                    var result = AppendMethod(obj, node.Method, node.Arguments.Select(o => Visit(o)).ToArray());
+                    var result = AppendMethod(obj, node.Method, VisitArgumentList(node.Arguments));
                     if (result != null)
                         return result;
                 }
@@ -239,7 +268,7 @@ namespace Dapper.Easies
                     args = new Expression[] { arg };
                 }
                 else
-                    args = node.Arguments.Select(o => Visit(o)).ToArray();
+                    args = VisitArgumentList(node.Arguments);
 
                 var result = AppendMethod(null, node.Method, args);
                 if (result != null)
@@ -375,9 +404,36 @@ namespace Dapper.Easies
             return exps.Select(o => GetConstantValue(o)).ToArray();
         }
 
+        // 预分配参数数组，避免 LINQ Select + ToArray 产生的迭代器/闭包/中间缓冲分配。
+        // node.Arguments 是 ReadOnlyCollection<Expression>，实现了 IReadOnlyList<Expression>，可直接拿 Count。
+        private Expression[] VisitArgumentList(IReadOnlyList<Expression> arguments)
+        {
+            var args = new Expression[arguments.Count];
+            for (int i = 0; i < args.Length; i++)
+                args[i] = Visit(arguments[i]);
+            return args;
+        }
+
         protected virtual object[] VisitConstantExpressions(IEnumerable<Expression> exps)
         {
-            var args = exps.Select(o =>
+            // 常见调用方传入的是 node.Arguments（IReadOnlyList<Expression>），走快路径直接预分配数组，
+            // 避免 Select 委托闭包（捕获 this）与迭代器分配。
+            if (exps is IReadOnlyList<Expression> list)
+            {
+                var args = new object[list.Count];
+                for (int i = 0; i < args.Length; i++)
+                {
+                    args[i] = VisitConstantExpression(list[i]);
+                }
+                return args;
+            }
+
+            var result = new List<object>();
+            foreach (var o in exps)
+                result.Add(VisitConstantExpression(o));
+            return result.ToArray();
+
+            object VisitConstantExpression(Expression o)
             {
                 if (o is LambdaExpression lambda)
                     return s_delegates.GetOrAdd(ExpressionEqualityComparer.Instance.GetHashCode(lambda), hashCode => lambda.Compile());
@@ -387,9 +443,7 @@ namespace Dapper.Easies
                     return constant.Value;
 
                 throw new NotSupportedException(o.ToString());
-            }).ToArray();
-
-            return args;
+            }
         }
 
         protected virtual string GetPropertyName(Expression exp)
