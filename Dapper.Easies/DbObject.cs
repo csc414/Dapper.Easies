@@ -58,6 +58,7 @@ namespace Dapper.Easies
         private volatile string _cachedUpdateSql;
         private volatile string _cachedDeleteSql;
         private volatile string _cachedGetByIdSql;
+        private volatile string _cachedSelectAllSql;
 
         public string CachedInsertSql
         {
@@ -73,6 +74,11 @@ namespace Dapper.Easies
         {
             get => _cachedDeleteSql;
             set => _cachedDeleteSql = value;
+        }
+        public string CachedSelectAllSql
+        {
+            get => _cachedSelectAllSql;
+            set => _cachedSelectAllSql = value;
         }
         public string CachedGetByIdSql
         {

@@ -11,6 +11,24 @@ namespace Dapper.Easies.MySql
 
         public virtual string SelectFormat(QueryContext context, ParameterBuilder parameterBuilder, int? skip = null, int? take = null, AggregateInfo aggregateInfo = null)
         {
+            // schema-only 全表查询快路径：无聚合/无投影/无 distinct/无 join/无 where(含 appender)/无 group/无 having/无 order/无分页。
+            // 此类 SQL 仅依赖表结构，首次生成后缓存复用，跳过 parser 构造与字段遍历。
+            if (aggregateInfo == null
+                && context.SelectorExpression == null
+                && !context.Distinct
+                && context.JoinMetedatas == null
+                && context.WhereExpressions == null
+                && context.GroupByExpression == null
+                && context.HavingExpressions == null
+                && context.OrderByMetedata == null
+                && (take ?? context.Take) == 0)
+            {
+                var cached = context.DbObject.CachedSelectAllSql;
+                if (cached != null)
+                    return cached;
+                return BuildAndCacheSelectAll(context);
+            }
+
             var parser = new MySqlExpressionParser(context);
             var sql = new StringBuilder("SELECT", 0x100);
             var alias = context.Alias[0];
@@ -92,6 +110,26 @@ namespace Dapper.Easies.MySql
                 return "SELECT COUNT(*) FROM (" + sql.ToString() + ") _t";
 
             return sql.ToString();
+        }
+
+        private string BuildAndCacheSelectAll(QueryContext context)
+        {
+            var alias = context.Alias[0];
+            var sql = new StringBuilder(0x100);
+            sql.Append("SELECT ");
+            var i = 0;
+            foreach (var property in context.DbObject.Properties)
+            {
+                if (i > 0)
+                    sql.Append(", ");
+                sql.Append(alias.Alias).Append('.').Append(property.EscapeNameAsAlias);
+                i++;
+            }
+            sql.Append(" FROM ").Append(AliasTableName(alias.Name, alias.Alias));
+
+            var result = sql.ToString();
+            context.DbObject.CachedSelectAllSql = result;
+            return result;
         }
 
         protected void AppendJoin(MySqlExpressionParser parser, QueryContext context, StringBuilder sql, ParameterBuilder parameterBuilder)
